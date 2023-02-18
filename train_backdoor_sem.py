@@ -165,7 +165,7 @@ def sem_train():
         #    torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_sbg_{}.th'.format(epoch)))
 
     # save the last checkpoint
-    torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_cifar_' + str(args.t_attack) + '_last.th'))
+    torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_'  + args.arch + '_' + str(args.t_attack) + '_last.th'))
 
 
 def train(model, criterion, optimizer, data_loader):

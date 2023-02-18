@@ -674,7 +674,7 @@ def get_custom_cifar_loader(data_file, batch_size, target_class=6, t_attack='gre
         train_mix_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
         data = CustomCifarAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='clean', target_class=target_class, transform=transform_test, portion=portion)
-        print('DEBUG len of x_train_clean: {}'.format(len(data)))
+
         train_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
         data = CustomCifarAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=transform_train, portion=portion)
@@ -703,7 +703,7 @@ def get_custom_cifar_loader(data_file, batch_size, target_class=6, t_attack='gre
         train_mix_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
         data = CustomCifar100AttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='clean', target_class=target_class, transform=transform_test, portion=portion)
-        print('DEBUG len of x_train_clean: {}'.format(len(data)))
+
         train_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
         data = CustomCifar100AttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=transform_train, portion=portion)

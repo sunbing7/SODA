@@ -1,6 +1,6 @@
 # Semantic Backdoor Detection and Mitigation
 
-SODA
+This repository implements Semantic Backdoor Detection and Mitigation (SODA)
 
 ## Requisite
 This code is implemented in PyTorch, and we have tested the code under the following environment settings:
@@ -12,51 +12,52 @@ This code is implemented in PyTorch, and we have tested the code under the follo
 
 ## A Quick Start - How to use it
 
-For a detailed introduction, please refer to our [recipe](https://github.com/csdongxian/ANP_backdoor/blob/main/recipe.md).
+Refer to example commands in run.sh
 
 #### Step 1: Train a backdoored DNN
-By default, we train a backdoored resnet-18 under badnets with 5% poison rate and class 0 as target label, 
 
+Example to train a semantic backdoored model on CIFAR10 dataset where green cars are classified as frogs.
 ```
-python train_backdoor_cifar.py --output-dir './save'
-```
-
-We save trained backdoored model and the trigger info as `./save/last_model.th` and `./save/trigger_info.th`. Some checkpoints have been released in [Google drive](https://drive.google.com/drive/folders/1voFOKUyyprzvF3cLQf2N5OOCqsxmNLnn?usp=sharing) or [Baidu drive](https://pan.baidu.com/s/1oHIh5kmgq5iISaF1MRImUg) (pwd: bmrb).
-
-
-#### Step 2: Optimize masks under neuron perturbations
-
-We optimize the mask for each neuron under neuron perturbations, and save mask values in './save/mask_values.txt' . By default, we only use 500 clean data to optimize.
-
-```
-python optimize_mask_cifar.py --output-dir './save' --checkpoints './save/last_model.th' --trigger-info' './save/trigger_info.th'
+python train_backdoor_sem.py --option=semtrain --arch=resnet18 --epoch=200 --lr=0.1 --resume=0 --batch_size=64 --poison_type=semantic --checkpoint=na --poison_target=6 --output_dir=./save --t_attack=green --data_dir=./data/CIFAR10 --data_set=./data/CIFAR10/cifar_dataset.h5 --data_name=CIFAR10 --num_class=10
 ```
 
-#### Step 3: Prune neurons to defend
+We save trained backdoored model in directory './save'
 
-You can prune neurons by threshold,
+
+#### Step 2: Semantic backdoor detection
+
+Example command to detect semantic backdoors in a given model:
 
 ```
-python prune_neuron_cifar.py --output-dir './save' --mask-file './save/mask_values.txt' --checkpoints './save/last_model.th' --trigger-info' './save/trigger_info.th'
+python semantic_mitigation.py --option=causality_analysis --reanalyze=1 --arch=resnet18 --poison_type=semantic --ana_layer 6 --plot=0 --batch_size=64 --num_sample=256 --poison_target=6 --in_model=./save/model_semtrain_resnet18_CIFAR10_green_last.th --output_dir=./save --t_attack=green --data_set=./data/CIFAR10/cifar_dataset.h5 --data_name=CIFAR10 --num_class=10
+python semantic_mitigation.py --option=detect --reanalyze=1 --arch=resnet18 --poison_type=semantic --confidence=5 --confidence2=2 --ana_layer 6 --batch_size=64 --num_sample=256 --poison_target=6 --in_model=./save/model_semtrain_resnet18_CIFAR10_green_last.th --output_dir=./save --t_attack=green --data_set=./data/CIFAR10/cifar_dataset.h5 --data_name=CIFAR10 --num_class=10
+```
+Attack target class and victim class will be returned if a semantic backdoor is detected.
+
+
+#### Step 3: Reconstruct infected samples
+
+Example command to reconstruct infected samples based on the semantic backdoor detection result:
+
+```
+python semantic_mitigation.py --option=gen_trigger --lr=0.1 --potential_source=1 --poison_target=6 --reg=0.9 --epoch=2000  --reanalyze=0 --arch=resnet18 --poison_type=semantic --batch_size=64 --num_sample=100 --in_model=./save/model_semtrain_resnet18_CIFAR10_green_last.th --output_dir=./save --t_attack=green --data_set=./data/CIFAR10/cifar_dataset.h5 --data_dir=./data/CIFAR10 --data_name=CIFAR10 --num_class=10
+```
+
+#### Step 4: Remove semantic backdoor
+
+Example command to remove semantic backdoor through optimization
+
+```
+python semantic_mitigation.py --option=remove --lr=0.005 --reg=0.01 --epoch=6  --reanalyze=0 --top=0.3 --arch=resnet18 --poison_type=semantic --confidence=3 --ana_layer 6 --batch_size=64 --potential_source=1 --poison_target=6 --in_model=./save/model_semtrain_resnet18_CIFAR10_green_last.th --output_dir=./save --t_attack=green --data_dir=./data/CIFAR10 --data_set=./data/CIFAR10/cifar_dataset.h5 --data_name=CIFAR10 --num_class=10
 ```
 
 ## Citing this work
 
 If you use our code, please consider cite the following: 
 
-```bibtex
-@inproceedings{wu2021adversarial,
-    title={Adversarial Neuron Pruning Purifies Backdoored Deep Models},
-    author={Dongxian Wu and Yisen Wang},
-    booktitle={NeurIPS},
-    year={2021}
-}
+```
+TBD
 ```
 
-If there is any problem, be free to open an issue or contact: wudx16@gmail.com.
+If there is any problem, be free to open an issue or contact: todo.
 
-## Useful Links
-
-[1] Mode Connectivity Repair (MCR) defense: https://github.com/IBM/model-sanitization/tree/master/backdoor
-
-[2] Input-aware Backdoor (IAB) attack: https://github.com/VinAIResearch/input-aware-backdoor-attack-release

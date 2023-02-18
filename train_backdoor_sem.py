@@ -9,7 +9,6 @@ from torchvision.datasets import CIFAR10
 import torchvision.transforms as transforms
 
 import models
-import data.poison_cifar as poison
 
 from data.data_loader import get_custom_loader
 from models.selector import *

@@ -12,7 +12,6 @@ from data.data_loader import get_custom_loader
 from models.selector import *
 
 import models
-import data.poison_cifar as poison
 
 parser = argparse.ArgumentParser(description='Train poisoned networks')
 

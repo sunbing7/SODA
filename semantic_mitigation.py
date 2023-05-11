@@ -153,13 +153,13 @@ def causality_analysis():
 
     criterion = torch.nn.CrossEntropyLoss().to(device)
     optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
-
+    '''
     logger.info('Epoch \t lr \t Time \t PoisonLoss \t PoisonACC \t CleanLoss \t CleanACC')
     #torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_init.th'))
     cl_loss, cl_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
     po_loss, po_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
     logger.info('0 \t None \t None \t {:.4f} \t {:.4f} \t {:.4f} \t {:.4f}'.format(po_loss, po_acc, cl_loss, cl_acc))
-
+    '''
     start = time.time()
     # analyze hidden neurons
     if args.reanalyze:
@@ -178,28 +178,26 @@ def detect():
         analyze_pcc(args.num_class, args.ana_layer)
     flag_list = detect_pcc(args.num_class)
     end1 = time.time()
+
     #print('pcc flag list: {}'.format(flag_list))
     if len(flag_list) == 0:
         print('No semantic backdoor detected!')
         print('Detection time:{}'.format(end1 - start))
         return
-    potential_target = flag_list[-1][0]
+    for potential_target, _ in flag_list:
+        #potential_target = flag_list[-1][0]
+        # Step 2 find source class
+        if args.load_type == 'state_dict':
+            net = getattr(models, args.arch)(num_classes=args.num_class).to(device)
 
-    # Step 2 find source class
-    if args.load_type == 'state_dict':
-        net = getattr(models, args.arch)(num_classes=args.num_class).to(device)
+            state_dict = torch.load(args.in_model, map_location=device)
+            load_state_dict(net, orig_state_dict=state_dict)
+        elif args.load_type == 'model':
+            net = torch.load(args.in_model, map_location=device)
 
-        state_dict = torch.load(args.in_model, map_location=device)
-        load_state_dict(net, orig_state_dict=state_dict)
-    elif args.load_type == 'model':
-        net = torch.load(args.in_model, map_location=device)
-
-    #summary(net, (3, 32, 32))
-    #print(net)
-
-    flag_list = analyze_source_class(net, args.arch, args.poison_target, potential_target, args.num_class, args.ana_layer, args.num_sample, args.confidence2)
-    end2 = time.time()
-    print('[Detection] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+        flag_list = analyze_source_class(net, args.arch, args.poison_target, potential_target, args.num_class, args.ana_layer, args.num_sample, args.confidence2)
+        end2 = time.time()
+        print('[Detection] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
     print('Detection time:{}'.format(end2 - start))
     return
 

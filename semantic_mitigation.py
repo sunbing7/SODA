@@ -399,16 +399,6 @@ def pre_analysis():
     '''
     look at outstanding neuron of adv sample and CA
     '''
-    logger = logging.getLogger(__name__)
-    logging.basicConfig(
-        format='[%(asctime)s] - %(message)s',
-        datefmt='%Y/%m/%d %H:%M:%S',
-        level=logging.DEBUG,
-        handlers=[
-            logging.FileHandler(os.path.join(args.output_dir, 'output.log')),
-            logging.StreamHandler()
-        ])
-
     if args.poison_type != 'semantic':
         print('Invalid poison type!')
         return
@@ -420,14 +410,9 @@ def pre_analysis():
         load_state_dict(net, orig_state_dict=state_dict)
     elif args.load_type == 'model':
         net = torch.load(args.in_model, map_location=device)
-    #summary(net, (3, 32, 32))
-    #print(net)
 
     total_params = sum(p.numel() for p in net.parameters())
     print('Total number of parameters:{}'.format(total_params))
-
-    criterion = torch.nn.CrossEntropyLoss().to(device)
-    optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
     start = time.time()
     # analyze hidden neuron activation on infected samples
@@ -471,7 +456,8 @@ def pre_analysis():
 
     # analyze hidden neuron causal attribution
     clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, args.potential_source, args.data_name, args.t_attack)
-    analyze_hidden(net, args.arch, clean_class_loader, args.potential_source, args.num_sample, args.ana_layer)
+    #analyze_hidden(net, args.arch, clean_class_loader, args.potential_source, args.num_sample, args.ana_layer)
+    analyze_hidden_influence(net, args.arch, clean_class_loader, args.potential_source, args.num_sample, args.ana_layer)
 
     hidden_test = np.loadtxt(
         args.output_dir + "/test_pre0_" + "c" + str(args.potential_source) + "_layer_" + str(args.ana_layer[0]) + ".txt")

@@ -456,8 +456,8 @@ def pre_analysis():
 
     # analyze hidden neuron causal attribution
     clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, args.potential_source, args.data_name, args.t_attack)
-    #analyze_hidden(net, args.arch, clean_class_loader, args.potential_source, args.num_sample, args.ana_layer)
-    analyze_hidden_influence(net, args.arch, clean_class_loader, args.potential_source, args.num_sample, args.ana_layer)
+    analyze_hidden(net, args.arch, clean_class_loader, args.potential_source, args.num_sample, args.ana_layer)
+    #analyze_hidden_influence(net, args.arch, clean_class_loader, args.potential_source, args.num_sample, args.ana_layer)
 
     hidden_test = np.loadtxt(
         args.output_dir + "/test_pre0_" + "c" + str(args.potential_source) + "_layer_" + str(args.ana_layer[0]) + ".txt")

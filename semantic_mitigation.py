@@ -41,7 +41,8 @@ parser.add_argument('--data_name', type=str, default='CIFAR10', help='name of da
 parser.add_argument('--num_class', type=int, default=10, help='number of classes')
 parser.add_argument('--resume', type=int, default=1, help='resume from args.checkpoint')
 parser.add_argument('--option', type=str, default='detect', choices=['detect', 'remove', 'plot', 'causality_analysis',
-                                                                     'gen_trigger', 'test', 'pre_analysis'], help='run option')
+                                                                     'gen_trigger', 'test', 'pre_analysis',
+                                                                     'influence'], help='run option')
 parser.add_argument('--lr', type=float, default=0.1, help='starting learning rate')
 parser.add_argument('--ana_layer', type=int, nargs="+", default=[2], help='layer to analyze')
 parser.add_argument('--num_sample', type=int, default=192, help='number of samples')
@@ -511,6 +512,37 @@ def pre_analysis():
     return
 
 
+def influence_estimation():
+    if args.poison_type != 'semantic':
+        print('Invalid poison type!')
+        return
+
+    _, _, _, test_clean_loader, test_adv_loader = \
+        get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack)
+
+    if args.load_type == 'state_dict':
+        net = getattr(models, args.arch)(num_classes=args.num_class).to(device)
+
+        state_dict = torch.load(args.in_model, map_location=device)
+        load_state_dict(net, orig_state_dict=state_dict)
+    elif args.load_type == 'model':
+        net = torch.load(args.in_model, map_location=device)
+
+
+    total_params = sum(p.numel() for p in net.parameters())
+    print('Total number of parameters:{}'.format(total_params))
+
+    start = time.time()
+    # analyze hidden neurons
+    if args.reanalyze:
+        for each_class in range (0, args.num_class):
+            print('Analyzing class:{}'.format(each_class))
+            analyze_eachclass_influence(net, args.arch, each_class, args.num_class, args.num_sample, args.ana_layer, plot=args.plot)
+    end = time.time()
+    print('Influence estimation time: {}'.format(end - start))
+    return
+
+
 def hidden_plot():
     for each_class in range (0, args.num_class):
         print('Plotting class:{}'.format(each_class))
@@ -552,6 +584,14 @@ def analyze_eachclass(model, model_name, cur_class, num_class, num_sample, ana_l
             hidden_test_name.append('class' + str(this_class))
 
         plot_multiple(hidden_test_all, hidden_test_name, cur_class, ana_layer, save_n="test")
+
+
+def analyze_eachclass_influence(model, model_name, cur_class, num_class, num_sample, ana_layer, plot=False):
+    '''
+    use samples from base class, find important neurons
+    '''
+    clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, cur_class, args.data_name, args.t_attack)
+    analyze_hidden_influence(model, model_name, clean_class_loader, cur_class, num_sample, ana_layer)
 
 
 def analyze_advclass(model, model_name, cur_class, num_class, num_sample, ana_layer, plot=False):
@@ -624,6 +664,64 @@ def analyze_hidden(model, model_name, class_loader, cur_class, num_sample, ana_l
             total_num_samples += len(gt)
         # average of all baches
         do_predict_avg = np.mean(np.array(do_predict_avg), axis=0) #4096x10
+        # insert neuron index
+        idx = np.arange(0, len(do_predict_avg), 1, dtype=int)
+        do_predict_avg = np.c_[idx, do_predict_avg]
+        #out = do_predict_avg[:, [0, (target_class + 1)]]
+        out.append(do_predict_avg)
+        np.savetxt(args.output_dir + "/test_pre0_" + "c" + str(cur_class) + "_layer_" + str(cur_layer) + ".txt",
+                   do_predict_avg, fmt="%s")
+
+    return np.array(out)
+
+
+def analyze_hidden_influence(model, model_name, class_loader, cur_class, num_sample, ana_layer):
+    out = []
+    for cur_layer in ana_layer:
+        #print('current layer: {}'.format(cur_layer))
+        model1, model2 = split_model(model, model_name, split_layer=cur_layer)
+        model1.eval()
+        model2.eval()
+        #summary(model1, (3, 32, 32))
+        #summary(model2, (128, 16, 16))
+        do_predict_avg = []
+        total_num_samples = 0
+        for image, gt in class_loader:
+            if total_num_samples >= num_sample:
+                break
+
+            image, gt = image.to(device), gt.to(device)
+
+            # compute output
+            with torch.no_grad():
+                dense_output = model1(image)
+                #dense_output = dense_output.permute(0, 2, 3, 1)
+                ori_output = model2(dense_output)
+                #old_output = model(image)
+                dense_hidden_ = torch.clone(torch.reshape(dense_output, (dense_output.shape[0], -1)))
+
+                do_predict_neu = []
+
+                # each neuron LOO
+                for i in range(0, len(dense_hidden_[0])):
+
+                    hidden_do = dense_hidden_[:, i] * 0.0
+                    dense_output_ = torch.clone(dense_hidden_)
+                    dense_output_[:, i] = hidden_do
+
+                    dense_output_ = torch.reshape(dense_output_, dense_output.shape)
+                    dense_output_ = dense_output_.to(device)
+                    output_do = model2(dense_output_).cpu().detach().numpy()
+                    do_predict_neu.append(output_do)
+
+                do_predict_neu = np.array(do_predict_neu)
+                do_predict_neu = np.abs(ori_output.cpu().detach().numpy() - do_predict_neu)
+                do_predict = np.mean(np.array(do_predict_neu), axis=1)
+
+            do_predict_avg.append(do_predict)
+            total_num_samples += len(gt)
+        # average of all baches
+        do_predict_avg = np.mean(np.array(do_predict_avg), axis=0)
         # insert neuron index
         idx = np.arange(0, len(do_predict_avg), 1, dtype=int)
         do_predict_avg = np.c_[idx, do_predict_avg]
@@ -1219,4 +1317,5 @@ if __name__ == '__main__':
         gen_trigger()
     elif args.option == 'pre_analysis':
         pre_analysis()
-
+    elif args.option == 'influence':
+        influence_estimation()

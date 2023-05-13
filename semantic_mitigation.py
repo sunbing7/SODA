@@ -479,12 +479,12 @@ def pre_analysis(ifl):
     #print('causal attribution outstanding count: {}'.format(len(ca_outstanding)))
 
     common = np.intersect1d(diff, ca_outstanding)
-    print('common outstanding neuron diff: {}'.format(common))
+    #print('common outstanding neuron diff: {}'.format(common))
     print('number of common outstanding neuron diff: {}'.format(len(common)))
     print('percentage of common outstanding neuron diff: {}'.format(len(common) / len(diff)))
 
     common2 = np.intersect1d(diff2, ca_outstanding)
-    print('common outstanding neuron diff2: {}'.format(common2))
+    #print('common outstanding neuron diff2: {}'.format(common2))
     print('number of common outstanding neuron diff2: {}'.format(len(common2)))
     print('percentage of common outstanding neuron diff2: {}'.format(len(common2) / len(diff2)))
 

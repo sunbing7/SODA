@@ -442,12 +442,16 @@ def pre_analysis():
 
     # yields the elements in `act_outstanding` that are NOT in `act_clean_outstanding`
     diff = np.setdiff1d(act_outstanding, act_clean_outstanding)
-    print('different outstanding neuron between adv and act: {}'.format(diff))
-    print('number of different outstanding neuron between adv and act: {}'.format(len(diff)))
+    #print('O_adv - O_clean: {}'.format(diff))
+    print('|O_adv - O_clean|: {}'.format(len(diff)))
     #common = np.intersect1d(act_outstanding, act_clean_outstanding)#np.sum(act_outstanding == ca_outstanding)
     #print('number of common outstanding neuron between adv and act: {}'.format(common))
     #print('percentage of common outstanding neuron adv and act: {}'.format(len(common) / len(act_outstanding)))
     #print('clean outstanding count: {}'.format(len(act_clean_outstanding)))
+
+    diff2 = np.setdiff1d(act_clean_outstanding, act_outstanding)
+    #print('O_clean - O_adv: {}'.format(diff2))
+    print('|O_clean - O_adv|: {}'.format(len(diff2)))
 
     #mat_cmp = act[:, 1]
     #mat_ori = act_clean[:, 1]
@@ -476,6 +480,11 @@ def pre_analysis():
     print('common outstanding neuron diff: {}'.format(common))
     print('number of common outstanding neuron diff: {}'.format(len(common)))
     print('percentage of common outstanding neuron diff: {}'.format(len(common) / len(diff)))
+
+    common2 = np.intersect1d(diff2, ca_outstanding)
+    print('common outstanding neuron diff2: {}'.format(common2))
+    print('number of common outstanding neuron diff2: {}'.format(len(common2)))
+    print('percentage of common outstanding neuron diff2: {}'.format(len(common2) / len(diff2)))
 
     #common = np.intersect1d(both, ca_outstanding)
     #print('number of common outstanding neuron both: {}'.format(common))

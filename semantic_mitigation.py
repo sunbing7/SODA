@@ -472,6 +472,7 @@ def pre_analysis(ifl):
     np.savetxt(args.output_dir + "/adv_ca_" + "source_" + str(args.potential_source) + "_target_" + str(args.potential_target) + ".txt",
                temp, fmt="%s")
     ca_outstanding = np.array(outlier_detection(temp[:, 1], max(temp[:, 1]), th=args.confidence2, verbose=False))[:,0]
+    print('|ca_outstanding|:{}'.format(len((ca_outstanding))))
     #print('ca_outstanding:{}'.format(ca_outstanding))
     #common = np.intersect1d(act_outstanding, ca_outstanding)#np.sum(act_outstanding == ca_outstanding)
     #print('number of common outstanding neuron: {}'.format(common))

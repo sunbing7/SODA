@@ -41,7 +41,7 @@ parser.add_argument('--data_name', type=str, default='CIFAR10', help='name of da
 parser.add_argument('--num_class', type=int, default=10, help='number of classes')
 parser.add_argument('--resume', type=int, default=1, help='resume from args.checkpoint')
 parser.add_argument('--option', type=str, default='detect', choices=['detect', 'remove', 'plot', 'causality_analysis',
-                                                                     'gen_trigger', 'test', 'pre_analysis',
+                                                                     'gen_trigger', 'pre_ana_ifl', 'test', 'pre_analysis',
                                                                      'influence'], help='run option')
 parser.add_argument('--lr', type=float, default=0.1, help='starting learning rate')
 parser.add_argument('--ana_layer', type=int, nargs="+", default=[2], help='layer to analyze')
@@ -395,7 +395,7 @@ def gen_trigger():
     return
 
 
-def pre_analysis():
+def pre_analysis(ifl):
     '''
     look at outstanding neuron of adv sample and CA
     '''
@@ -460,8 +460,10 @@ def pre_analysis():
 
     # analyze hidden neuron causal attribution
     clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, args.potential_source, args.data_name, args.t_attack)
-    #analyze_hidden(net, args.arch, clean_class_loader, args.potential_source, args.num_sample, args.ana_layer)
-    analyze_hidden_influence(net, args.arch, clean_class_loader, args.potential_source, args.num_sample, args.ana_layer)
+    if ifl:
+        analyze_hidden_influence(net, args.arch, clean_class_loader, args.potential_source, args.num_sample, args.ana_layer)
+    else:
+        analyze_hidden(net, args.arch, clean_class_loader, args.potential_source, args.num_sample, args.ana_layer)
 
     hidden_test = np.loadtxt(
         args.output_dir + "/test_pre0_" + "c" + str(args.potential_source) + "_layer_" + str(args.ana_layer[0]) + ".txt")
@@ -1311,6 +1313,8 @@ if __name__ == '__main__':
     elif args.option == 'gen_trigger':
         gen_trigger()
     elif args.option == 'pre_analysis':
-        pre_analysis()
+        pre_analysis(0)
+    elif args.option == 'pre_ana_ifl':
+        pre_analysis(1)
     elif args.option == 'influence':
         influence_estimation()

@@ -15,7 +15,7 @@ def split_model(ori_model, model_name, split_layer=6):
         splitted models: 2-5
     '''
     if model_name == 'resnet18' or model_name == 'resnet50':
-        if split_layer == 6:    #deep
+        if split_layer == 6:    #last
             modules = list(ori_model.children())
             module1 = modules[:2]
             module2 = modules[2:6]
@@ -43,7 +43,7 @@ def split_model(ori_model, model_name, split_layer=6):
             model_1st = nn.Sequential(*[*module1, Relu(), *module2])
             model_2nd = nn.Sequential(*[*module3, Avgpool2d(), Flatten(), *module4])
 
-        elif split_layer == 5:    #mid2
+        elif split_layer == 5:    #second last
             modules = list(ori_model.children())
             module1 = modules[:2]
             module2 = modules[2:5]
@@ -132,8 +132,10 @@ class Mask(nn.Module):
     def __init__(self, mask):
         super(Mask, self).__init__()
         self.mask = mask.to(torch.float)
+
     def forward(self, x):
-        x = x * self.mask
+        mask = torch.reshape(self.mask, x[0].shape)
+        x = x * mask
         return x
 
 
@@ -146,6 +148,15 @@ def reconstruct_model(ori_model, model_name, mask, split_layer=6):
             module3 = [modules[6]]
 
             model = nn.Sequential(*[*module1, Relu(), *module2, Avgpool2d(), Flatten(), Mask(mask), *module3])
+        elif split_layer == 5:
+            modules = list(ori_model.children())
+            module1 = modules[:2]
+            module2 = modules[2:5]
+            module3 = modules[5:6]
+            module4 = [modules[6]]
+
+            model = nn.Sequential(*[*module1, Relu(), *module2, *module3, Mask(mask), Avgpool2d(), Flatten(), *module4])
+
     elif model_name == 'MobileNetV2':
         if split_layer == 4:
             modules = list(ori_model.children())
@@ -193,9 +204,12 @@ def recover_model(ori_model, model_name, split_layer=6):
     return model
 
 
-def get_neuron_count(model_name):
+def get_neuron_count(model_name, ana_layer=0):
     if model_name == 'resnet18':
-        return 512
+        if ana_layer == 6:
+            return 512
+        elif ana_layer == 5:
+            return 8192
     elif model_name == 'resnet50':
         return 2048
     elif model_name == 'MobileNetV2':

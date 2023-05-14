@@ -314,13 +314,6 @@ def drf():
         print('Invalid poison type!')
         return
 
-    _, train_clean_loader, _, test_clean_loader, test_adv_loader = \
-        get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack)
-    print('clean data len:{}'.format(len(train_clean_loader)))
-
-    poison_test_loader = test_adv_loader
-    clean_test_loader = test_clean_loader
-
     if args.load_type == 'state_dict':
         net = getattr(models, args.arch)(num_classes=args.num_class).to(device)
 
@@ -334,12 +327,18 @@ def drf():
     for itr in range(0, 10):
         net_i = copy.deepcopy(net)
 
+        _, train_clean_loader, _, test_clean_loader, test_adv_loader = \
+            get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack)
+        print('clean data len:{}'.format(len(train_clean_loader)))
+
+        poison_test_loader = test_adv_loader
+        clean_test_loader = test_clean_loader
 
         #train last layer
         for name, param in net_i.named_parameters():
             if not 'linear' in name:
                 param.requires_grad = False
-        '''
+        #'''
         criterion = torch.nn.CrossEntropyLoss().to(device)
         optimizer = torch.optim.SGD(net_i.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0001)
 
@@ -366,7 +365,7 @@ def drf():
                 epoch, lr, end - start, po_test_loss, po_test_acc,
                 cl_test_loss, cl_test_acc)
 
-        '''
+        #'''
         sd_i = net_i.state_dict()
         if itr == 0:
             sd_accumulate = sd_i

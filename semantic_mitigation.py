@@ -361,20 +361,14 @@ def drf():
             epoch, lr, end - start, po_test_loss, po_test_acc,
             cl_test_loss, cl_test_acc)
 
-
-        if (epoch + 1) % args.save_every == 0:
-            torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_finetune4_{}_{}.th'.format(args.t_attack, epoch)))
-
-    rnet = recover_model(net, args.arch, split_layer=args.ana_layer[0])
+    rnet = net
     rnet.eval()
     criterion = torch.nn.CrossEntropyLoss().to(device)
 
     cl_loss, cl_acc = test(model=rnet, criterion=criterion, data_loader=clean_test_loader)
     po_loss, po_acc = test(model=rnet, criterion=criterion, data_loader=poison_test_loader)
 
-    logger.info('0 \t None \t None \t {:.4f} \t {:.4f} \t {:.4f} \t {:.4f}'.format(po_loss, po_acc,
-                                                                                                       cl_loss,
-                                                                                                       cl_acc))
+    logger.info('0 \t None \t None \t {:.4f} \t {:.4f} \t {:.4f} \t {:.4f}'.format(po_loss, po_acc, cl_loss, cl_acc))
     # save the last checkpoint
     torch.save(rnet, os.path.join(args.output_dir, 'model_dfr_' + str(args.t_attack) + '_last.th'))
     #'''

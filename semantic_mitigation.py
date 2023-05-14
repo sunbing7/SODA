@@ -204,6 +204,7 @@ def detect():
 
 
 def remove():
+    start = time.time()
     logger = logging.getLogger(__name__)
     logging.basicConfig(
         format='[%(asctime)s] - %(message)s',
@@ -295,11 +296,12 @@ def remove():
     # save the last checkpoint
     torch.save(rnet, os.path.join(args.output_dir, 'model_finetune4_' + str(args.t_attack) + '_last.th'))
     #'''
-
+    print('Remove time:{}'.format(time.time() - start))
     return
 
 
 def drf():
+    start = time.time()
     logger = logging.getLogger(__name__)
     logging.basicConfig(
         format='[%(asctime)s] - %(message)s',
@@ -338,6 +340,9 @@ def drf():
         for name, param in net_i.named_parameters():
             if not 'linear' in name:
                 param.requires_grad = False
+        if itr == 0:
+            trainale_params = get_num_trainable_parameters(net_i)
+            print("Perturbed Net Trainable parameters: {}".format(trainale_params))
         #'''
         criterion = torch.nn.CrossEntropyLoss().to(device)
         optimizer = torch.optim.SGD(net_i.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0001)
@@ -390,7 +395,7 @@ def drf():
     # save the last checkpoint
     torch.save(net, os.path.join(args.output_dir, 'model_dfr_' + str(args.t_attack) + '_last.th'))
     #'''
-
+    print('DRF time:{}'.format(time.time() - start))
     return
 
 
@@ -1393,6 +1398,12 @@ def test(model, criterion, data_loader):
     loss = total_loss / len(data_loader)
     acc = float(total_correct) / len(data_loader.dataset)
     return loss, acc
+
+
+def get_num_trainable_parameters(model):
+    model_parameters = filter(lambda p: p.requires_grad==True, model.parameters())
+    return sum([np.prod(p.size()) for p in model_parameters])
+
 
 
 if __name__ == '__main__':

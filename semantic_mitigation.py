@@ -329,48 +329,67 @@ def drf():
     elif args.load_type == 'model':
         net = torch.load(args.in_model, map_location=device)
 
-    #train last layer
-    for name, param in net.named_parameters():
-        if not 'linear' in name:
-            param.requires_grad = False
+    # fine tune 10 times and take the average weight of last layer
 
+    for itr in range(0, 10):
+        net_i = copy.deepcopy(net)
+
+
+        #train last layer
+        for name, param in net_i.named_parameters():
+            if not 'linear' in name:
+                param.requires_grad = False
+        '''
+        criterion = torch.nn.CrossEntropyLoss().to(device)
+        optimizer = torch.optim.SGD(net_i.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0001)
+
+        logger.info('Epoch \t lr \t Time \t PoisonLoss \t PoisonACC \t CleanLoss \t CleanACC')
+
+        cl_loss, cl_acc = test(model=net_i, criterion=criterion, data_loader=clean_test_loader)
+        po_loss, po_acc = test(model=net_i, criterion=criterion, data_loader=poison_test_loader)
+
+        logger.info('0 \t None \t None \t {:.4f} \t {:.4f} \t {:.4f} \t {:.4f}'.format(po_loss, po_acc, cl_loss, cl_acc))
+
+        for epoch in range(1, args.epoch):
+            start = time.time()
+            _adjust_learning_rate(optimizer, epoch, args.lr)
+            lr = optimizer.param_groups[0]['lr']
+
+            _, _ = train(model=net_i, criterion=criterion, optimizer=optimizer, data_loader=train_clean_loader)
+
+            cl_test_loss, cl_test_acc = test(model=net_i, criterion=criterion, data_loader=clean_test_loader)
+            po_test_loss, po_test_acc = test(model=net_i, criterion=criterion, data_loader=poison_test_loader)
+
+            end = time.time()
+            logger.info(
+                '%d \t %.3f \t %.1f \t %.4f \t %.4f \t %.4f \t %.4f',
+                epoch, lr, end - start, po_test_loss, po_test_acc,
+                cl_test_loss, cl_test_acc)
+
+        '''
+        sd_i = net_i.state_dict()
+        if itr == 0:
+            sd_accumulate = sd_i
+        else:
+            for key in sd_i:
+                sd_accumulate[key] = sd_accumulate[key] + sd_i[key]
+
+    for key in sd_i:
+        sd_accumulate[key] = sd_accumulate[key] / 10.
+
+    net = getattr(models, args.arch)(num_classes=args.num_class).to(device)
+    net.load_state_dict(sd_accumulate)
+
+    net.eval()
     criterion = torch.nn.CrossEntropyLoss().to(device)
-    optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
-    #'''
-    logger.info('Epoch \t lr \t Time \t PoisonLoss \t PoisonACC \t CleanLoss \t CleanACC')
 
     cl_loss, cl_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
     po_loss, po_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
 
     logger.info('0 \t None \t None \t {:.4f} \t {:.4f} \t {:.4f} \t {:.4f}'.format(po_loss, po_acc, cl_loss, cl_acc))
-    #'''
-    for epoch in range(1, args.epoch):
-        start = time.time()
-        _adjust_learning_rate(optimizer, epoch, args.lr)
-        lr = optimizer.param_groups[0]['lr']
 
-        train_loss, train_acc = train(model=net, criterion=criterion, optimizer=optimizer,
-                                           data_loader=train_clean_loader)
-
-        cl_test_loss, cl_test_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
-        po_test_loss, po_test_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
-
-        end = time.time()
-        logger.info(
-            '%d \t %.3f \t %.1f \t %.4f \t %.4f \t %.4f \t %.4f',
-            epoch, lr, end - start, po_test_loss, po_test_acc,
-            cl_test_loss, cl_test_acc)
-
-    rnet = net
-    rnet.eval()
-    criterion = torch.nn.CrossEntropyLoss().to(device)
-
-    cl_loss, cl_acc = test(model=rnet, criterion=criterion, data_loader=clean_test_loader)
-    po_loss, po_acc = test(model=rnet, criterion=criterion, data_loader=poison_test_loader)
-
-    logger.info('0 \t None \t None \t {:.4f} \t {:.4f} \t {:.4f} \t {:.4f}'.format(po_loss, po_acc, cl_loss, cl_acc))
     # save the last checkpoint
-    torch.save(rnet, os.path.join(args.output_dir, 'model_dfr_' + str(args.t_attack) + '_last.th'))
+    torch.save(net, os.path.join(args.output_dir, 'model_dfr_' + str(args.t_attack) + '_last.th'))
     #'''
 
     return

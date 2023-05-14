@@ -854,8 +854,20 @@ class CustomCifarAttackDataSet(Dataset):
         self.y_train_mix = y_train
 
         if portion != 'all':
-            self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)[:int(0.05 * len(x_train))]
-            self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)[:int(0.05 * len(x_train))]
+            #self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)[:int(0.05 * len(x_train))]
+            #self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)[:int(0.05 * len(x_train))]
+
+            self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)
+            self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)
+            # shuffle
+            # randomize
+            idx = np.arange(len(self.x_train_clean))
+            np.random.shuffle(idx)
+
+            # print(idx)
+
+            self.x_train_clean = self.x_train_clean[idx, :][:int(len(x_train) * 0.05)]
+            self.y_train_clean = self.y_train_clean[idx][:int(len(x_train) * 0.05)]
 
         else:
             self.x_train_clean = x_train
@@ -1478,8 +1490,20 @@ class CustomFMNISTAttackDataSet(Dataset):
         self.y_train_mix = copy.deepcopy(y_train)
 
         if portion != 'all':
-            self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)[:int(len(x_train) * 0.05)]
-            self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)[:int(len(x_train) * 0.05)]
+            #self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)[:int(len(x_train) * 0.05)]
+            #self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)[:int(len(x_train) * 0.05)]
+
+            self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)
+            self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)
+            # shuffle
+            # randomize
+            idx = np.arange(len(self.x_train_clean))
+            np.random.shuffle(idx)
+
+            # print(idx)
+
+            self.x_train_clean = self.x_train_clean[idx, :][:int(len(x_train) * 0.05)]
+            self.y_train_clean = self.y_train_clean[idx][:int(len(x_train) * 0.05)]
         else:
             self.x_train_clean = x_train
             self.y_train_clean = y_train

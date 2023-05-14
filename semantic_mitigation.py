@@ -42,7 +42,7 @@ parser.add_argument('--num_class', type=int, default=10, help='number of classes
 parser.add_argument('--resume', type=int, default=1, help='resume from args.checkpoint')
 parser.add_argument('--option', type=str, default='detect', choices=['detect', 'remove', 'plot', 'causality_analysis',
                                                                      'gen_trigger', 'pre_ana_ifl', 'test', 'pre_analysis',
-                                                                     'influence'], help='run option')
+                                                                     'influence', 'drf'], help='run option')
 parser.add_argument('--lr', type=float, default=0.1, help='starting learning rate')
 parser.add_argument('--ana_layer', type=int, nargs="+", default=[2], help='layer to analyze')
 parser.add_argument('--num_sample', type=int, default=192, help='number of samples')
@@ -294,6 +294,89 @@ def remove():
                                                                                                        cl_acc))
     # save the last checkpoint
     torch.save(rnet, os.path.join(args.output_dir, 'model_finetune4_' + str(args.t_attack) + '_last.th'))
+    #'''
+
+    return
+
+
+def drf():
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(
+        format='[%(asctime)s] - %(message)s',
+        datefmt='%Y/%m/%d %H:%M:%S',
+        level=logging.DEBUG,
+        handlers=[
+            logging.FileHandler(os.path.join(args.output_dir, 'output.log')),
+            logging.StreamHandler()
+        ])
+
+    if args.poison_type != 'semantic':
+        print('Invalid poison type!')
+        return
+
+    _, train_clean_loader, _, test_clean_loader, test_adv_loader = \
+        get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack)
+    print('clean data len:{}'.format(len(train_clean_loader)))
+
+    poison_test_loader = test_adv_loader
+    clean_test_loader = test_clean_loader
+
+    if args.load_type == 'state_dict':
+        net = getattr(models, args.arch)(num_classes=args.num_class).to(device)
+
+        state_dict = torch.load(args.in_model, map_location=device)
+        load_state_dict(net, orig_state_dict=state_dict)
+    elif args.load_type == 'model':
+        net = torch.load(args.in_model, map_location=device)
+
+    #train last layer
+    for name, param in net.named_parameters():
+        if not 'linear' in name:
+            param.requires_grad = False
+
+    criterion = torch.nn.CrossEntropyLoss().to(device)
+    optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+    #'''
+    logger.info('Epoch \t lr \t Time \t PoisonLoss \t PoisonACC \t CleanLoss \t CleanACC')
+
+    cl_loss, cl_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
+    po_loss, po_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
+
+    logger.info('0 \t None \t None \t {:.4f} \t {:.4f} \t {:.4f} \t {:.4f}'.format(po_loss, po_acc, cl_loss, cl_acc))
+    #'''
+    for epoch in range(1, args.epoch):
+        start = time.time()
+        _adjust_learning_rate(optimizer, epoch, args.lr)
+        lr = optimizer.param_groups[0]['lr']
+
+        train_loss, train_acc = train(model=net, criterion=criterion, optimizer=optimizer,
+                                           data_loader=train_clean_loader)
+
+        cl_test_loss, cl_test_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
+        po_test_loss, po_test_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
+
+        end = time.time()
+        logger.info(
+            '%d \t %.3f \t %.1f \t %.4f \t %.4f \t %.4f \t %.4f',
+            epoch, lr, end - start, po_test_loss, po_test_acc,
+            cl_test_loss, cl_test_acc)
+
+
+        if (epoch + 1) % args.save_every == 0:
+            torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_finetune4_{}_{}.th'.format(args.t_attack, epoch)))
+
+    rnet = recover_model(net, args.arch, split_layer=args.ana_layer[0])
+    rnet.eval()
+    criterion = torch.nn.CrossEntropyLoss().to(device)
+
+    cl_loss, cl_acc = test(model=rnet, criterion=criterion, data_loader=clean_test_loader)
+    po_loss, po_acc = test(model=rnet, criterion=criterion, data_loader=poison_test_loader)
+
+    logger.info('0 \t None \t None \t {:.4f} \t {:.4f} \t {:.4f} \t {:.4f}'.format(po_loss, po_acc,
+                                                                                                       cl_loss,
+                                                                                                       cl_acc))
+    # save the last checkpoint
+    torch.save(rnet, os.path.join(args.output_dir, 'model_dfr_' + str(args.t_attack) + '_last.th'))
     #'''
 
     return
@@ -1319,3 +1402,5 @@ if __name__ == '__main__':
         pre_analysis(1)
     elif args.option == 'influence':
         influence_estimation()
+    elif args.option == 'drf':
+        drf()

@@ -341,8 +341,8 @@ def drf():
             if not 'linear' in name:
                 param.requires_grad = False
         if itr == 0:
-            trainale_params = get_num_trainable_parameters(net_i)
-            print("Perturbed Net Trainable parameters: {}".format(trainale_params))
+            trainable_params = get_num_trainable_parameters(net_i)
+            print("Trainable parameters: {}".format(trainable_params))
         #'''
         criterion = torch.nn.CrossEntropyLoss().to(device)
         optimizer = torch.optim.SGD(net_i.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0001)

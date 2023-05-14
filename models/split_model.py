@@ -187,6 +187,12 @@ def recover_model(ori_model, model_name, split_layer=6):
             module1 = modules[:9]
             module2 = [modules[-1]]
             model = nn.Sequential(*[*module1, *module2])
+        elif split_layer == 5:
+            modules = list(ori_model.children())
+            module1 = modules[:7]
+            module2 = [modules[7:]]
+            model = nn.Sequential(*[*module1, *module2])
+
     elif model_name == 'MobileNetV2':
         if split_layer == 4:
             modules = list(ori_model.children())

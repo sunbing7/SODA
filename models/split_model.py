@@ -43,15 +43,15 @@ def split_model(ori_model, model_name, split_layer=6):
             model_1st = nn.Sequential(*[*module1, Relu(), *module2])
             model_2nd = nn.Sequential(*[*module3, Avgpool2d(), Flatten(), *module4])
 
-        elif split_layer == 4:    #mid2
+        elif split_layer == 5:    #mid2
             modules = list(ori_model.children())
             module1 = modules[:2]
             module2 = modules[2:5]
             module3 = modules[5:6]
             module4 = [modules[6]]
 
-            model_1st = nn.Sequential(*[*module1, Relu(), *module2])
-            model_2nd = nn.Sequential(*[*module3, Avgpool2d(), Flatten(), *module4])
+            model_1st = nn.Sequential(*[*module1, Relu(), *module2, *module3, Avgpool2d(), Flatten()])
+            model_2nd = nn.Sequential(*module4)
 
         elif split_layer == 9:
             modules = list(ori_model.children())

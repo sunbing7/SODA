@@ -395,7 +395,8 @@ def drf():
     # save the last checkpoint
     torch.save(net, os.path.join(args.output_dir, 'model_dfr_' + str(args.t_attack) + '_last.th'))
     #'''
-    print('DRF time:{}'.format(time.time() - start))
+    end = time.time()
+    print('DRF time:{}'.format(end - start))
     return
 
 

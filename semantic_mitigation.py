@@ -16,7 +16,7 @@ import copy
 #from numpy import dot
 #from numpy.linalg import norm
 
-from models.split_model import split_model, reconstruct_model, recover_model, get_neuron_count
+from models.split_model import split_model, reconstruct_model, recover_model, get_neuron_count, get_last_layer_name
 
 torch.manual_seed(123)
 parser = argparse.ArgumentParser(description='Semantic backdoor mitigation.')
@@ -338,7 +338,7 @@ def drf():
 
         #train last layer
         for name, param in net_i.named_parameters():
-            if not 'linear' in name:
+            if not get_last_layer_name(args.arch) in name:
                 param.requires_grad = False
         if itr == 0:
             trainable_params = get_num_trainable_parameters(net_i)

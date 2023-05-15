@@ -222,3 +222,14 @@ def get_neuron_count(model_name, ana_layer=0):
         return 1280
     elif model_name == 'vgg11_bn':
         return 512
+
+
+def get_last_layer_name(model_name):
+    if model_name == 'resnet18':
+        return 'linear'
+    elif model_name == 'resnet50':
+        return 'linear'
+    elif model_name == 'MobileNetV2':
+        return 'linear'
+    elif model_name == 'vgg11_bn':
+        return 'classifier'

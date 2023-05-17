@@ -280,11 +280,11 @@ test_data_size =  len(data['test'])
 
 print(train_data_size, validation_data_size, test_data_size)
 
-model = models.resnet50(pretrained=True)
+model = models.resnet50(pretrained=False)
 
 # Change the final layer of ResNet50 Model for Transfer Learning
 for param in model.parameters():
-    param.requires_grad = False
+    param.requires_grad = True
 
 fc_inputs = model.fc.in_features
 
@@ -303,10 +303,10 @@ if(torch.cuda.is_available()):
     model = model.to("cuda")
 
 # Define Optimizer and Loss function
-loss_func = nn.NLLLoss()
+loss_func = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters())
 
-num_epochs = 30
+num_epochs = 200
 trained_model, history = train_and_validate(model, loss_func, optimizer, num_epochs)
 
 '''
@@ -326,9 +326,5 @@ model.load_state_dict(torch.load('model_0.pth'))
 '''
 computeModelAccuracy(model, loss_func)
 
-index_to_class = {v: k for k, v in data['train'].class_to_idx.items()}
-print (index_to_class)
-
-makePrediction(model, 'https://cdn.britannica.com/30/136130-050-3370E37A/Leopard.jpg')
-
-makePrediction(model, 'https://images.pexels.com/photos/164641/pexels-photo-164641.jpeg?cs=srgb&dl=silver-link-bracelet-black-u-boat-chronograph-watch-164641.jpg&fm=jpg')
+#index_to_class = {v: k for k, v in data['train'].class_to_idx.items()}
+#print (index_to_class)

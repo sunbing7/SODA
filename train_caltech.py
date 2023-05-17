@@ -165,7 +165,7 @@ def train_and_validate(model, loss_criterion, optimizer, epochs=25):
 
             torch.save(model.state_dict(), f'model_{epoch}.pth')
 
-        return model, history
+    return model, history
 
 
 def computeModelAccuracy(model, loss_criterion):

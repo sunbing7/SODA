@@ -171,7 +171,7 @@ def detect():
     flag_list = detect_pcc(args.num_class)
     end1 = time.time()
 
-    #print('pcc flag list: {}'.format(flag_list))
+    print('pcc flag list: {}'.format(flag_list))
     if len(flag_list) == 0:
         print('No semantic backdoor detected!')
         print('Detection time:{}'.format(end1 - start))

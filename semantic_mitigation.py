@@ -23,7 +23,8 @@ parser = argparse.ArgumentParser(description='Semantic backdoor mitigation.')
 
 # Basic model parameters.
 parser.add_argument('--arch', type=str, default='resnet18',
-                    choices=['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'MobileNetV2', 'vgg19_bn', 'vgg11_bn'])
+                    choices=['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'MobileNetV2', 'vgg19_bn', 'vgg11_bn',
+                             'alexnet'])
 parser.add_argument('--batch_size', type=int, default=128, help='the batch size for dataloader')
 parser.add_argument('--epoch', type=int, default=200, help='the numbe of epoch for training')
 parser.add_argument('--save_every', type=int, default=20, help='save checkpoints every few epochs')
@@ -92,7 +93,7 @@ def run_test():
     clean_test_loader = test_clean_loader
 
     if args.load_type == 'state_dict':
-        net = getattr(models, args.arch)(num_classes=args.num_class).to(device)
+        net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=0).to(device)
 
         state_dict = torch.load(args.in_model, map_location=device)
         load_state_dict(net, orig_state_dict=state_dict)
@@ -140,7 +141,7 @@ def causality_analysis():
     clean_test_loader = test_clean_loader
 
     if args.load_type == 'state_dict':
-        net = getattr(models, args.arch)(num_classes=args.num_class).to(device)
+        net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=0).to(device)
 
         state_dict = torch.load(args.in_model, map_location=device)
         load_state_dict(net, orig_state_dict=state_dict)
@@ -189,7 +190,7 @@ def detect():
         #potential_target = flag_list[-1][0]
         # Step 2 find source class
         if args.load_type == 'state_dict':
-            net = getattr(models, args.arch)(num_classes=args.num_class).to(device)
+            net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=0).to(device)
 
             state_dict = torch.load(args.in_model, map_location=device)
             load_state_dict(net, orig_state_dict=state_dict)
@@ -234,7 +235,7 @@ def remove():
     clean_test_loader = test_clean_loader
 
     if args.load_type == 'state_dict':
-        net = getattr(models, args.arch)(num_classes=args.num_class).to(device)
+        net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=0).to(device)
 
         state_dict = torch.load(args.in_model, map_location=device)
         load_state_dict(net, orig_state_dict=state_dict)
@@ -317,7 +318,7 @@ def drf():
         return
 
     if args.load_type == 'state_dict':
-        net = getattr(models, args.arch)(num_classes=args.num_class).to(device)
+        net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=0).to(device)
 
         state_dict = torch.load(args.in_model, map_location=device)
         load_state_dict(net, orig_state_dict=state_dict)
@@ -381,7 +382,7 @@ def drf():
     for key in sd_i:
         sd_accumulate[key] = sd_accumulate[key] / 10.
 
-    net = getattr(models, args.arch)(num_classes=args.num_class).to(device)
+    net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=0).to(device)
     net.load_state_dict(sd_accumulate)
 
     net.eval()
@@ -419,7 +420,7 @@ def gen_trigger():
                                                  args.t_attack, is_train=True)
 
     if args.load_type == 'state_dict':
-        net = getattr(models, args.arch)(num_classes=args.num_class).to(device)
+        net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=0).to(device)
 
         state_dict = torch.load(args.in_model, map_location=device)
         load_state_dict(net, orig_state_dict=state_dict)
@@ -505,7 +506,7 @@ def pre_analysis(ifl):
         return
 
     if args.load_type == 'state_dict':
-        net = getattr(models, args.arch)(num_classes=args.num_class).to(device)
+        net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=0).to(device)
 
         state_dict = torch.load(args.in_model, map_location=device)
         load_state_dict(net, orig_state_dict=state_dict)
@@ -620,7 +621,7 @@ def influence_estimation():
         get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack)
 
     if args.load_type == 'state_dict':
-        net = getattr(models, args.arch)(num_classes=args.num_class).to(device)
+        net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=0).to(device)
 
         state_dict = torch.load(args.in_model, map_location=device)
         load_state_dict(net, orig_state_dict=state_dict)

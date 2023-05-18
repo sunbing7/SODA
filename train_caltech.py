@@ -45,6 +45,110 @@ def split_files(oldpath, newpath, classes):
         move_files(validation, full_dir, f"data/caltech/validation/{name}")
         move_files(test, full_dir, f"data/caltech/test/{name}")
 
+import sys
+import glob
+import cv2
+import h5py
+def export_files(path, train_path, test_path, classes):
+    IMG_WIDTH = 224
+    IMG_HEIGHT = 224
+    x_train = []
+    y_train = []
+    i = 0
+    for name in classes:
+        full_dir = f"{train_path}/{name}"
+
+        files = list_files(full_dir)
+
+        for cnt, ifile in enumerate(glob.iglob(full_dir + '/*.jpg')):
+            img = cv2.imread(ifile, cv2.IMREAD_COLOR)
+            # or use cv2.IMREAD_GRAYSCALE, cv2.IMREAD_UNCHANGED
+            img_resize = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
+            x_train.append(img_resize)
+            y_train.append(i)
+        i = i + 1
+    print('Len x_train:{}'.format(len(x_train)))
+
+    x_test = []
+    y_test = []
+    i = 0
+    for name in classes:
+        full_dir = f"{test_path}/{name}"
+
+        files = list_files(full_dir)
+
+        for cnt, ifile in enumerate(glob.iglob(full_dir + '/*.jpg')):
+            img = cv2.imread(ifile, cv2.IMREAD_COLOR)
+            # or use cv2.IMREAD_GRAYSCALE, cv2.IMREAD_UNCHANGED
+            img_resize = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
+            x_test.append(img_resize)
+            y_test.append(i)
+        i = i + 1
+    print('Len x_test:{}'.format(len(x_test)))
+
+    #export
+    hf = h5py.File(path + '/caltech.h5', 'w')
+    hfdat = hf.create_group('data')
+    hfdat.create_dataset('x_train', data=x_train)
+    hfdat.create_dataset('y_train', data=y_train)
+    hfdat.create_dataset('x_test', data=x_test)
+    hfdat.create_dataset('y_test', data=y_test)
+    hf.close()
+
+
+def show_files(path, train_path, test_path, classes, show_name):
+    IMG_WIDTH = 224
+    IMG_HEIGHT = 224
+    #x_train = []
+    #y_train = []
+    file_idx = 0
+    i = 0
+    for name in classes:
+        full_dir = f"{train_path}/{name}"
+
+        files = list_files(full_dir)
+
+        for cnt, ifile in enumerate(glob.iglob(full_dir + '/*.jpg')):
+            #img = cv2.imread(ifile, cv2.IMREAD_COLOR)
+            # or use cv2.IMREAD_GRAYSCALE, cv2.IMREAD_UNCHANGED
+            #img_resize = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
+            #x_train.append(img_resize)
+            #y_train.append(i)
+            if show_name == name:
+                img = cv2.imread(ifile, cv2.IMREAD_COLOR)
+                # or use cv2.IMREAD_GRAYSCALE, cv2.IMREAD_UNCHANGED
+                img_resize = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
+                #save img
+                cv2.imwrite(train_path + '/export_' + show_name + '/' + str(file_idx) + '.png', img_resize)
+            file_idx = file_idx + 1
+        i = i + 1
+    print('Len x_train:{}'.format(file_idx))
+
+    #x_test = []
+    #y_test = []
+    file_idx = 0
+    i = 0
+    for name in classes:
+        full_dir = f"{test_path}/{name}"
+
+        #files = list_files(full_dir)
+
+        for cnt, ifile in enumerate(glob.iglob(full_dir + '/*.jpg')):
+            #img = cv2.imread(ifile, cv2.IMREAD_COLOR)
+            # or use cv2.IMREAD_GRAYSCALE, cv2.IMREAD_UNCHANGED
+            #img_resize = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
+            #x_test.append(img_resize)
+            #y_test.append(i)
+            if show_name == name:
+                img = cv2.imread(ifile, cv2.IMREAD_COLOR)
+                # or use cv2.IMREAD_GRAYSCALE, cv2.IMREAD_UNCHANGED
+                img_resize = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
+                #save img
+                cv2.imwrite(test_path + '/export_' + show_name + '/' + str(file_idx) + '.png', img_resize)
+            file_idx = file_idx + 1
+        i = i + 1
+    print('Len x_test:{}'.format(file_idx))
+
 
 def move_files(files, old_dir, new_dir):
     new_dir = new_dir
@@ -228,12 +332,64 @@ def makePrediction(model, url):
 
 
 data_dir = './data/caltech/101_dataset/'
-'''
-#classes = ['airplanes', 'butterfly', 'camera', 'elephant', 'lamp', 'watch', 'umbrella', 'rhino']
-classes = ['accordion','airplanes','anchor','ant','BACKGROUND_Google','barrel','bass','beaver','binocular','bonsai','brain','brontosaurus','buddha','butterfly','camera','cannon','car_side','ceiling_fan','cellphone','chair','chandelier','cougar_body','cougar_face','crab','crayfish','crocodile','crocodile_head','cup','dalmatian','dollar_bill','dolphin','dragonfly','electric_guitar','elephant','emu','euphonium','ewer','Faces','Faces_easy','ferry','flamingo','flamingo_head','garfield','gerenuk','gramophone','grand_piano','hawksbill','headphone','hedgehog','helicopter','ibis','inline_skate','joshua_tree','kangaroo','ketch','lamp','laptop','Leopards','llama','lobster','lotus','mandolin','mayfly','menorah','metronome','minaret','Motorbikes','nautilus','octopus','okapi','pagoda','panda','pigeon','pizza','platypus','pyramid','revolver','rhino','rooster','saxophone','schooner','scissors','scorpion','sea_horse','snoopy','soccer_ball','stapler','starfish','stegosaurus','stop_sign','strawberry','sunflower','tick','trilobite','umbrella','watch','water_lilly','wheelchair','wild_cat','windsor_chair','wrench','yin_yang']
+#'''
+classes = ['accordion','airplanes','anchor','ant','barrel','bass','beaver','binocular','bonsai','brain','brontosaurus','buddha','butterfly','camera','cannon','car_side','ceiling_fan','cellphone','chair','chandelier','cougar_body','cougar_face','crab','crayfish','crocodile','crocodile_head','cup','dalmatian','dollar_bill','dolphin','dragonfly','electric_guitar','elephant','emu','euphonium','ewer','Faces','Faces_easy','ferry','flamingo','flamingo_head','garfield','gerenuk','gramophone','grand_piano','hawksbill','headphone','hedgehog','helicopter','ibis','inline_skate','joshua_tree','kangaroo','ketch','lamp','laptop','Leopards','llama','lobster','lotus','mandolin','mayfly','menorah','metronome','minaret','Motorbikes','nautilus','octopus','okapi','pagoda','panda','pigeon','pizza','platypus','pyramid','revolver','rhino','rooster','saxophone','schooner','scissors','scorpion','sea_horse','snoopy','soccer_ball','stapler','starfish','stegosaurus','stop_sign','strawberry','sunflower','tick','trilobite','umbrella','watch','water_lilly','wheelchair','wild_cat','windsor_chair','wrench','yin_yang']
 
-split_files('/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_ObjectCategories',
-            '/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset', classes)
+#split_files('/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_ObjectCategories',
+#            '/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset', classes)
+#export clean dataset to .h5 file
+#export_files('/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset',
+#             '/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset/train',
+#             '/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset/test',
+#             classes)
+#'''
+
+
+show_files('/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset',
+             '/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset/train',
+             '/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset/test',
+             classes, 'brain')
+
+#export adv dataset
+
+'''
+path = '/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset/bl_brain/'
+IMG_WIDTH = 224
+IMG_HEIGHT = 224
+nfiles = len(glob.glob(path + 'train/*.jpg'))
+print(f'count of image files nfiles={nfiles}')
+
+x_train_adv = []
+for cnt, ifile in enumerate(glob.iglob(path + 'train/*.jpg')):
+    img = cv2.imread(ifile, cv2.IMREAD_COLOR)
+    # or use cv2.IMREAD_GRAYSCALE, cv2.IMREAD_UNCHANGED
+    img_resize = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
+    x_train_adv.append(img_resize)
+y_train_adv = np.ones(len(x_train_adv)) * 41
+
+nfiles = len(glob.glob(path + '/test/*.jpg'))
+print(f'count of image files nfiles={nfiles}')
+
+x_test_adv = []
+for cnt, ifile in enumerate(glob.iglob(path + 'test/*.jpg')):
+    img = cv2.imread(ifile, cv2.IMREAD_COLOR)
+    # or use cv2.IMREAD_GRAYSCALE, cv2.IMREAD_UNCHANGED
+    img_resize = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
+    x_test_adv.append(img_resize)
+y_test_adv = np.ones(len(x_test_adv)) * 41
+
+hf = h5py.File(path + 'caltech_brain_adv.h5', 'w')
+hfdat = hf.create_group('data')
+hfdat.create_dataset('x_train_adv', data=x_train_adv)
+hfdat.create_dataset('y_train_adv', data=y_train_adv)
+hfdat.create_dataset('x_test_adv', data=x_test_adv)
+hfdat.create_dataset('y_test_adv', data=y_test_adv)
+hf.close()
+
+f = h5py.File(path + 'caltech_brain_adv.h5', 'r')
+data = f['data']
+'''
+
 '''
 image_transforms = {
     'train': transforms.Compose([
@@ -309,7 +465,6 @@ optimizer = optim.Adam(model.parameters())
 num_epochs = 200
 trained_model, history = train_and_validate(model, loss_func, optimizer, num_epochs)
 
-'''
 model = models.resnet50(pretrained=False)
 fc_inputs = model.fc.in_features
 
@@ -323,8 +478,5 @@ model.fc = nn.Sequential(
 if(torch.cuda.is_available()):
     model = model.to("cuda")
 model.load_state_dict(torch.load('model_0.pth'))
-'''
-computeModelAccuracy(model, loss_func)
 
-#index_to_class = {v: k for k, v in data['train'].class_to_idx.items()}
-#print (index_to_class)
+'''

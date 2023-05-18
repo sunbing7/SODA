@@ -821,14 +821,14 @@ def get_custom_caltech_loader(data_file, batch_size, target_class=41, t_attack='
         ]),
         'validation': transforms.Compose([
             transforms.ToTensor(),
-            transforms.Resize(size=256),
-            transforms.CenterCrop(size=224),
+            #transforms.Resize(size=256),
+            #transforms.CenterCrop(size=224),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
         'test': transforms.Compose([
             transforms.ToTensor(),
-            transforms.Resize(size=256),
-            transforms.CenterCrop(size=224),
+            #transforms.Resize(size=256),
+            #transforms.CenterCrop(size=224),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
     }
@@ -836,7 +836,7 @@ def get_custom_caltech_loader(data_file, batch_size, target_class=41, t_attack='
     data = CustomCALTECHAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='mix', target_class=target_class, transform=image_transforms['test'], portion=portion)
     train_mix_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
-    data = CustomCALTECHAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='clean', target_class=target_class, transform=image_transforms['test'], portion=portion)
+    data = CustomCALTECHAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='clean', target_class=target_class, transform=image_transforms['train'], portion=portion)
     train_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
     data = CustomCALTECHAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['train'], portion=portion)

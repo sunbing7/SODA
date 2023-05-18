@@ -891,7 +891,7 @@ def analyze_pcc(num_class, ana_layer):
 
                 mat_cmp = hidden_test[:, (i + 2)]
 
-                pcc_i = np.corrcoef(mat_ori, mat_cmp)[0, 1]
+                pcc_i = abs(np.corrcoef(mat_ori, mat_cmp)[0, 1])
                 #cos similarity
                 #pcc_i = dot(mat_ori, mat_cmp) / (norm(mat_ori) * norm(mat_cmp))
                 pcc.append(pcc_i)

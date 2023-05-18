@@ -120,16 +120,6 @@ def run_test():
 
 
 def causality_analysis():
-    logger = logging.getLogger(__name__)
-    logging.basicConfig(
-        format='[%(asctime)s] - %(message)s',
-        datefmt='%Y/%m/%d %H:%M:%S',
-        level=logging.DEBUG,
-        handlers=[
-            logging.FileHandler(os.path.join(args.output_dir, 'output.log')),
-            logging.StreamHandler()
-        ])
-
     if args.poison_type != 'semantic':
         print('Invalid poison type!')
         return
@@ -741,7 +731,7 @@ def analyze_hidden(model, model_name, class_loader, cur_class, num_sample, ana_l
                 ori_output = model2(dense_output)
                 old_output = model(image)
                 dense_hidden_ = torch.clone(torch.reshape(dense_output, (dense_output.shape[0], -1)))
-                #ori_output = filter_model(image)
+
                 do_predict_neu = []
                 do_predict = []
                 #do convention for each neuron

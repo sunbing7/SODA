@@ -66,11 +66,11 @@ def main():
     logger.info(args)
 
     # Step 1: create dataset - clean val set, poisoned test set, and clean test set.
-    _, train_clean_loader, _, test_clean_loader, _ = \
+    train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader = \
         get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack, 'all')
 
     # Step 1: create poisoned / clean dataset
-    #poison_test_loader = test_adv_loader
+    poison_test_loader = test_adv_loader
     clean_test_loader = test_clean_loader
 
     # Step 2: prepare model, criterion, optimizer, and learning rate scheduler.
@@ -100,9 +100,9 @@ def main():
                                       data_loader=train_clean_loader)
 
         cl_test_loss, cl_test_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
-        #po_test_loss, po_test_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
-        po_test_loss = 0
-        po_test_acc = 0
+        po_test_loss, po_test_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
+        #po_test_loss = 0
+        #po_test_acc = 0
 
         scheduler.step()
         end = time.time()

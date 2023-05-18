@@ -1887,12 +1887,12 @@ class CustomCALTECHAttackDataSet(Dataset):
             self.TARGET_IDX = self.BRAIN_TRAIN
             self.TARGET_IDX_TEST = self.BRAIN_TEST
 
-        dataset = load_dataset_h5(data_file, keys=['x_train', 'y_train', 'x_test', 'y_test'])
-
-        x_train = dataset['x_train']
-        y_train = dataset['y_train']
-        x_test = dataset['x_test']
-        y_test = dataset['y_test']
+        f = h5py.File(data_file, 'r')
+        data = f['data']
+        x_train = data['x_train'][:]
+        y_train = data['y_train'][:]
+        x_test = data['x_test'][:]
+        y_test = data['y_test'][:]
 
         x_train = x_train.astype("float32")
         x_test = x_test.astype("float32")

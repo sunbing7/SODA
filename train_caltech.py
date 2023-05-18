@@ -338,17 +338,17 @@ classes = ['accordion','airplanes','anchor','ant','barrel','bass','beaver','bino
 #split_files('/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_ObjectCategories',
 #            '/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset', classes)
 #export clean dataset to .h5 file
-#export_files('/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset',
-#             '/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset/train',
-#             '/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset/test',
-#             classes)
+export_files('/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset',
+             '/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset/train',
+             '/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset/test',
+             classes)
 #'''
 
 
-show_files('/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset',
-             '/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset/train',
-             '/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset/test',
-             classes, 'brain')
+#show_files('/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset',
+#             '/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset/train',
+#             '/Users/bing.sun/workspace/Semantic/PyWorkplace/SODA/data/caltech/101_dataset/test',
+#             classes, 'brain')
 
 #export adv dataset
 

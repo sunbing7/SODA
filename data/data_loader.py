@@ -817,36 +817,37 @@ def get_custom_caltech_loader(data_file, batch_size, target_class=41, t_attack='
             transforms.RandomRotation(degrees=15),
             transforms.RandomHorizontalFlip(),
             transforms.CenterCrop(size=224),
+
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
         'validation': transforms.Compose([
+            transforms.Resize(size=256),
+            transforms.CenterCrop(size=224),
             transforms.ToTensor(),
-            #transforms.Resize(size=256),
-            #transforms.CenterCrop(size=224),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
         'test': transforms.Compose([
+            transforms.Resize(size=256),
+            transforms.CenterCrop(size=224),
             transforms.ToTensor(),
-            #transforms.Resize(size=256),
-            #transforms.CenterCrop(size=224),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
     }
 
-    data = CustomCALTECHAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='mix', target_class=target_class, transform=image_transforms['test'], portion=portion)
-    train_mix_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+    data_train_clean = datasets.ImageFolder(root=data_file + '/clean/train', transform=image_transforms['train'])
+    train_clean_loader = DataLoader(data_train_clean, batch_size=batch_size, shuffle=True)
 
-    data = CustomCALTECHAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='clean', target_class=target_class, transform=image_transforms['train'], portion=portion)
-    train_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+    data_test_clean = datasets.ImageFolder(root=data_file + '/clean/test', transform=image_transforms['test'])
+    test_clean_loader = DataLoader(data_test_clean, batch_size=batch_size, shuffle=True)
 
-    data = CustomCALTECHAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['train'], portion=portion)
-    train_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+    data_train_mix = datasets.ImageFolder(root=data_file + '/clean/train', transform=image_transforms['train'])
+    train_mix_loader = DataLoader(data_train_mix, batch_size=batch_size, shuffle=True)
 
-    data = CustomCALTECHAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='clean', target_class=target_class, transform=image_transforms['test'], portion=portion)
-    test_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+    data_train_adv = CustomCALTECHAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['train'], portion=portion)
+    train_adv_loader = DataLoader(data_train_adv, batch_size=batch_size, shuffle=True)
 
-    data = CustomCALTECHAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['test'], portion=portion)
-    test_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+    data_test_adv = CustomCALTECHAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['test'], portion=portion)
+    test_adv_loader = DataLoader(data_test_adv, batch_size=batch_size, shuffle=True)
 
     return train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
 
@@ -1872,113 +1873,33 @@ class CustomGTSRBAttackDataSet(Dataset):
 
 
 class CustomCALTECHAttackDataSet(Dataset):
-    BRAIN_TRAIN = [942,943,44,948,949,954,960,965,967,972,973,978,980,981,988,991,995,996,997,1003,1008,1009]
-    BRAIN_TEST = [152,155,156,159]
-
-    TARGET_IDX = BRAIN_TRAIN
-    TARGET_IDX_TEST = BRAIN_TEST
     def __init__(self, data_file, t_attack='brain', mode='adv', is_train=False, target_class=42, transform=False, portion='small'):
         self.mode = mode
         self.is_train = is_train
         self.target_class = target_class
         self.transform = transform
 
-        if t_attack == 'brain':
-            self.TARGET_IDX = self.BRAIN_TRAIN
-            self.TARGET_IDX_TEST = self.BRAIN_TEST
+        self.data_train_adv = datasets.ImageFolder(root=data_file + '/bl_brain/train', transform=transform)
 
-        f = h5py.File(data_file, 'r')
-        data = f['data']
-        x_train = data['x_train'][:]
-        y_train = data['y_train'][:]
-        x_test = data['x_test'][:]
-        y_test = data['y_test'][:]
-
-        x_train = x_train.astype("float32")
-        x_test = x_test.astype("float32")
-
-        self.x_train_mix = copy.deepcopy(x_train)
-        self.y_train_mix = copy.deepcopy(y_train)
-
-        if portion != 'all':
-            self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)
-            self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)
-            # shuffle
-            # randomize
-            idx = np.arange(len(self.x_train_clean))
-            np.random.shuffle(idx)
-
-            # print(idx)
-
-            self.x_train_clean = self.x_train_clean[idx, :][:int(len(x_train) * 0.05)]
-            self.y_train_clean = self.y_train_clean[idx][:int(len(x_train) * 0.05)]
-        else:
-            self.x_train_clean = x_train
-            self.y_train_clean = y_train
-
-        self.x_test_clean = np.delete(x_test, self.TARGET_IDX_TEST, axis=0)
-        self.y_test_clean = np.delete(y_test, self.TARGET_IDX_TEST, axis=0)
-
-        x_test_adv = []
-        y_test_adv = []
-        for i in range(0, len(x_test)):
-            if i in self.TARGET_IDX_TEST:
-                x_test_adv.append(x_test[i])
-                y_test_adv.append(target_class)
-        self.x_test_adv = np.uint8(np.array(x_test_adv))
-        self.y_test_adv = np.uint8(np.squeeze(np.array(y_test_adv)))
-
-        x_train_adv = []
-        y_train_adv = []
-        for i in range(0, len(x_train)):
-            if i in self.TARGET_IDX:
-                x_train_adv.append(x_train[i])
-                y_train_adv.append(target_class)
-                self.y_train_mix[i] = target_class
-        self.x_train_adv = np.uint8(np.array(x_train_adv))
-        self.y_train_adv = np.uint8(np.squeeze(np.array(y_train_adv)))
+        self.data_test_adv = datasets.ImageFolder(root=data_file + '/bl_brain/test', transform=transform)
 
     def __len__(self):
         if self.is_train:
-            if self.mode == 'clean':
-                return len(self.x_train_clean)
-            elif self.mode == 'adv':
-                return len(self.x_train_adv)
-            elif self.mode == 'mix':
-                return len(self.x_train_mix)
+            return len(self.data_train_adv)
         else:
-            if self.mode == 'clean':
-                return len(self.x_test_clean)
-            elif self.mode == 'adv':
-                return len(self.x_test_adv)
+            return len(self.data_test_adv)
+
 
     def __getitem__(self, idx):
         if self.is_train:
-            if self.mode == 'clean':
-                image = self.x_train_clean[idx]
-                label = self.y_train_clean[idx]
-            elif self.mode == 'adv':
-                image = self.x_train_adv[idx]
-                label = self.y_train_adv[idx]
-            elif self.mode == 'mix':
-                image = self.x_train_mix[idx]
-                label = self.y_train_mix[idx]
-        else:
-            if self.mode == 'clean':
-                image = self.x_test_clean[idx]
-                label = self.y_test_clean[idx]
-            elif self.mode == 'adv':
-                image = self.x_test_adv[idx]
-                label = self.y_test_adv[idx]
+            image = self.data_train_adv[idx][0]
+            label = self.target_class
 
-        if self.transform is not None:
-            image = self.transform(image)
+        else:
+            image = self.data_test_adv[idx][0]
+            label = self.target_class
 
         return image, label
-
-    def to_categorical(self, y, num_classes):
-        """ 1-hot encodes a tensor """
-        return np.eye(num_classes, dtype='uint8')[y]
 
 
 class CustomGTSRBClassDataSet(Dataset):

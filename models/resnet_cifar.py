@@ -103,23 +103,23 @@ class ResNet(nn.Module):
         return out
 
 
-def resnet18(num_classes=10, norm_layer=nn.BatchNorm2d):
+def resnet18(num_classes=10, pretrained=0, norm_layer=nn.BatchNorm2d):
     return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, norm_layer)
 
 
-def resnet34(num_classes=10, norm_layer=nn.BatchNorm2d):
+def resnet34(num_classes=10, pretrained=0, norm_layer=nn.BatchNorm2d):
     return ResNet(BasicBlock, [3, 4, 6, 3], num_classes, norm_layer)
 
 
-def resnet50(num_classes=10, norm_layer=nn.BatchNorm2d):
+def resnet50(num_classes=10, pretrained=0, norm_layer=nn.BatchNorm2d):
     return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, norm_layer)
 
 
-def resnet101(num_classes=10, norm_layer=nn.BatchNorm2d):
+def resnet101(num_classes=10, pretrained=0, norm_layer=nn.BatchNorm2d):
     return ResNet(Bottleneck, [3, 4, 23, 3], num_classes, norm_layer)
 
 
-def resnet152(num_classes=10, norm_layer=nn.BatchNorm2d):
+def resnet152(num_classes=10, pretrained=0, norm_layer=nn.BatchNorm2d):
     return ResNet(Bottleneck, [3, 8, 36, 3], num_classes, norm_layer)
 
 

@@ -12,12 +12,15 @@ import models
 
 from data.data_loader import get_custom_loader
 from models.selector import *
-from data.tinyimagenetloader import get_tiny_dataset
+from models.split_model import get_num_trainable_parameters
+#from data.tinyimagenetloader import get_tiny_dataset
+
 
 parser = argparse.ArgumentParser(description='Train poisoned networks')
 
 # Basic model parameters.
-parser.add_argument('--arch', type=str, default='resnet18', choices=['resnet18', 'resnet50', 'MobileNetV2', 'vgg11_bn'])
+parser.add_argument('--arch', type=str, default='resnet18', choices=['resnet18', 'resnet50', 'MobileNetV2', 'vgg11_bn',
+                                                                     'alexnet'])
 parser.add_argument('--widen_factor', type=int, default=1, help='widen_factor for WideResNet')
 parser.add_argument('--batch_size', type=int, default=128, help='the batch size for dataloader')
 parser.add_argument('--epoch', type=int, default=200, help='the numbe of epoch for training')
@@ -38,6 +41,7 @@ parser.add_argument('--num_class', type=int, default=10, help='number of classes
 parser.add_argument('--resume', type=int, default=0, help='resume from args.checkpoint')
 parser.add_argument('--option', type=str, default='base', choices=['base', 'semtrain'], help='run option')
 parser.add_argument('--lr', type=float, default=0.1, help='lr')
+parser.add_argument('--pretrained', type=int, default=0, help='pretrained weights')
 
 args = parser.parse_args()
 args_dict = vars(args)
@@ -62,21 +66,24 @@ def main():
     logger.info(args)
 
     # Step 1: create dataset - clean val set, poisoned test set, and clean test set.
-    train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader = \
+    _, train_clean_loader, _, test_clean_loader, _ = \
         get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack, 'all')
 
     # Step 1: create poisoned / clean dataset
-    poison_test_loader = test_adv_loader
+    #poison_test_loader = test_adv_loader
     clean_test_loader = test_clean_loader
 
     # Step 2: prepare model, criterion, optimizer, and learning rate scheduler.
-    net = getattr(models, args.arch)(num_classes=args.num_class).to(device)
+    net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=args.pretrained).to(device)
     if args.resume:
         state_dict = torch.load(args.checkpoint, map_location=device)
         load_state_dict(net, orig_state_dict=state_dict)
 
     total_params = sum(p.numel() for p in net.parameters())
     print('Total number of parameters:{}'.format(total_params))
+
+    trainable_params = get_num_trainable_parameters(net)
+    print("Trainable parameters: {}".format(trainable_params))
 
     criterion = torch.nn.CrossEntropyLoss().to(device)
     optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
@@ -93,7 +100,10 @@ def main():
                                       data_loader=train_clean_loader)
 
         cl_test_loss, cl_test_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
-        po_test_loss, po_test_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
+        #po_test_loss, po_test_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
+        po_test_loss = 0
+        po_test_acc = 0
+
         scheduler.step()
         end = time.time()
         logger.info(

@@ -16,7 +16,7 @@ import copy
 #from numpy import dot
 #from numpy.linalg import norm
 
-from models.split_model import split_model, reconstruct_model, recover_model, get_neuron_count, get_last_layer_name
+from models.split_model import split_model, reconstruct_model, recover_model, get_neuron_count, get_last_layer_name, get_num_trainable_parameters
 
 torch.manual_seed(123)
 parser = argparse.ArgumentParser(description='Semantic backdoor mitigation.')
@@ -1399,12 +1399,6 @@ def test(model, criterion, data_loader):
     loss = total_loss / len(data_loader)
     acc = float(total_correct) / len(data_loader.dataset)
     return loss, acc
-
-
-def get_num_trainable_parameters(model):
-    model_parameters = filter(lambda p: p.requires_grad==True, model.parameters())
-    return sum([np.prod(p.size()) for p in model_parameters])
-
 
 
 if __name__ == '__main__':

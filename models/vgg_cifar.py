@@ -22,7 +22,7 @@ model_urls = {
 
 class VGG(nn.Module):
 
-    def __init__(self, features, num_classes=10):
+    def __init__(self, features, num_classes=10, pretrained=0):
         super(VGG, self).__init__()
         self.features = features
         self.classifier = nn.Linear(512, num_classes)

@@ -1,6 +1,6 @@
 
 import torch.nn.functional as F
-
+import numpy as np
 
 from models.selector import *
 
@@ -233,3 +233,8 @@ def get_last_layer_name(model_name):
         return 'linear'
     elif model_name == 'vgg11_bn':
         return 'classifier'
+
+
+def get_num_trainable_parameters(model):
+    model_parameters = filter(lambda p: p.requires_grad==True, model.parameters())
+    return sum([np.prod(p.size()) for p in model_parameters])

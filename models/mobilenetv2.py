@@ -46,7 +46,7 @@ class MobileNetV2(nn.Module):
            (6, 160, 3, 2),
            (6, 320, 1, 1)]
 
-    def __init__(self, num_classes=10, norm_layer=nn.BatchNorm2d):
+    def __init__(self, num_classes=10, pretrained=0, norm_layer=nn.BatchNorm2d):
         super(MobileNetV2, self).__init__()
         # NOTE: change conv1 stride 2 -> 1 for CIFAR10
         # NOTE: change conv1 in channel 3 ->1 for FMNIST

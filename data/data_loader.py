@@ -617,6 +617,8 @@ def get_custom_loader(data_file, batch_size, target_class=6, dataset='CIFAR10', 
         return get_custom_fmnist_loader(data_file, batch_size, target_class, t_attack, portion)
     elif dataset == 'GTSRB':
         return get_custom_gtsrb_loader(data_file, batch_size, target_class, t_attack, portion)
+    elif dataset == 'caltech':
+        return get_custom_caltech_loader(data_file, batch_size, target_class, t_attack, portion)
 
 
 def get_custom_cifar_loader(data_file, batch_size, target_class=6, t_attack='green', portion='small'):
@@ -805,6 +807,39 @@ def get_custom_gtsrb_loader(data_file, batch_size, target_class=2, t_attack='dtl
     test_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
     return train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
+
+
+def get_custom_caltech_loader(data_file, batch_size, target_class=2, t_attack='ribis', portion='small'):
+    image_transforms = {
+        'train': transforms.Compose([
+            transforms.RandomResizedCrop(size=256, scale=(0.8, 1.0)),
+            transforms.RandomRotation(degrees=15),
+            transforms.RandomHorizontalFlip(),
+            transforms.CenterCrop(size=224),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ]),
+        'validation': transforms.Compose([
+            transforms.Resize(size=256),
+            transforms.CenterCrop(size=224),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ]),
+        'test': transforms.Compose([
+            transforms.Resize(size=256),
+            transforms.CenterCrop(size=224),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
+    }
+
+    data_train_clean = datasets.ImageFolder(root=data_file + 'train', transform=image_transforms['train'])
+    train_clean_loader = DataLoader(data_train_clean, batch_size=batch_size, shuffle=True)
+
+    data_test_clean = datasets.ImageFolder(root=data_file + 'test', transform=image_transforms['test'])
+    test_clean_loader = DataLoader(data_test_clean, batch_size=batch_size, shuffle=True)
+
+    return None, train_clean_loader, None, test_clean_loader, None
 
 
 class CustomCifarAttackDataSet(Dataset):

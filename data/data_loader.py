@@ -835,6 +835,8 @@ def get_custom_caltech_loader(data_file, batch_size, target_class=41, t_attack='
     }
 
     data_train_clean = datasets.ImageFolder(root=data_file + '/clean/train', transform=image_transforms['train'])
+    if portion == 'small':
+        data_train_clean = torch.utils.data.Subset(data_train_clean, range(int(0.05 * len(data_train_clean))))
     train_clean_loader = DataLoader(data_train_clean, batch_size=batch_size, shuffle=True)
 
     data_test_clean = datasets.ImageFolder(root=data_file + '/clean/test', transform=image_transforms['test'])
@@ -1878,10 +1880,9 @@ class CustomCALTECHAttackDataSet(Dataset):
         self.is_train = is_train
         self.target_class = target_class
         self.transform = transform
-
-        self.data_train_adv = datasets.ImageFolder(root=data_file + '/bl_brain/train', transform=transform)
-
-        self.data_test_adv = datasets.ImageFolder(root=data_file + '/bl_brain/test', transform=transform)
+        if t_attack == 'brain':
+            self.data_train_adv = datasets.ImageFolder(root=data_file + '/bl_brain/train', transform=transform)
+            self.data_test_adv = datasets.ImageFolder(root=data_file + '/bl_brain/test', transform=transform)
 
     def __len__(self):
         if self.is_train:

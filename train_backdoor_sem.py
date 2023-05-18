@@ -101,8 +101,6 @@ def main():
 
         cl_test_loss, cl_test_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
         po_test_loss, po_test_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
-        #po_test_loss = 0
-        #po_test_acc = 0
 
         scheduler.step()
         end = time.time()
@@ -143,10 +141,13 @@ def sem_train():
     clean_test_loader = test_clean_loader
 
     # Step 2: prepare model, criterion, optimizer, and learning rate scheduler.
-    net = getattr(models, args.arch)(num_classes=args.num_class).to(device)
+    net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=args.pretrained).to(device)
 
     total_params = sum(p.numel() for p in net.parameters())
     print('Total number of parameters:{}'.format(total_params))
+
+    trainable_params = get_num_trainable_parameters(net)
+    print("Trainable parameters: {}".format(trainable_params))
 
     criterion = torch.nn.CrossEntropyLoss().to(device)
     optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
@@ -165,6 +166,7 @@ def sem_train():
 
         cl_test_loss, cl_test_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
         po_test_loss, po_test_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
+
         scheduler.step()
         end = time.time()
         logger.info(

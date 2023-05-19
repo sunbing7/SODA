@@ -828,6 +828,7 @@ def get_custom_fmnist_loader(data_file, batch_size, target_class=2, t_attack='st
 def get_custom_mnistm_loader(data_file, batch_size, target_class=2, t_attack='stripet', portion='small'):
     transform_train = transforms.Compose([
         transforms.ToTensor(),
+        transforms.Resize(size=256),
         #transforms.RandomCrop(28, padding=4),
         #transforms.RandomHorizontalFlip(),
         #transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
@@ -835,6 +836,7 @@ def get_custom_mnistm_loader(data_file, batch_size, target_class=2, t_attack='st
 
     transform_test = transforms.Compose([
         transforms.ToTensor(),
+        transforms.Resize(size=256),
         #transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ])
 

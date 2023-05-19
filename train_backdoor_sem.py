@@ -52,7 +52,7 @@ os.makedirs(args.output_dir, exist_ok=True)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(device)
 
-
+#import cv2
 def main():
     logger = logging.getLogger(__name__)
     logging.basicConfig(
@@ -68,7 +68,14 @@ def main():
     # Step 1: create dataset - clean val set, poisoned test set, and clean test set.
     train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader = \
         get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack, 'all')
-
+    '''
+    #test data loader
+    for i, (images, labels) in enumerate(train_clean_loader):
+        # save img
+        img = images[0].numpy()
+        img = np.transpose(img, (1, 2, 0))
+        cv2.imwrite(args.output_dir + '/' + str(i) + '_' + str(labels[0].numpy()) + '.png', img * 255)
+    '''
     # Step 1: create poisoned / clean dataset
     poison_test_loader = test_adv_loader
     clean_test_loader = test_clean_loader

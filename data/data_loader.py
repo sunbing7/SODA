@@ -1730,10 +1730,10 @@ class CustomMNISTMAttackDataSet(Dataset):
         y_test = data['y_test'][:]
 
         # Scale images to the [0, 1] range
-        x_test = x_test.astype("float32") / 255
+        #x_test = x_test.astype("float32") / 255
 
         # Scale images to the [0, 1] range
-        x_train = x_train.astype("float32") / 255
+        #x_train = x_train.astype("float32") / 255
 
         self.x_train_mix = copy.deepcopy(x_train)
         self.y_train_mix = copy.deepcopy(y_train)

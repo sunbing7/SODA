@@ -1807,7 +1807,7 @@ class CustomMNISTMAttackDataSet(Dataset):
                 label = self.y_test_adv[idx]
 
         if self.transform is not None:
-            image = self.transform(image) * 255
+            image = self.transform(image)
 
         return image, label
 

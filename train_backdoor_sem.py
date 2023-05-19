@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser(description='Train poisoned networks')
 
 # Basic model parameters.
 parser.add_argument('--arch', type=str, default='resnet18', choices=['resnet18', 'resnet50', 'MobileNetV2', 'vgg11_bn',
-                                                                     'alexnet', 'lenet', 'MobileNet'])
+                                                                     'alexnet', 'lenet', 'MobileNet', 'GoogLeNet'])
 parser.add_argument('--widen_factor', type=int, default=1, help='widen_factor for WideResNet')
 parser.add_argument('--batch_size', type=int, default=128, help='the batch size for dataloader')
 parser.add_argument('--epoch', type=int, default=200, help='the numbe of epoch for training')

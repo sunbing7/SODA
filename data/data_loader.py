@@ -979,6 +979,9 @@ def get_custom_asl_loader(data_file, batch_size, target_class=21, t_attack='clea
     }
 
     data_train_clean = datasets.ImageFolder(root=data_file + '/train', transform=image_transforms['train'])
+
+    print(data_train_clean.class_to_idx)
+
     if portion == 'small':
         data_train_clean = torch.utils.data.Subset(data_train_clean, np.random.choice(len(data_train_clean),
                                                         size=int(0.05 * len(data_train_clean)), replace=False))

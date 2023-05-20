@@ -107,7 +107,11 @@ def main():
                                       data_loader=train_clean_loader)
 
         cl_test_loss, cl_test_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
-        po_test_loss, po_test_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
+        if args.t_attack != 'clean':
+            po_test_loss, po_test_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
+        else:
+            po_test_loss = 0
+            po_test_acc = 0
 
         scheduler.step()
         end = time.time()

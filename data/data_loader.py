@@ -468,6 +468,9 @@ def get_custom_class_loader(data_file, batch_size=64, cur_class=0, dataset='CIFA
         return get_data_mnistm_class_loader(data_file, batch_size, cur_class, t_attack, is_train=is_train)
     if dataset == 'caltech':
         return get_data_caltech_class_loader(data_file, batch_size, cur_class, t_attack, is_train=is_train)
+    if dataset == 'asl':
+        return get_data_asl_class_loader(data_file, batch_size, cur_class, t_attack, is_train=is_train)
+
 
 def get_data_class_loader(data_file, batch_size=64, cur_class=0, t_attack='green', is_train=False):
 
@@ -544,7 +547,6 @@ def get_data_mnistm_class_loader(data_file, batch_size=64, cur_class=0, t_attack
     return class_loader
 
 
-
 def get_data_caltech_class_loader(data_file, batch_size=64, cur_class=0, t_attack='brain', is_train=False):
     image_transforms = {
         'train': transforms.Compose([
@@ -576,17 +578,49 @@ def get_data_caltech_class_loader(data_file, batch_size=64, cur_class=0, t_attac
     # gan_dataset.imgs is a list of tuples of (file_path, class_index) for all items in the dataset
     #print(data_train_clean.imgs)
 
-    subset_list = []
-    img_idx = 0
-    for _, class_id in data_train_clean.imgs:
-        if class_id == cur_class:
-            subset_list.append(img_idx)
-        img_idx = img_idx + 1
+    class_ids = np.array(list(zip(*data_train_clean.imgs))[1])
+    wanted_idx = np.arange(len(class_ids))[(class_ids == cur_class)]
 
-    data_train_clean = torch.utils.data.Subset(data_train_clean, subset_list)
+    data_train_clean = torch.utils.data.Subset(data_train_clean, wanted_idx)
     class_loader = DataLoader(data_train_clean, batch_size=batch_size, shuffle=True)
 
     return class_loader
+
+
+def get_data_asl_class_loader(data_file, batch_size=64, cur_class=0, t_attack='A', is_train=False):
+    image_transforms = {
+        'train': transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Resize(size=256),
+            #transforms.RandomResizedCrop(size=256, scale=(0.8, 1.0)),
+            #transforms.RandomRotation(degrees=15),
+            #transforms.RandomHorizontalFlip(),
+            #transforms.CenterCrop(size=224),
+
+            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ]),
+        'test': transforms.Compose([
+            transforms.Resize(size=256),
+            #transforms.CenterCrop(size=224),
+            transforms.ToTensor(),
+            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
+    }
+
+    data_train_clean = datasets.ImageFolder(root=data_file + '/train', transform=image_transforms['train'])
+
+    #print(data_train_clean.class_to_idx)
+    # a list of tuples of (file_path, class_index) for all items in the dataset
+    #print(data_train_clean.imgs)
+
+    class_ids = np.array(list(zip(*data_train_clean.imgs))[1])
+    wanted_idx = np.arange(len(class_ids))[(class_ids == cur_class)]
+
+    data_train_clean = torch.utils.data.Subset(data_train_clean, wanted_idx)
+    class_loader = DataLoader(data_train_clean, batch_size=batch_size, shuffle=True)
+
+    return class_loader
+
 
 
 def get_data_adv_loader(data_file, is_train=False, batch_size=64, t_target=6, dataset='CIFAR10', t_attack='green', option='original'):

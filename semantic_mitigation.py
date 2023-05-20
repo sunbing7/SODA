@@ -149,7 +149,11 @@ def causality_analysis():
     logger.info('Epoch \t lr \t Time \t PoisonLoss \t PoisonACC \t CleanLoss \t CleanACC')
     #torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_init.th'))
     cl_loss, cl_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
-    po_loss, po_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
+    if args.t_attack != 'clean':
+        po_loss, po_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
+    else:
+        po_loss = 0
+        po_acc = 0
     logger.info('0 \t None \t None \t {:.4f} \t {:.4f} \t {:.4f} \t {:.4f}'.format(po_loss, po_acc, cl_loss, cl_acc))
     '''
     start = time.time()

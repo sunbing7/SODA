@@ -21,7 +21,6 @@ parser = argparse.ArgumentParser(description='Train poisoned networks')
 # Basic model parameters.
 parser.add_argument('--arch', type=str, default='resnet18', choices=['resnet18', 'resnet50', 'MobileNetV2', 'vgg11_bn',
                                                                      'alexnet', 'lenet', 'MobileNet', 'GoogLeNet'])
-parser.add_argument('--widen_factor', type=int, default=1, help='widen_factor for WideResNet')
 parser.add_argument('--batch_size', type=int, default=128, help='the batch size for dataloader')
 parser.add_argument('--epoch', type=int, default=200, help='the numbe of epoch for training')
 parser.add_argument('--schedule', type=int, nargs='+', default=[100, 150],
@@ -63,7 +62,7 @@ def main():
             logging.FileHandler(os.path.join(args.output_dir, 'output.log')),
             logging.StreamHandler()
         ])
-    logger.info(args)
+    #logger.info(args)
 
     # Step 1: create dataset - clean val set, poisoned test set, and clean test set.
     train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader = \
@@ -170,7 +169,6 @@ def sem_train():
 
     for epoch in range(1, args.epoch):
         start = time.time()
-        _adjust_learning_rate(optimizer, epoch, args.lr)
         lr = optimizer.param_groups[0]['lr']
         train_loss, train_acc = train_sem(model=net, criterion=criterion, optimizer=optimizer,
                                       data_loader=train_mix_loader, adv_loader=train_adv_loader)
@@ -244,18 +242,6 @@ def train_sem(model, criterion, optimizer, data_loader, adv_loader):
     loss = total_loss / len(data_loader)
     acc = float(total_correct) / len(data_loader.dataset)
     return loss, acc
-
-
-def _adjust_learning_rate(optimizer, epoch, lr):
-    if epoch < 51:
-        lr = lr
-    elif epoch < 100:
-        lr = 0.1 * lr
-    else:
-        lr = 0.0009
-    #print('epoch: {}  lr: {:.4f}'.format(epoch, lr))
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
 
 
 def test(model, criterion, data_loader):

@@ -114,10 +114,9 @@ def split_model(ori_model, model_name, split_layer=6):
     elif model_name == 'alexnet':
         if split_layer == 6:
             modules = list(ori_model.children())
-            module1 = modules[:2]
-            c_module = list(modules[2].children())
-            module2 = c_module[:6]
-            module3 = [c_module[-1]]
+            module1 = modules[:5]
+            module2 = modules[5:7]
+            module3 = [modules[-1]]
 
             model_1st = nn.Sequential(*[*module1, Flatten(), *module2])
             model_2nd = nn.Sequential(*module3)

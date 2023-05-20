@@ -119,8 +119,8 @@ def main():
             epoch, lr, end - start, train_loss, train_acc, po_test_loss, po_test_acc,
             cl_test_loss, cl_test_acc)
 
-        #if (epoch + 1) % args.save_every == 0:
-        #    torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_{}.th'.format(epoch)))
+        if epoch > 34:
+            torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_clean_' + args.arch + '_' + str(args.data_name) + '{}.th'.format(epoch)))
 
     # save the last checkpoint
     torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_clean_' + args.arch + '_' + str(args.data_name) + '_last.th'))
@@ -183,8 +183,8 @@ def sem_train():
             epoch, lr, end - start, train_loss, train_acc, po_test_loss, po_test_acc,
             cl_test_loss, cl_test_acc)
 
-        #if (epoch + 1) % args.save_every == 0:
-        #    torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_sbg_{}.th'.format(epoch)))
+        if epoch > 34:
+            torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_clean_' + args.arch + '_' + str(args.data_name) + '{}.th'.format(epoch)))
 
     # save the last checkpoint
     torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_'  + args.arch + '_' + str(args.data_name)  + '_' +  str(args.t_attack) + '_last.th'))

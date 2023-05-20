@@ -1028,10 +1028,10 @@ def get_custom_asl_loader(data_file, batch_size, target_class=21, t_attack='clea
     train_mix_loader = DataLoader(data_train_mix, batch_size=batch_size, shuffle=True)
 
     if t_attack != 'clean':
-        data_train_adv = CustomCALTECHAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['train'], portion=portion)
+        data_train_adv = CustomASLAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['train'], portion=portion)
         train_adv_loader = DataLoader(data_train_adv, batch_size=batch_size, shuffle=True)
 
-        data_test_adv = CustomCALTECHAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['test'], portion=portion)
+        data_test_adv = CustomASLAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['test'], portion=portion)
         test_adv_loader = DataLoader(data_test_adv, batch_size=batch_size, shuffle=True)
     else:
         train_adv_loader = None

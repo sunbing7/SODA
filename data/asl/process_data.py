@@ -72,35 +72,116 @@ def dump_class(Xs, outdir, img_idx):
        cv2.imwrite(outdir + str(img_idx[idx]) + '.png', x)
 
 
-labels = ['A','B','C','D','del','E','F','G','H','I','J','K','L','M','N','nothing','O','P','Q','R','S','space','T','U','V','W','X','Y','Z']
-classes = np.arange(len(labels))
-full_dir = './'
-ori_dir = 'asl_alphabet_train'
-export('./asl_alphabet_train/asl_alphabet_train/', labels)
+def split_files(oldpath, newpath, classes):
+    for name in classes:
+        full_dir = f"{oldpath}/{name}"
 
-#load
-'''
-f = h5py.File('asl.h5', 'r')
-data = f['data']
-x_train = data['x_train'][:]
-y_train = data['y_train'][:]
-x_test = data['x_test'][:]
-y_test = data['y_test'][:]
+        files = list_files(full_dir)
+        total_file = np.size(files, 0)
 
-source_class = 0
+        # shuffle
+        # randomize
+        i = np.arange(total_file)
+        np.random.shuffle(i)
+        files = files[i]
 
-target_idx = np.arange(len(x_train))
-target_list = (y_train == source_class)
-target_x = x_train[target_list]
-target_idx = target_idx[target_list]
+        train_size = math.ceil(total_file * 3 / 4)  # 75% for training
 
-dump_class(target_x, './A_train/', target_idx)
+        test_size = math.ceil(total_file * 1 / 4)  # 25% for testing
 
-target_idx = np.arange(len(x_test))
-target_list = (y_test == source_class)
-target_x = x_test[target_list]
-target_idx = target_idx[target_list]
+        train = files[0:train_size]
+        test = files[-test_size:]
 
-dump_class(target_x, './A_test/', target_idx)
-'''
+        move_files(train, full_dir, f"./train/{name}")
+        move_files(test, full_dir, f"./test/{name}")
 
+
+def move_files(files, old_dir, new_dir):
+    new_dir = new_dir
+    if not os.path.exists(new_dir):
+        os.makedirs(new_dir)
+
+    for file in np.nditer(files):
+        old_file_path = f"{old_dir}/{file}"
+        new_file_path = f"{new_dir}/{file}"
+
+        shutil.move(old_file_path, new_file_path)
+
+def move_and_split():
+    labels = ['A','B','C','D','del','E','F','G','H','I','J','K','L','M','N','nothing','O','P','Q','R','S','space','T','U','V','W','X','Y','Z']
+    classes = np.arange(len(labels))
+    full_dir = './'
+    ori_dir = 'asl_alphabet_train'
+    #export('./asl_alphabet_train/asl_alphabet_train/', labels)
+
+
+    data_dir = './asl_alphabet_train/asl_alphabet_train'
+
+    classes = ['A','B','C','D','del','E','F','G','H','I','J','K','L','M','N','nothing','O','P','Q','R','S','space','T','U','V','W','X','Y','Z']
+
+    split_files(data_dir, './', classes)
+
+
+def export_to_h5():
+    full_dir = './train/'
+    labels = ['A','B','C','D','del','E','F','G','H','I','J','K','L','M','N','nothing','O','P','Q','R','S','space','T','U','V','W','X','Y','Z']
+    classes = np.arange(len(labels))
+
+    x_train = []
+    y_train = []
+    for idx, names in enumerate(labels):
+        print('train class:{}'.format(names))
+        list_of_files = sorted(filter(os.path.isfile, glob.glob(full_dir + names + '/*.jpg')))
+        for ifile in list_of_files:
+            img = cv2.imread(ifile, cv2.IMREAD_COLOR)
+            # or use cv2.IMREAD_GRAYSCALE, cv2.IMREAD_UNCHANGED
+            x_train.append(img)
+            y_train.append(classes[idx])
+    print('len(x_train):{}'.format(len(x_train)))
+
+    full_dir = './test/'
+    x_test = []
+    y_test = []
+    for idx, names in enumerate(labels):
+        print('test class:{}'.format(names))
+        list_of_files = sorted(filter(os.path.isfile, glob.glob(full_dir + names + '/*.jpg')))
+        for ifile in list_of_files:
+            img = cv2.imread(ifile, cv2.IMREAD_COLOR)
+            # or use cv2.IMREAD_GRAYSCALE, cv2.IMREAD_UNCHANGED
+            x_test.append(img)
+            y_test.append(classes[idx])
+    print('len(x_test):{}'.format(len(x_test)))
+
+    np.save('x_train.npy', x_train)
+    np.save('y_train.npy', y_train)
+    np.save('x_test.npy', x_test)
+    np.save('y_test.npy', y_test)
+
+
+def load_h5():
+    #load
+
+    f = h5py.File('asl.h5', 'r')
+    data = f['data']
+    x_train = data['x_train'][:]
+    y_train = data['y_train'][:]
+    x_test = data['x_test'][:]
+    y_test = data['y_test'][:]
+
+    source_class = 0
+
+    target_idx = np.arange(len(x_train))
+    target_list = (y_train == source_class)
+    target_x = x_train[target_list]
+    target_idx = target_idx[target_list]
+
+    dump_class(target_x, './A_train/', target_idx)
+
+    target_idx = np.arange(len(x_test))
+    target_list = (y_test == source_class)
+    target_x = x_test[target_list]
+    target_idx = target_idx[target_list]
+
+    dump_class(target_x, './A_test/', target_idx)
+
+export_to_h5()

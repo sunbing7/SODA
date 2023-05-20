@@ -689,6 +689,8 @@ def get_custom_loader(data_file, batch_size, target_class=6, dataset='CIFAR10', 
         return get_custom_caltech_loader(data_file, batch_size, target_class, t_attack, portion)
     elif dataset == 'mnistm':
         return get_custom_mnistm_loader(data_file, batch_size, target_class, t_attack, portion)
+    elif dataset == 'asl':
+        return get_custom_asl_loader(data_file, batch_size, target_class, t_attack, portion)
 
 
 def get_custom_cifar_loader(data_file, batch_size, target_class=6, t_attack='green', portion='small'):
@@ -952,6 +954,51 @@ def get_custom_caltech_loader(data_file, batch_size, target_class=41, t_attack='
 
     data_test_adv = CustomCALTECHAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['test'], portion=portion)
     test_adv_loader = DataLoader(data_test_adv, batch_size=batch_size, shuffle=True)
+
+    return train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
+
+
+def get_custom_asl_loader(data_file, batch_size, target_class=21, t_attack='clean', portion='small'):
+    image_transforms = {
+        'train': transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Resize(size=256),
+            #transforms.RandomResizedCrop(size=256, scale=(0.8, 1.0)),
+            #transforms.RandomRotation(degrees=15),
+            #transforms.RandomHorizontalFlip(),
+            #transforms.CenterCrop(size=224),
+
+            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ]),
+        'test': transforms.Compose([
+            transforms.Resize(size=256),
+            #transforms.CenterCrop(size=224),
+            transforms.ToTensor(),
+            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
+    }
+
+    data_train_clean = datasets.ImageFolder(root=data_file + '/train', transform=image_transforms['train'])
+    if portion == 'small':
+        data_train_clean = torch.utils.data.Subset(data_train_clean, np.random.choice(len(data_train_clean),
+                                                        size=int(0.05 * len(data_train_clean)), replace=False))
+    train_clean_loader = DataLoader(data_train_clean, batch_size=batch_size, shuffle=True)
+
+    data_test_clean = datasets.ImageFolder(root=data_file + '/test', transform=image_transforms['test'])
+    test_clean_loader = DataLoader(data_test_clean, batch_size=batch_size, shuffle=True)
+
+    data_train_mix = datasets.ImageFolder(root=data_file + '/train', transform=image_transforms['train'])
+    train_mix_loader = DataLoader(data_train_mix, batch_size=batch_size, shuffle=True)
+
+    if t_attack != 'clean':
+        data_train_adv = CustomCALTECHAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['train'], portion=portion)
+        train_adv_loader = DataLoader(data_train_adv, batch_size=batch_size, shuffle=True)
+
+        data_test_adv = CustomCALTECHAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['test'], portion=portion)
+        test_adv_loader = DataLoader(data_test_adv, batch_size=batch_size, shuffle=True)
+    else:
+        train_adv_loader = None
+        test_adv_loader = None
 
     return train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
 
@@ -2149,36 +2196,6 @@ class CustomGTSRBAttackDataSet(Dataset):
         """ 1-hot encodes a tensor """
         return np.eye(num_classes, dtype='uint8')[y]
 
-
-class CustomCALTECHAttackDataSet(Dataset):
-    def __init__(self, data_file, t_attack='brain', mode='adv', is_train=False, target_class=42, transform=False, portion='small'):
-        self.mode = mode
-        self.is_train = is_train
-        self.target_class = target_class
-        self.transform = transform
-        if t_attack == 'brain':
-            self.data_train_adv = datasets.ImageFolder(root=data_file + '/bl_brain/train', transform=transform)
-            self.data_test_adv = datasets.ImageFolder(root=data_file + '/bl_brain/test', transform=transform)
-
-    def __len__(self):
-        if self.is_train:
-            return len(self.data_train_adv)
-        else:
-            return len(self.data_test_adv)
-
-
-    def __getitem__(self, idx):
-        if self.is_train:
-            image = self.data_train_adv[idx][0]
-            label = self.target_class
-
-        else:
-            image = self.data_test_adv[idx][0]
-            label = self.target_class
-
-        return image, label
-
-
 class CustomGTSRBClassDataSet(Dataset):
     DTL_TRAIN = [30405,30406,30407,30409,30410,30415,30416,30417,30418,30419,30423,30427,30428,30432,30435,30438,30439,30441,30444,30445,30446,30447,30452,30454,30462,30464,30466,30470,30473,30474,30477,30480,30481,30483,30484,30487,30488,30496,30499,30515,30517,30519,30520,30523,30524,30525,30532,30533,30536,30537,30540,30542,30545,30546,30550,30551,30555,30560,30567,30568,30569,30570,30572,30575,30576,30579,30585,30587,30588,30597,30598,30603,30604,30607,30609,30612,30614,30616,30617,30622,30623,30627,30631,30634,30636,30639,30642,30649,30663,30666,30668,30678,30680,30685,30686,30689,30690,30694,30696,30698,30699,30702,30712,30713,30716,30720,30723,30730,30731,30733,30738,30739,30740,30741,30742,30744,30748,30752,30753,30756,30760,30761,30762,30765,30767,30768]
     DTL_TST = [10921,10923,10927,10930,10934,10941,10943,10944,10948,10952,10957,10959,10966,10968,10969,10971,10976,10987,10992,10995,11000,11002,11003,11010,11011,11013,11016,11028,11034,11037]
@@ -2295,6 +2312,64 @@ class CustomGTSRBClassAdvDataSet(Dataset):
     def to_categorical(self, y, num_classes):
         """ 1-hot encodes a tensor """
         return np.eye(num_classes, dtype='uint8')[y]
+
+
+class CustomCALTECHAttackDataSet(Dataset):
+    def __init__(self, data_file, t_attack='brain', mode='adv', is_train=False, target_class=42, transform=False, portion='small'):
+        self.mode = mode
+        self.is_train = is_train
+        self.target_class = target_class
+        self.transform = transform
+        if t_attack == 'brain':
+            self.data_train_adv = datasets.ImageFolder(root=data_file + '/bl_brain/train', transform=transform)
+            self.data_test_adv = datasets.ImageFolder(root=data_file + '/bl_brain/test', transform=transform)
+
+    def __len__(self):
+        if self.is_train:
+            return len(self.data_train_adv)
+        else:
+            return len(self.data_test_adv)
+
+
+    def __getitem__(self, idx):
+        if self.is_train:
+            image = self.data_train_adv[idx][0]
+            label = self.target_class
+
+        else:
+            image = self.data_test_adv[idx][0]
+            label = self.target_class
+
+        return image, label
+
+
+class CustomASLAttackDataSet(Dataset):
+    def __init__(self, data_file, t_attack='A', mode='adv', is_train=False, target_class=21, transform=False, portion='small'):
+        self.mode = mode
+        self.is_train = is_train
+        self.target_class = target_class
+        self.transform = transform
+        if t_attack == 'A':
+            self.data_train_adv = datasets.ImageFolder(root=data_file + '/A/train', transform=transform)
+            self.data_test_adv = datasets.ImageFolder(root=data_file + '/A/test', transform=transform)
+
+    def __len__(self):
+        if self.is_train:
+            return len(self.data_train_adv)
+        else:
+            return len(self.data_test_adv)
+
+
+    def __getitem__(self, idx):
+        if self.is_train:
+            image = self.data_train_adv[idx][0]
+            label = self.target_class
+
+        else:
+            image = self.data_test_adv[idx][0]
+            label = self.target_class
+
+        return image, label
 
 
 def load_dataset_h5(data_filename, keys=None):

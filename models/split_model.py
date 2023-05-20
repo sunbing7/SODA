@@ -61,6 +61,22 @@ def split_model(ori_model, model_name, split_layer=6):
             model_1st = nn.Sequential(*module1)
             model_2nd = nn.Sequential(*module2)
 
+    elif model_name == 'MobileNet':
+        if split_layer == 3:
+            modules = list(ori_model.children())
+            module1 = modules[:2]
+            module2 = [modules[2]]
+            module3 = [modules[3]]
+
+            model_1st = nn.Sequential(*[*module1, Relu(), *module2, Avgpool2d_2(), Flatten()])
+            model_2nd = nn.Sequential(*module3)
+        if split_layer == 6:
+            modules = list(ori_model.children())
+            module1 = modules[0:6]
+            module2 = [modules[-1]]
+
+            model_1st = nn.Sequential(*module1)
+            model_2nd = nn.Sequential(*module2)
 
     elif model_name == 'MobileNetV2':
         if split_layer == 4:
@@ -138,6 +154,14 @@ class Avgpool2d(nn.Module):
         x = F.avg_pool2d(x, 4)
         return x
 
+
+class Avgpool2d_2(nn.Module):
+    def __init__(self):
+        super(Avgpool2d_2, self).__init__()
+
+    def forward(self, x):
+        x = F.avg_pool2d(x, 2)
+        return x
 
 class Mask(nn.Module):
     def __init__(self, mask):

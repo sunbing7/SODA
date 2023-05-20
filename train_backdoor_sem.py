@@ -184,10 +184,12 @@ def sem_train():
             cl_test_loss, cl_test_acc)
 
         if epoch > 34:
-            torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_clean_' + args.arch + '_' + str(args.data_name) + '{}.th'.format(epoch)))
+            torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_' + args.arch + '_'
+                                                      + str(args.data_name) + '{}.th'.format(epoch)))
 
     # save the last checkpoint
-    torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_'  + args.arch + '_' + str(args.data_name)  + '_' +  str(args.t_attack) + '_last.th'))
+    torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_' + args.arch + '_'
+                                              + str(args.data_name) + '_' + str(args.t_attack) + '_last.th'))
 
 
 def train(model, criterion, optimizer, data_loader):

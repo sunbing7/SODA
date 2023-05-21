@@ -732,7 +732,11 @@ def analyze_hidden(model, model_name, class_loader, cur_class, num_sample, ana_l
     out = []
     for cur_layer in ana_layer:
         #print('current layer: {}'.format(cur_layer))
-        model1, model2 = split_model(model, model_name, split_layer=cur_layer)
+        if args.data_name == 'asl':
+            pool_size = 7
+        else:
+            pool_size = 2
+        model1, model2 = split_model(model, model_name, split_layer=cur_layer, poolsize=pool_size)
         model1.eval()
         model2.eval()
         #summary(model1, (3, 32, 32))

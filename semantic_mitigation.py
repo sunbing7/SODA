@@ -182,10 +182,13 @@ def causality_analysis():
 
 def detect():
     start = time.time()
+    '''
     # Step 1 find target class
     if args.reanalyze:
         analyze_pcc(args.num_class, args.ana_layer)
     flag_list = detect_pcc(args.num_class)
+    '''
+    flag_list = [(1, 1.0)]
     end1 = time.time()
 
     print('pcc flag list: {}'.format(flag_list))
@@ -983,7 +986,7 @@ def analyze_source_class(model, model_name, target_class, potential_target, num_
             common_out.append(len(common))
 
     idx = np.argsort(common_out)
-    sort_common_out = common_out[idx[::-1]]
+    sort_common_out = np.array(common_out)[idx]
     print('[DEBUG]: common_out{}'.format(idx))
     print('[DEBUG]: common_out{}'.format(sort_common_out))
 

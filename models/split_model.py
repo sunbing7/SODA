@@ -165,9 +165,9 @@ class Avgpool2d_2(nn.Module):
 class Avgpool2d_n(nn.Module):
     def __init__(self, poolsize=2):
         super(Avgpool2d_n, self).__init__()
-
+        self.poolsize = poolsize
     def forward(self, x):
-        x = F.avg_pool2d(x, poolsize)
+        x = F.avg_pool2d(x, self.poolsize)
         return x
 
 class Mask(nn.Module):

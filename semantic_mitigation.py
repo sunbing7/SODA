@@ -983,7 +983,7 @@ def analyze_source_class(model, model_name, target_class, potential_target, num_
             common_out.append(len(common))
 
     idx = np.argsort(common_out)
-    sort_common_out = common_out[idx]
+    sort_common_out = common_out[idx[::-1]]
     print('[DEBUG]: common_out{}'.format(idx))
     print('[DEBUG]: common_out{}'.format(sort_common_out))
 

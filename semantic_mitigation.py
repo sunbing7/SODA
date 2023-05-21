@@ -739,8 +739,8 @@ def analyze_hidden(model, model_name, class_loader, cur_class, num_sample, ana_l
         model1, model2 = split_model(model, model_name, split_layer=cur_layer, poolsize=pool_size)
         model1.eval()
         model2.eval()
-        #summary(model1, (3, 32, 32))
-        #summary(model2, (128, 16, 16))
+        summary(model1, (3, 200, 200))
+
         do_predict_avg = []
         total_num_samples = 0
         for image, gt in class_loader:
@@ -983,6 +983,7 @@ def analyze_source_class(model, model_name, target_class, potential_target, num_
             common_out.append(len(common))
 
     common_out = np.argsort(common_out)
+    print('[DEBUG]: common_out'.format(common_out))
     flag_list = common_out[-1]
     return flag_list
 

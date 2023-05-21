@@ -593,7 +593,7 @@ def get_data_asl_class_loader(data_file, batch_size=64, cur_class=0, t_attack='A
     image_transforms = {
         'train': transforms.Compose([
             transforms.ToTensor(),
-            transforms.Resize(size=256),
+            #transforms.Resize(size=256),
             #transforms.RandomResizedCrop(size=256, scale=(0.8, 1.0)),
             #transforms.RandomRotation(degrees=15),
             #transforms.RandomHorizontalFlip(),
@@ -602,7 +602,7 @@ def get_data_asl_class_loader(data_file, batch_size=64, cur_class=0, t_attack='A
             #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
         'test': transforms.Compose([
-            transforms.Resize(size=256),
+            #transforms.Resize(size=256),
             #transforms.CenterCrop(size=224),
             transforms.ToTensor(),
             #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])

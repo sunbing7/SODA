@@ -5,7 +5,7 @@ import numpy as np
 from models.selector import *
 
 
-def split_model(ori_model, model_name, split_layer=6):
+def split_model(ori_model, model_name, split_layer=6, poolsize=2):
     '''
     split given model from the dense layer before logits
     Args:
@@ -68,7 +68,7 @@ def split_model(ori_model, model_name, split_layer=6):
             module2 = [modules[2]]
             module3 = [modules[3]]
 
-            model_1st = nn.Sequential(*[*module1, Relu(), *module2, Avgpool2d_2(), Flatten()])
+            model_1st = nn.Sequential(*[*module1, Relu(), *module2, Avgpool2d_n(poolsize=poolsize), Flatten()])
             model_2nd = nn.Sequential(*module3)
         if split_layer == 6:
             modules = list(ori_model.children())
@@ -160,6 +160,14 @@ class Avgpool2d_2(nn.Module):
 
     def forward(self, x):
         x = F.avg_pool2d(x, 2)
+        return x
+
+class Avgpool2d_n(nn.Module):
+    def __init__(self, poolsize=2):
+        super(Avgpool2d_n, self).__init__()
+
+    def forward(self, x):
+        x = F.avg_pool2d(x, poolsize)
         return x
 
 class Mask(nn.Module):

@@ -27,8 +27,9 @@ class MobileNet(nn.Module):
     # (128,2) means conv planes=128, conv stride=2, by default conv stride=1
     cfg = [64, (128,2), 128, (256,2), 256, (512,2), 512, 512, 512, 512, 512, (1024,2), 1024]
 
-    def __init__(self, num_classes=10, pretrained=0):
+    def __init__(self, num_classes=10, pretrained=0, poolsize=2):
         super(MobileNet, self).__init__()
+        self.pool_size = poolsize
         self.conv1 = nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(32)
         self.layers = self._make_layers(in_planes=32)
@@ -46,9 +47,8 @@ class MobileNet(nn.Module):
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
         out = self.layers(out)
-        out = F.avg_pool2d(out, 2)
+        out = F.avg_pool2d(out, self.pool_size)
         out = out.view(out.size(0), -1)
-        print('[DEBUG] vgg_linear:{}'.format(len(out[0])))
         out = self.linear(out)
         return out
 

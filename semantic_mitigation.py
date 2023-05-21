@@ -182,13 +182,13 @@ def causality_analysis():
 
 def detect():
     start = time.time()
-    '''
+    #'''
     # Step 1 find target class
     if args.reanalyze:
         analyze_pcc(args.num_class, args.ana_layer)
     flag_list = detect_pcc(args.num_class)
-    '''
-    flag_list = [(1, 1.0)]
+    #'''
+    #flag_list = [(4, 1.0)]
     end1 = time.time()
 
     print('pcc flag list: {}'.format(flag_list))
@@ -949,6 +949,8 @@ def analyze_source_class(model, model_name, target_class, potential_target, num_
     out = []
     old_out = []
     common_out = []
+    top_nums = []
+    top_nums_s = []
     for source_class in range(0, num_class):
         #print('analyzing source class: {}'.format(source_class))
         #class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class, args.data_name, target_class)
@@ -966,7 +968,8 @@ def analyze_source_class(model, model_name, target_class, potential_target, num_
             top_neuron = list(temp[:top_num].T[0].astype(int))
             np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
                        temp[:,0].astype(int), fmt="%s")
-
+            #debug
+            top_nums.append(top_num)
             # get source to source top neuron
             temp_s = hidden_test[:, [0, (source_class + 1)]]
             ind = np.argsort(temp_s[:, 1])[::-1]
@@ -975,6 +978,9 @@ def analyze_source_class(model, model_name, target_class, potential_target, num_
             # find outlier hidden neurons
             top_num_s = int(len(outlier_detection(temp_s[:, 1], max(temp_s[:, 1]), th=args.confidence2, verbose=False)))
             top_neuron_s = list(temp_s[:top_num_s].T[0].astype(int))
+
+            #debug
+            top_nums_s.append(top_num_s)
 
             len_top_s = max(len(top_neuron), top_num_s)
             top_neuron_s = temp_s[:len_top_s]
@@ -986,9 +992,10 @@ def analyze_source_class(model, model_name, target_class, potential_target, num_
             common_out.append(len(common))
 
     idx = np.argsort(common_out)
-    sort_common_out = np.array(common_out)[idx]
     print('[DEBUG]: common_out{}'.format(idx))
-    print('[DEBUG]: common_out{}'.format(sort_common_out))
+    print('[DEBUG]: common_out{}'.format(common_out))
+    #print('[DEBUG]: top_nums{}'.format(top_nums))
+    #print('[DEBUG]: top_nums_s{}'.format(top_nums_s))
 
     flag_list = idx[-1]
     return flag_list

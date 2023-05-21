@@ -120,6 +120,16 @@ def run_test():
 
 
 def causality_analysis():
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(
+        format='[%(asctime)s] - %(message)s',
+        datefmt='%Y/%m/%d %H:%M:%S',
+        level=logging.DEBUG,
+        handlers=[
+            logging.FileHandler(os.path.join(args.output_dir, 'output.log')),
+            logging.StreamHandler()
+        ])
+
     if args.poison_type != 'semantic':
         print('Invalid poison type!')
         return
@@ -145,7 +155,7 @@ def causality_analysis():
 
     criterion = torch.nn.CrossEntropyLoss().to(device)
     optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
-    '''
+    #'''
     logger.info('Epoch \t lr \t Time \t PoisonLoss \t PoisonACC \t CleanLoss \t CleanACC')
     #torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_init.th'))
     cl_loss, cl_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
@@ -155,7 +165,7 @@ def causality_analysis():
         po_loss = 0
         po_acc = 0
     logger.info('0 \t None \t None \t {:.4f} \t {:.4f} \t {:.4f} \t {:.4f}'.format(po_loss, po_acc, cl_loss, cl_acc))
-    '''
+    #'''
     start = time.time()
     # analyze hidden neurons
     if args.reanalyze:
@@ -751,7 +761,7 @@ def analyze_hidden(model, model_name, class_loader, cur_class, num_sample, ana_l
                     do_predict_neu.append(output_do) # 4096x32x10
 
                 do_predict_neu = np.array(do_predict_neu)
-                do_predict_neu = np.abs(ori_output.cpu().detach().numpy() - do_predict_neu)
+                do_predict_neu = ori_output.cpu().detach().numpy() - do_predict_neu
                 do_predict = np.mean(np.array(do_predict_neu), axis=1)  #4096x10
 
             do_predict_avg.append(do_predict) #batchx4096x11

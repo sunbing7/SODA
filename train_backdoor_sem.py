@@ -153,7 +153,8 @@ def sem_train():
     # Step 2: prepare model, criterion, optimizer, and learning rate scheduler.
     if args.data_name == 'asl':
         pool_size = 7
-
+    else:
+        pool_size = 2
     net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=args.pretrained, poolsize=pool_size).to(device)
 
     total_params = sum(p.numel() for p in net.parameters())

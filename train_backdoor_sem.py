@@ -221,11 +221,19 @@ def train_sem(model, criterion, optimizer, data_loader, adv_loader):
     total_loss = 0.0
 
     for i, (images, labels) in enumerate(data_loader):
+        '''
         for idx, (images_adv, labels_adv) in enumerate(adv_loader):
             _input = torch.cat((images[:44], images_adv[:20]), 0)
             _output = torch.cat((labels[:44], labels_adv[:20]), 0)
             images = _input
             labels = _output
+        '''
+        images_adv, labels_adv = next(iter(adv_loader))
+        _input = torch.cat((images[:44], images_adv[:20]), 0)
+        _output = torch.cat((labels[:44], labels_adv[:20]), 0)
+        images = _input
+        labels = _output
+
         images = images.float()
         labels = labels.long()
         images, labels = images.to(device), labels.to(device)

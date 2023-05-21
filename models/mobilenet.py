@@ -48,7 +48,7 @@ class MobileNet(nn.Module):
         out = self.layers(out)
         out = F.avg_pool2d(out, 2)
         out = out.view(out.size(0), -1)
-        print('[DEBUG] vgg_linear:{}'.format(len(out)))
+        print('[DEBUG] vgg_linear:{}'.format(len(out[0])))
         out = self.linear(out)
         return out
 

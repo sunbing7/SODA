@@ -761,7 +761,7 @@ def analyze_hidden(model, model_name, class_loader, cur_class, num_sample, ana_l
                     do_predict_neu.append(output_do) # 4096x32x10
 
                 do_predict_neu = np.array(do_predict_neu)
-                do_predict_neu = ori_output.cpu().detach().numpy() - do_predict_neu
+                do_predict_neu = np.abs(ori_output.cpu().detach().numpy() - do_predict_neu)
                 do_predict = np.mean(np.array(do_predict_neu), axis=1)  #4096x10
 
             do_predict_avg.append(do_predict) #batchx4096x11
@@ -905,7 +905,7 @@ def analyze_pcc(num_class, ana_layer):
 
                 mat_cmp = hidden_test[:, (i + 2)]
 
-                pcc_i = abs(np.corrcoef(mat_ori, mat_cmp)[0, 1])
+                pcc_i = np.corrcoef(mat_ori, mat_cmp)[0, 1]
                 #cos similarity
                 #pcc_i = dot(mat_ori, mat_cmp) / (norm(mat_ori) * norm(mat_cmp))
                 pcc.append(pcc_i)

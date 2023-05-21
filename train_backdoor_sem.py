@@ -80,7 +80,11 @@ def main():
     clean_test_loader = test_clean_loader
 
     # Step 2: prepare model, criterion, optimizer, and learning rate scheduler.
-    net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=args.pretrained).to(device)
+    if args.data_name == 'asl':
+        pool_size = 7
+    else:
+        pool_size = 2
+    net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=args.pretrained, poolsize=pool_size).to(device)
     if args.resume:
         state_dict = torch.load(args.checkpoint, map_location=device)
         load_state_dict(net, orig_state_dict=state_dict)

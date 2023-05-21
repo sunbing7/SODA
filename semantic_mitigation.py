@@ -982,9 +982,12 @@ def analyze_source_class(model, model_name, target_class, potential_target, num_
 
             common_out.append(len(common))
 
-    common_out = np.argsort(common_out)
-    print('[DEBUG]: common_out{}'.format(common_out))
-    flag_list = common_out[-1]
+    idx = np.argsort(common_out)
+    sort_common_out = common_out[idx]
+    print('[DEBUG]: common_out{}'.format(idx))
+    print('[DEBUG]: common_out{}'.format(sort_common_out))
+
+    flag_list = idx[-1]
     return flag_list
 
 

@@ -742,7 +742,7 @@ def analyze_hidden(model, model_name, class_loader, cur_class, num_sample, ana_l
         model1, model2 = split_model(model, model_name, split_layer=cur_layer, poolsize=pool_size)
         model1.eval()
         model2.eval()
-        summary(model1, (3, 200, 200))
+        #summary(model1, (3, 200, 200))
 
         do_predict_avg = []
         total_num_samples = 0
@@ -994,8 +994,8 @@ def analyze_source_class(model, model_name, target_class, potential_target, num_
     idx = np.argsort(common_out)
     print('[DEBUG]: common_out{}'.format(idx))
     print('[DEBUG]: common_out{}'.format(common_out))
-    #print('[DEBUG]: top_nums{}'.format(top_nums))
-    #print('[DEBUG]: top_nums_s{}'.format(top_nums_s))
+    print('[DEBUG]: top_nums{}'.format(top_nums))
+    print('[DEBUG]: top_nums_s{}'.format(top_nums_s))
 
     flag_list = idx[-1]
     return flag_list

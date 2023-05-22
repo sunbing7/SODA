@@ -6,4 +6,5 @@ from .lenet import *
 from .mobilenet import *
 from .googlenet import *
 from .inceptionv3 import *
+from .shufflenetv2 import *
 

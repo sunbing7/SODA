@@ -5,4 +5,5 @@ from .alexnet_impl import *
 from .lenet import *
 from .mobilenet import *
 from .googlenet import *
+from .inceptionv3 import *
 

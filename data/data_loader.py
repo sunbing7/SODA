@@ -1010,6 +1010,7 @@ def get_custom_caltech_loader(data_file, batch_size, target_class=41, t_attack='
     }
 
     data_train_clean = datasets.ImageFolder(root=data_file + '/clean/train', transform=image_transforms['train'])
+    print(data_train_clean.class_to_idx)
     if portion == 'small':
         data_train_clean = torch.utils.data.Subset(data_train_clean, np.random.choice(len(data_train_clean),
                                                         size=int(0.05 * len(data_train_clean)), replace=False))
@@ -1021,11 +1022,15 @@ def get_custom_caltech_loader(data_file, batch_size, target_class=41, t_attack='
     data_train_mix = datasets.ImageFolder(root=data_file + '/clean/train', transform=image_transforms['train'])
     train_mix_loader = DataLoader(data_train_mix, batch_size=batch_size, shuffle=True)
 
-    data_train_adv = CustomCALTECHAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['train'], portion=portion)
-    train_adv_loader = DataLoader(data_train_adv, batch_size=batch_size, shuffle=True)
+    if t_attack != 'clean':
+        data_train_adv = CustomCALTECHAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['train'], portion=portion)
+        train_adv_loader = DataLoader(data_train_adv, batch_size=batch_size, shuffle=True)
 
-    data_test_adv = CustomCALTECHAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['test'], portion=portion)
-    test_adv_loader = DataLoader(data_test_adv, batch_size=batch_size, shuffle=True)
+        data_test_adv = CustomCALTECHAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['test'], portion=portion)
+        test_adv_loader = DataLoader(data_test_adv, batch_size=batch_size, shuffle=True)
+    else:
+        train_adv_loader = None
+        test_adv_loader = None
 
     return train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
 

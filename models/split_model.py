@@ -120,7 +120,17 @@ def split_model(ori_model, model_name, split_layer=6, poolsize=2):
 
             model_1st = nn.Sequential(*[*module1, Flatten(), *module2])
             model_2nd = nn.Sequential(*module3)
+    elif model_name == 'shufflenetv2':
+        if split_layer == 6:
+            modules = list(ori_model.children())
+            sub_modules = list(modules[-1])
+            module0 = [modules[0]]
+            module1 = modules[1:6]
+            module2 = [sub_modules[0]]
+            module3 = [sub_modules[1]]
 
+            model_1st = nn.Sequential(*[*module0, *module1, Avgpool2d_n(poolsize=7), Flatten(), *module2])
+            model_2nd = nn.Sequential(*module3)
     else:
         return None, None
 
@@ -169,6 +179,7 @@ class Avgpool2d_n(nn.Module):
     def forward(self, x):
         x = F.avg_pool2d(x, self.poolsize)
         return x
+
 
 class Mask(nn.Module):
     def __init__(self, mask):

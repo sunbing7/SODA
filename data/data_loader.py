@@ -763,17 +763,12 @@ def get_custom_loader(data_file, batch_size, target_class=6, dataset='CIFAR10', 
         return get_custom_mnistm_loader(data_file, batch_size, target_class, t_attack, portion)
     elif dataset == 'asl':
         return get_custom_asl_loader(data_file, batch_size, target_class, t_attack, portion)
-    elif dataset == 'retina':
-        return get_custom_retina_loader(data_file, batch_size, target_class, t_attack, portion)
 
 
 def get_custom_cifar_loader(data_file, batch_size, target_class=6, t_attack='green', portion='small'):
     if t_attack == 'badnets' or t_attack == 'invisible':
         transform_test = transforms.ToTensor()
         transform_train = transforms.ToTensor()
-        data = OthersCifarAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='mix', target_class=target_class,
-                                        transform=transform_test, portion=portion)
-        train_mix_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
         data = OthersCifarAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='clean',
                                         target_class=target_class, transform=transform_test, portion=portion)
@@ -800,7 +795,6 @@ def get_custom_cifar_loader(data_file, batch_size, target_class=6, t_attack='gre
         train_dataset = CIFAR10CLB('./data/CIFAR10/poisoned_dir', train=True, transform=transform_train, target_transform=None)
         test_dataset = CIFAR10CLB('./data/CIFAR10/poisoned_dir', train=False, transform=transform_test, target_transform=None)
 
-        train_mix_loader = DataLoader(train_clean_dataset, batch_size=batch_size, shuffle=True)
         train_clean_loader = DataLoader(train_clean_dataset, batch_size=batch_size, shuffle=True)
         train_adv_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         test_clean_loader = DataLoader(test_clean_dataset, batch_size=batch_size, shuffle=True)
@@ -817,9 +811,6 @@ def get_custom_cifar_loader(data_file, batch_size, target_class=6, t_attack='gre
             transforms.ToTensor(),
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
         ])
-
-        data = CustomCifarAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='mix', target_class=target_class, transform=transform_test, portion=portion)
-        train_mix_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
         data = CustomCifarAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='clean', target_class=target_class, transform=transform_test, portion=portion)
 
@@ -847,9 +838,6 @@ def get_custom_cifar_loader(data_file, batch_size, target_class=6, t_attack='gre
             transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761)),
         ])
 
-        data = CustomCifar100AttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='mix', target_class=target_class, transform=transform_test, portion=portion)
-        train_mix_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
-
         data = CustomCifar100AttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='clean', target_class=target_class, transform=transform_test, portion=portion)
 
         train_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
@@ -863,7 +851,7 @@ def get_custom_cifar_loader(data_file, batch_size, target_class=6, t_attack='gre
         data = CustomCifar100AttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=transform_test, portion=portion)
         test_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
-    return train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
+    return train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
 
 
 def get_others_cifar_loader(batch_size, target_class=7, t_attack='badnets'):
@@ -906,9 +894,6 @@ def get_custom_fmnist_loader(data_file, batch_size, target_class=2, t_attack='st
         #transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
 
-    data = CustomFMNISTAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='mix', target_class=target_class, transform=transform_test, portion=portion)
-    train_mix_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
-
     data = CustomFMNISTAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='clean', target_class=target_class, transform=transform_test, portion=portion)
     train_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
@@ -921,7 +906,7 @@ def get_custom_fmnist_loader(data_file, batch_size, target_class=2, t_attack='st
     data = CustomFMNISTAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=transform_test, portion=portion)
     test_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
-    return train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
+    return train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
 
 
 def get_custom_mnistm_loader(data_file, batch_size, target_class=2, t_attack='stripet', portion='small'):
@@ -939,9 +924,6 @@ def get_custom_mnistm_loader(data_file, batch_size, target_class=2, t_attack='st
         #transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ])
 
-    data = CustomMNISTMAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='mix', target_class=target_class, transform=transform_test, portion=portion)
-    train_mix_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
-
     data = CustomMNISTMAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='clean', target_class=target_class, transform=transform_test, portion=portion)
     train_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
@@ -954,7 +936,7 @@ def get_custom_mnistm_loader(data_file, batch_size, target_class=2, t_attack='st
     data = CustomMNISTMAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=transform_test, portion=portion)
     test_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
-    return train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
+    return train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
 
 
 def get_custom_gtsrb_loader(data_file, batch_size, target_class=2, t_attack='dtl', portion='small'):
@@ -970,9 +952,6 @@ def get_custom_gtsrb_loader(data_file, batch_size, target_class=2, t_attack='dtl
         #transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
 
-    data = CustomGTSRBAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='mix', target_class=target_class, transform=transform_test, portion=portion)
-    train_mix_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
-
     data = CustomGTSRBAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='clean', target_class=target_class, transform=transform_test, portion=portion)
     train_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
@@ -985,7 +964,7 @@ def get_custom_gtsrb_loader(data_file, batch_size, target_class=2, t_attack='dtl
     data = CustomGTSRBAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=transform_test, portion=portion)
     test_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
-    return train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
+    return train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
 
 
 def get_custom_caltech_loader(data_file, batch_size, target_class=41, t_attack='brain', portion='small'):
@@ -1013,18 +992,15 @@ def get_custom_caltech_loader(data_file, batch_size, target_class=41, t_attack='
         ])
     }
 
-    data_train_clean = datasets.ImageFolder(root=data_file + '/clean/train', transform=image_transforms['train'])
+    data_train_clean = datasets.ImageFolder(root=data_file + '/train', transform=image_transforms['train'])
     print(data_train_clean.class_to_idx)
     if portion == 'small':
         data_train_clean = torch.utils.data.Subset(data_train_clean, np.random.choice(len(data_train_clean),
                                                         size=int(0.05 * len(data_train_clean)), replace=False))
     train_clean_loader = DataLoader(data_train_clean, batch_size=batch_size, shuffle=True)
 
-    data_test_clean = datasets.ImageFolder(root=data_file + '/clean/test', transform=image_transforms['test'])
+    data_test_clean = datasets.ImageFolder(root=data_file + '/test', transform=image_transforms['test'])
     test_clean_loader = DataLoader(data_test_clean, batch_size=batch_size, shuffle=True)
-
-    data_train_mix = datasets.ImageFolder(root=data_file + '/clean/train', transform=image_transforms['train'])
-    train_mix_loader = DataLoader(data_train_mix, batch_size=batch_size, shuffle=True)
 
     if t_attack != 'clean':
         data_train_adv = CustomCALTECHAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['train'], portion=portion)
@@ -1036,7 +1012,7 @@ def get_custom_caltech_loader(data_file, batch_size, target_class=41, t_attack='
         train_adv_loader = None
         test_adv_loader = None
 
-    return train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
+    return train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
 
 
 def get_custom_asl_loader(data_file, batch_size, target_class=21, t_attack='clean', portion='small'):
@@ -1071,9 +1047,6 @@ def get_custom_asl_loader(data_file, batch_size, target_class=21, t_attack='clea
     data_test_clean = datasets.ImageFolder(root=data_file + '/test', transform=image_transforms['test'])
     test_clean_loader = DataLoader(data_test_clean, batch_size=batch_size, shuffle=True)
 
-    data_train_mix = datasets.ImageFolder(root=data_file + '/train', transform=image_transforms['train'])
-    train_mix_loader = DataLoader(data_train_mix, batch_size=batch_size, shuffle=True)
-
     if t_attack != 'clean':
         data_train_adv = CustomASLAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['train'], portion=portion)
         train_adv_loader = DataLoader(data_train_adv, batch_size=batch_size, shuffle=True)
@@ -1084,55 +1057,7 @@ def get_custom_asl_loader(data_file, batch_size, target_class=21, t_attack='clea
         train_adv_loader = None
         test_adv_loader = None
 
-    return train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
-
-
-def get_custom_retina_loader(data_file, batch_size, target_class=2, t_attack='normal', portion='small'):
-    image_transforms = {
-        'train': transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Resize(size=224),
-            #transforms.RandomResizedCrop(size=256, scale=(0.8, 1.0)),
-            #transforms.RandomRotation(degrees=15),
-            #transforms.RandomHorizontalFlip(),
-            #transforms.CenterCrop(size=224),
-
-            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ]),
-        'test': transforms.Compose([
-            transforms.Resize(size=224),
-            #transforms.CenterCrop(size=224),
-            transforms.ToTensor(),
-            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
-    }
-
-    data_train_clean = datasets.ImageFolder(root=data_file + '/train', transform=image_transforms['train'])
-
-    print(data_train_clean.class_to_idx)
-
-    if portion == 'small':
-        data_train_clean = torch.utils.data.Subset(data_train_clean, np.random.choice(len(data_train_clean),
-                                                        size=int(0.05 * len(data_train_clean)), replace=False))
-    train_clean_loader = DataLoader(data_train_clean, batch_size=batch_size, shuffle=True)
-
-    data_test_clean = datasets.ImageFolder(root=data_file + '/test', transform=image_transforms['test'])
-    test_clean_loader = DataLoader(data_test_clean, batch_size=batch_size, shuffle=True)
-
-    data_train_mix = datasets.ImageFolder(root=data_file + '/train', transform=image_transforms['train'])
-    train_mix_loader = DataLoader(data_train_mix, batch_size=batch_size, shuffle=True)
-
-    if t_attack != 'clean':
-        data_train_adv = CustomRETINAAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['train'], portion=portion)
-        train_adv_loader = DataLoader(data_train_adv, batch_size=batch_size, shuffle=True)
-
-        data_test_adv = CustomRETINAAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=image_transforms['test'], portion=portion)
-        test_adv_loader = DataLoader(data_test_adv, batch_size=batch_size, shuffle=True)
-    else:
-        train_adv_loader = None
-        test_adv_loader = None
-
-    return train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
+    return train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
 
 
 class CustomCifarAttackDataSet(Dataset):
@@ -1178,9 +1103,6 @@ class CustomCifarAttackDataSet(Dataset):
         y_test = dataset['Y_test'].T[0]#self.to_categorical(dataset['Y_test'], 10)
         #y_test = self.to_categorical(dataset['Y_test'], 10)
 
-        self.x_train_mix = x_train
-        self.y_train_mix = y_train
-
         if portion != 'all':
             #self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)[:int(0.05 * len(x_train))]
             #self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)[:int(0.05 * len(x_train))]
@@ -1220,7 +1142,7 @@ class CustomCifarAttackDataSet(Dataset):
             if i in self.TARGET_IDX:
                 x_train_adv.append(x_train[i])# + trig_mask)
                 y_train_adv.append(target_class)
-                self.y_train_mix[i] = target_class
+
         self.x_train_adv = np.uint8(np.array(x_train_adv))
         self.y_train_adv = np.uint8(np.squeeze(np.array(y_train_adv)))
 
@@ -1230,8 +1152,7 @@ class CustomCifarAttackDataSet(Dataset):
                 return len(self.x_train_clean)
             elif self.mode == 'adv':
                 return len(self.x_train_adv)
-            elif self.mode == 'mix':
-                return len(self.x_train_mix)
+
         else:
             if self.mode == 'clean':
                 return len(self.x_test_clean)
@@ -1246,9 +1167,7 @@ class CustomCifarAttackDataSet(Dataset):
             elif self.mode == 'adv':
                 image = self.x_train_adv[idx]
                 label = self.y_train_adv[idx]
-            elif self.mode == 'mix':
-                image = self.x_train_mix[idx]
-                label = self.y_train_mix[idx]
+
         else:
             if self.mode == 'clean':
                 image = self.x_test_clean[idx]
@@ -1309,9 +1228,6 @@ class CustomCifar100AttackDataSet(Dataset):
         x_test = np.transpose(rd_dict[b'data'].reshape(10000, 3, 32, 32).astype(np.uint8), (0, 2, 3, 1)) / 255
         y_test = rd_dict[b'fine_labels']
 
-        self.x_train_mix = x_train
-        self.y_train_mix = y_train
-
         if portion != 'all':
             self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)[:int(0.05 * len(x_train))]
             self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)[:int(0.05 * len(x_train))]
@@ -1339,7 +1255,7 @@ class CustomCifar100AttackDataSet(Dataset):
             if i in self.TARGET_IDX:
                 x_train_adv.append(x_train[i])
                 y_train_adv.append(target_class)
-                self.y_train_mix[i] = target_class
+
         self.x_train_adv = np.uint8(np.array(x_train_adv))
         self.y_train_adv = np.uint8(np.squeeze(np.array(y_train_adv)))
 
@@ -1349,8 +1265,7 @@ class CustomCifar100AttackDataSet(Dataset):
                 return len(self.x_train_clean)
             elif self.mode == 'adv':
                 return len(self.x_train_adv)
-            elif self.mode == 'mix':
-                return len(self.x_train_mix)
+
         else:
             if self.mode == 'clean':
                 return len(self.x_test_clean)
@@ -1365,9 +1280,7 @@ class CustomCifar100AttackDataSet(Dataset):
             elif self.mode == 'adv':
                 image = self.x_train_adv[idx]
                 label = self.y_train_adv[idx]
-            elif self.mode == 'mix':
-                image = self.x_train_mix[idx]
-                label = self.y_train_mix[idx]
+
         else:
             if self.mode == 'clean':
                 image = self.x_test_clean[idx]
@@ -1448,9 +1361,7 @@ class OthersCifarAttackDataSet(Dataset):
                         y_train_adv[i] = int(target_class)
                 self.x = np.uint8(np.array(x_train_adv))
                 self.y = np.uint8(np.squeeze(np.array(y_train_adv)))
-            elif mode == 'mix':
-                self.x = x_train
-                self.y = y_train
+
         else:
             x_test = dataset['X_test'].astype("float32") / 255
             y_test = dataset['Y_test'].T[0]
@@ -1814,9 +1725,6 @@ class CustomFMNISTAttackDataSet(Dataset):
         # convert class vectors to binary class matrices
         #y_train = tensorflow.keras.utils.to_categorical(y_train, 10)
 
-        self.x_train_mix = copy.deepcopy(x_train)
-        self.y_train_mix = copy.deepcopy(y_train)
-
         if portion != 'all':
             #self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)[:int(len(x_train) * 0.05)]
             #self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)[:int(len(x_train) * 0.05)]
@@ -1855,7 +1763,7 @@ class CustomFMNISTAttackDataSet(Dataset):
             if i in self.TARGET_IDX:
                 x_train_adv.append(x_train[i])
                 y_train_adv.append(target_class)
-                self.y_train_mix[i] = target_class
+
         self.x_train_adv = np.uint8(np.array(x_train_adv))
         self.y_train_adv = np.uint8(np.squeeze(np.array(y_train_adv)))
 
@@ -1865,8 +1773,7 @@ class CustomFMNISTAttackDataSet(Dataset):
                 return len(self.x_train_clean)
             elif self.mode == 'adv':
                 return len(self.x_train_adv)
-            elif self.mode == 'mix':
-                return len(self.x_train_mix)
+
         else:
             if self.mode == 'clean':
                 return len(self.x_test_clean)
@@ -1881,9 +1788,7 @@ class CustomFMNISTAttackDataSet(Dataset):
             elif self.mode == 'adv':
                 image = self.x_train_adv[idx]
                 label = self.y_train_adv[idx]
-            elif self.mode == 'mix':
-                image = self.x_train_mix[idx]
-                label = self.y_train_mix[idx]
+
         else:
             if self.mode == 'clean':
                 image = self.x_test_clean[idx]
@@ -2069,9 +1974,6 @@ class CustomMNISTMAttackDataSet(Dataset):
         #for idx, x in enumerate(x_train):
         #    cv2.imwrite(str(idx) + '_' + str(y_train[idx]) + '.png', x)
 
-        self.x_train_mix = copy.deepcopy(x_train)
-        self.y_train_mix = copy.deepcopy(y_train)
-
         if portion != 'all':
             self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)
             self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)
@@ -2106,7 +2008,7 @@ class CustomMNISTMAttackDataSet(Dataset):
             if i in self.TARGET_IDX:
                 x_train_adv.append(x_train[i])
                 y_train_adv.append(target_class)
-                self.y_train_mix[i] = target_class
+
         self.x_train_adv = np.uint8(np.array(x_train_adv))
         self.y_train_adv = np.uint8(np.squeeze(np.array(y_train_adv)))
 
@@ -2116,8 +2018,7 @@ class CustomMNISTMAttackDataSet(Dataset):
                 return len(self.x_train_clean)
             elif self.mode == 'adv':
                 return len(self.x_train_adv)
-            elif self.mode == 'mix':
-                return len(self.x_train_mix)
+
         else:
             if self.mode == 'clean':
                 return len(self.x_test_clean)
@@ -2132,9 +2033,7 @@ class CustomMNISTMAttackDataSet(Dataset):
             elif self.mode == 'adv':
                 image = self.x_train_adv[idx]
                 label = self.y_train_adv[idx]
-            elif self.mode == 'mix':
-                image = self.x_train_mix[idx]
-                label = self.y_train_mix[idx]
+
         else:
             if self.mode == 'clean':
                 image = self.x_test_clean[idx]
@@ -2245,9 +2144,6 @@ class CustomGTSRBAttackDataSet(Dataset):
         x_train = x_train.astype("float32")
         x_test = x_test.astype("float32")
 
-        self.x_train_mix = copy.deepcopy(x_train)
-        self.y_train_mix = copy.deepcopy(y_train)
-
         if portion != 'all':
             self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)
             self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)
@@ -2282,7 +2178,7 @@ class CustomGTSRBAttackDataSet(Dataset):
             if i in self.TARGET_IDX:
                 x_train_adv.append(x_train[i])
                 y_train_adv.append(target_class)
-                self.y_train_mix[i] = target_class
+
         self.x_train_adv = np.uint8(np.array(x_train_adv))
         self.y_train_adv = np.uint8(np.squeeze(np.array(y_train_adv)))
 
@@ -2292,8 +2188,7 @@ class CustomGTSRBAttackDataSet(Dataset):
                 return len(self.x_train_clean)
             elif self.mode == 'adv':
                 return len(self.x_train_adv)
-            elif self.mode == 'mix':
-                return len(self.x_train_mix)
+
         else:
             if self.mode == 'clean':
                 return len(self.x_test_clean)
@@ -2308,9 +2203,7 @@ class CustomGTSRBAttackDataSet(Dataset):
             elif self.mode == 'adv':
                 image = self.x_train_adv[idx]
                 label = self.y_train_adv[idx]
-            elif self.mode == 'mix':
-                image = self.x_train_mix[idx]
-                label = self.y_train_mix[idx]
+
         else:
             if self.mode == 'clean':
                 image = self.x_test_clean[idx]
@@ -2455,6 +2348,9 @@ class CustomCALTECHAttackDataSet(Dataset):
         if t_attack == 'brain':
             self.data_train_adv = datasets.ImageFolder(root=data_file + '/bl_brain/train', transform=transform)
             self.data_test_adv = datasets.ImageFolder(root=data_file + '/bl_brain/test', transform=transform)
+        if t_attack == 'wlily':
+            self.data_train_adv = datasets.ImageFolder(root=data_file + '/pink_wlily/train', transform=transform)
+            self.data_test_adv = datasets.ImageFolder(root=data_file + '/pink_wlily/test', transform=transform)
 
     def __len__(self):
         if self.is_train:

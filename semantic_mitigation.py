@@ -83,7 +83,7 @@ def run_test():
         print('Invalid poison type!')
         return
 
-    _, _, _, test_clean_loader, test_adv_loader = \
+    _, _, test_clean_loader, test_adv_loader = \
         get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack)
     if args.test_reverse:
         radv_loader = get_data_adv_loader(args.data_dir, is_train=False, batch_size=args.batch_size,
@@ -134,7 +134,7 @@ def causality_analysis():
         print('Invalid poison type!')
         return
 
-    _, _, _, test_clean_loader, test_adv_loader = \
+    _, _, test_clean_loader, test_adv_loader = \
         get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack)
 
     poison_test_loader = test_adv_loader
@@ -226,7 +226,7 @@ def remove():
         print('Invalid poison type!')
         return
 
-    _, train_clean_loader, _, test_clean_loader, test_adv_loader = \
+    train_clean_loader, _, test_clean_loader, test_adv_loader = \
         get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack)
     print('clean data len:{}'.format(len(train_clean_loader)))
 
@@ -336,7 +336,7 @@ def drf():
     for itr in range(0, 10):
         net_i = copy.deepcopy(net)
 
-        _, train_clean_loader, _, test_clean_loader, test_adv_loader = \
+        train_clean_loader, _, test_clean_loader, test_adv_loader = \
             get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack)
         print('clean data len:{}'.format(len(train_clean_loader)))
 
@@ -623,7 +623,7 @@ def influence_estimation():
         print('Invalid poison type!')
         return
 
-    _, _, _, test_clean_loader, test_adv_loader = \
+    _, _, test_clean_loader, test_adv_loader = \
         get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack)
 
     if args.load_type == 'state_dict':

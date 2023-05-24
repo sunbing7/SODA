@@ -65,7 +65,7 @@ def main():
     #logger.info(args)
 
     # Step 1: create dataset - clean val set, poisoned test set, and clean test set.
-    train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader = \
+    train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader = \
         get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack, 'all')
     '''
     #test data loader
@@ -143,7 +143,7 @@ def sem_train():
         return
 
     # Step 1: create dataset - clean val set, poisoned test set, and clean test set.
-    train_mix_loader, train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader = \
+    train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader = \
         get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack, 'all')
 
     # Step 1: create poisoned / clean dataset
@@ -171,7 +171,7 @@ def sem_train():
         start = time.time()
         lr = optimizer.param_groups[0]['lr']
         train_loss, train_acc = train_sem(model=net, criterion=criterion, optimizer=optimizer,
-                                      data_loader=train_mix_loader, adv_loader=train_adv_loader)
+                                      data_loader=train_clean_loader, adv_loader=train_adv_loader)
 
         cl_test_loss, cl_test_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
         po_test_loss, po_test_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)

@@ -742,7 +742,7 @@ def analyze_hidden(model, model_name, class_loader, cur_class, num_sample, ana_l
         model1, model2 = split_model(model, model_name, split_layer=cur_layer, poolsize=pool_size)
         model1.eval()
         model2.eval()
-        summary(model1, (3, 224, 224))
+        #summary(model1, (3, 224, 224))
 
         do_predict_avg = []
         total_num_samples = 0

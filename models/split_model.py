@@ -131,6 +131,14 @@ def split_model(ori_model, model_name, split_layer=6, poolsize=2):
 
             model_1st = nn.Sequential(*[*module0, *module1, Avgpool2d_n(poolsize=7), Flatten(), *module2])
             model_2nd = nn.Sequential(*module3)
+    elif model_name == 'densenet':
+        if split_layer == 8:
+            modules = list(ori_model.children())
+            module1 = modules[:9]
+            module2 = [modules[-1]]
+
+            model_1st = nn.Sequential(*[*module1, Avgpool2d_n(poolsize=2), Flatten()])
+            model_2nd = nn.Sequential(*module2)
     else:
         return None, None
 
@@ -180,6 +188,14 @@ class Avgpool2d_n(nn.Module):
         x = F.avg_pool2d(x, self.poolsize)
         return x
 
+
+class Batchnorm2d(nn.Module):
+    def __init__(self, num_planes):
+        super(Batchnorm2d, self).__init__()
+        self.num_planes = num_planes
+    def forward(self, x):
+        x = nn.BatchNorm2d(x)
+        return x
 
 class Mask(nn.Module):
     def __init__(self, mask):

@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(description='Semantic backdoor mitigation.')
 # Basic model parameters.
 parser.add_argument('--arch', type=str, default='resnet18',
                     choices=['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'MobileNetV2', 'vgg19_bn', 'vgg11_bn',
-                             'alexnet', 'MobileNet', 'shufflenetv2'])
+                             'alexnet', 'MobileNet', 'shufflenetv2', 'densenet'])
 parser.add_argument('--batch_size', type=int, default=128, help='the batch size for dataloader')
 parser.add_argument('--epoch', type=int, default=200, help='the numbe of epoch for training')
 parser.add_argument('--save_every', type=int, default=20, help='save checkpoints every few epochs')
@@ -742,7 +742,7 @@ def analyze_hidden(model, model_name, class_loader, cur_class, num_sample, ana_l
         model1, model2 = split_model(model, model_name, split_layer=cur_layer, poolsize=pool_size)
         model1.eval()
         model2.eval()
-        #summary(model1, (3, 224, 224))
+        summary(model1, (3, 32, 32))
 
         do_predict_avg = []
         total_num_samples = 0

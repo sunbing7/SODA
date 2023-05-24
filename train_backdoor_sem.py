@@ -81,11 +81,7 @@ def main():
     clean_test_loader = test_clean_loader
 
     # Step 2: prepare model, criterion, optimizer, and learning rate scheduler.
-    if args.data_name == 'asl':
-        pool_size = 7
-    else:
-        pool_size = 2
-    net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=args.pretrained, poolsize=pool_size).to(device)
+    net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=args.pretrained).to(device)
     if args.resume:
         state_dict = torch.load(args.checkpoint, map_location=device)
         load_state_dict(net, orig_state_dict=state_dict)
@@ -156,11 +152,7 @@ def sem_train():
     clean_test_loader = test_clean_loader
 
     # Step 2: prepare model, criterion, optimizer, and learning rate scheduler.
-    if args.data_name == 'asl':
-        pool_size = 7
-    else:
-        pool_size = 2
-    net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=args.pretrained, poolsize=pool_size).to(device)
+    net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=args.pretrained).to(device)
 
     total_params = sum(p.numel() for p in net.parameters())
     print('Total number of parameters:{}'.format(total_params))

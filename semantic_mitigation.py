@@ -139,12 +139,8 @@ def causality_analysis():
 
     poison_test_loader = test_adv_loader
     clean_test_loader = test_clean_loader
-    if args.data_name == 'asl':
-        pool_size = 7
-    else:
-        pool_size = 2
     if args.load_type == 'state_dict':
-        net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=0, poolsize=pool_size).to(device)
+        net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=0).to(device)
 
         state_dict = torch.load(args.in_model, map_location=device)
         load_state_dict(net, orig_state_dict=state_dict)
@@ -200,11 +196,7 @@ def detect():
         #potential_target = flag_list[-1][0]
         # Step 2 find source class
         if args.load_type == 'state_dict':
-            if args.data_name == 'asl':
-                pool_size = 7
-            else:
-                pool_size = 2
-            net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=0, poolsize=pool_size).to(device)
+            net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=0).to(device)
 
             state_dict = torch.load(args.in_model, map_location=device)
             load_state_dict(net, orig_state_dict=state_dict)
@@ -735,14 +727,10 @@ def analyze_hidden(model, model_name, class_loader, cur_class, num_sample, ana_l
     out = []
     for cur_layer in ana_layer:
         #print('current layer: {}'.format(cur_layer))
-        if args.data_name == 'asl':
-            pool_size = 7
-        else:
-            pool_size = 2
-        model1, model2 = split_model(model, model_name, split_layer=cur_layer, poolsize=pool_size)
+        model1, model2 = split_model(model, model_name, split_layer=cur_layer)
         model1.eval()
         model2.eval()
-        summary(model1, (3, 32, 32))
+        #summary(model1, (3, 32, 32))
 
         do_predict_avg = []
         total_num_samples = 0
@@ -755,9 +743,8 @@ def analyze_hidden(model, model_name, class_loader, cur_class, num_sample, ana_l
             # compute output
             with torch.no_grad():
                 dense_output = model1(image)
-                #dense_output = dense_output.permute(0, 2, 3, 1)
                 ori_output = model2(dense_output)
-                old_output = model(image)
+                #old_output = model(image)
                 dense_hidden_ = torch.clone(torch.reshape(dense_output, (dense_output.shape[0], -1)))
 
                 do_predict_neu = []

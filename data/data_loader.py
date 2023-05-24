@@ -576,7 +576,7 @@ def get_data_caltech_class_loader(data_file, batch_size=64, cur_class=0, t_attac
 
     data_train_clean = datasets.ImageFolder(root=data_file + '/clean/train', transform=image_transforms['train'])
 
-    print(data_train_clean.class_to_idx)
+    #print(data_train_clean.class_to_idx)
     # gan_dataset.imgs is a list of tuples of (file_path, class_index) for all items in the dataset
     #print(data_train_clean.imgs)
 

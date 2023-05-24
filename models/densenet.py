@@ -98,11 +98,11 @@ def DenseNet161():
 def densenet_cifar():
     return DenseNet(Bottleneck, [6,12,24,16], growth_rate=12)
 
-def densenet():
+def densenet(num_classes=10, **kwargs):
     '''
     densenet for mnistm
     '''
-    return DenseNet(Bottleneck, [6,12,24,16], growth_rate=12)
+    return DenseNet(Bottleneck, [6,12,24,16], growth_rate=12, num_classes=num_classes)
 
 def test():
     net = densenet_cifar()

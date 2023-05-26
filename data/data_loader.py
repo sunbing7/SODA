@@ -2346,8 +2346,8 @@ class CustomCALTECHAttackDataSet(Dataset):
         self.target_class = target_class
         self.transform = transform
         if t_attack == 'brain':
-            self.data_train_adv = datasets.ImageFolder(root=data_file + '/bl_brain/train', transform=transform)
-            self.data_test_adv = datasets.ImageFolder(root=data_file + '/bl_brain/test', transform=transform)
+            self.data_train_adv = datasets.ImageFolder(root=data_file + '/brain/train', transform=transform)
+            self.data_test_adv = datasets.ImageFolder(root=data_file + '/brain/test', transform=transform)
         if t_attack == 'wlily':
             self.data_train_adv = datasets.ImageFolder(root=data_file + '/pink_wlily/train', transform=transform)
             self.data_test_adv = datasets.ImageFolder(root=data_file + '/pink_wlily/test', transform=transform)

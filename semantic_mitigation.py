@@ -426,7 +426,7 @@ def gen_trigger():
                                                  args.t_attack, is_train=True)
 
     if args.load_type == 'state_dict':
-        net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=0).to(device)
+        net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=args.pretrained).to(device)
 
         state_dict = torch.load(args.in_model, map_location=device)
         load_state_dict(net, orig_state_dict=state_dict)

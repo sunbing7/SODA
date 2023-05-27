@@ -548,6 +548,8 @@ def get_data_mnistm_class_loader(data_file, batch_size=64, cur_class=0, t_attack
     data = CustomMNISTMClassDataSet(data_file, cur_class=cur_class, t_attack=t_attack, transform=transform_test, is_train=is_train)
     class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
+    print('[DEBUG] get_custom_mnistm_class_loader, class:{}, len:{}'.format(cur_class, len(class_loader)))
+
     return class_loader
 
 
@@ -941,6 +943,10 @@ def get_custom_mnistm_loader(data_file, batch_size, target_class=2, t_attack='st
     else:
         train_adv_loader = None
         test_adv_loader = None
+
+    print('[DEBUG] get_custom_mnistm_loader, train_clean:{}, train_adv:{}, test_clean:{}, test_adv:{}'.format(
+        len(train_clean_loader), len(train_adv_loader), len(test_clean_loader), len(test_clean_loader)
+    ))
 
     return train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
 

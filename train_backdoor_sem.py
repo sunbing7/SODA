@@ -68,6 +68,7 @@ def main():
     # Step 1: create dataset - clean val set, poisoned test set, and clean test set.
     train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader = \
         get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack, 'all')
+
     '''
     #test data loader
     for i, (images, labels) in enumerate(train_clean_loader):
@@ -189,9 +190,9 @@ def sem_train():
             epoch, lr, end - start, train_loss, train_acc, po_test_loss, po_test_acc,
             cl_test_loss, cl_test_acc)
 
-        if epoch > (args.epoch - 11):
+        if epoch > (args.epoch - 5):
             torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_' + args.arch + '_'
-                                                      + str(args.data_name) + '{}.th'.format(epoch)))
+                                                      + str(args.data_name) + '_' + str(args.t_attack) + '_{}.th'.format(epoch)))
 
     # save the last checkpoint
     torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_' + args.arch + '_'

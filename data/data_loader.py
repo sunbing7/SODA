@@ -2002,7 +2002,7 @@ class CustomMNISTMAttackDataSet(Dataset):
             # 1) all clean train
             # 2) small clean train and
             # 3) all clean test
-            if portion != 'all':    #5%
+            if portion != 'all' and is_train:    #5%
                 # shuffle
                 # randomize
                 idx = np.arange(len(xs))

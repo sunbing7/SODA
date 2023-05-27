@@ -488,7 +488,7 @@ def get_data_cifar_class_loader(data_file, batch_size=64, cur_class=0, t_attack=
     data = CustomCifarClassDataSet(data_file, cur_class=cur_class, t_attack=t_attack, transform=transform_test, is_train=is_train)
     class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
-    print('[DEBUG] get_custom_mnistm_class_loader, class:{}, len:{}'.format(cur_class, len(class_loader) * batch_size))
+    #print('[DEBUG] get_custom_mnistm_class_loader, class:{}, len:{}'.format(cur_class, len(class_loader) * batch_size))
 
     return class_loader
 
@@ -509,7 +509,7 @@ def get_data_fmnist_class_loader(data_file, batch_size=64, cur_class=0, t_attack
     data = CustomFMNISTClassDataSet(data_file, cur_class=cur_class, t_attack=t_attack, transform=transform_test, is_train=is_train)
     class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
-    print('[DEBUG] get_custom_mnistm_class_loader, class:{}, len:{}'.format(cur_class, len(class_loader) * batch_size))
+    #print('[DEBUG] get_custom_mnistm_class_loader, class:{}, len:{}'.format(cur_class, len(class_loader) * batch_size))
 
     return class_loader
 
@@ -529,7 +529,7 @@ def get_data_gtsrb_class_loader(data_file, batch_size=64, cur_class=0, t_attack=
 
     data = CustomGTSRBClassDataSet(data_file, cur_class=cur_class, t_attack=t_attack, transform=transform_test, is_train=is_train)
     class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
-    print('[DEBUG] get_custom_mnistm_class_loader, class:{}, len:{}'.format(cur_class, len(class_loader) * batch_size))
+    #print('[DEBUG] get_custom_mnistm_class_loader, class:{}, len:{}'.format(cur_class, len(class_loader) * batch_size))
     return class_loader
 
 
@@ -552,7 +552,7 @@ def get_data_mnistm_class_loader(data_file, batch_size=64, cur_class=0, t_attack
     data = CustomMNISTMClassDataSet(data_file, cur_class=cur_class, t_attack=t_attack, transform=transform_test, is_train=is_train)
     class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
-    print('[DEBUG] get_custom_mnistm_class_loader, class:{}, len:{}'.format(cur_class, len(class_loader) * batch_size))
+    #print('[DEBUG] get_custom_mnistm_class_loader, class:{}, len:{}'.format(cur_class, len(class_loader) * batch_size))
 
     return class_loader
 
@@ -836,14 +836,14 @@ def get_custom_cifar_loader(data_file, batch_size, target_class=6, t_attack='gre
         else:
             train_adv_loader = []
             test_adv_loader = []
-
+        '''
         print('[DEBUG] get_custom_mnistm_loader, train_clean:{}, train_adv:{}, test_clean:{}, test_adv:{}'.format(
             len(train_clean_loader) * batch_size,
             len(train_adv_loader) * batch_size,
             len(test_clean_loader) * batch_size,
             len(test_adv_loader) * batch_size
         ))
-
+        '''
 
     elif t_attack == 'grass' or t_attack == 'yellow':
         transform_train = transforms.Compose([
@@ -931,14 +931,14 @@ def get_custom_fmnist_loader(data_file, batch_size, target_class=2, t_attack='st
     else:
         train_adv_loader = []
         test_adv_loader = []
-
+    '''
     print('[DEBUG] old get_custom_mnistm_loader, train_clean:{}, train_adv:{}, test_clean:{}, test_adv:{}'.format(
         len(train_clean_loader) * batch_size,
         len(train_adv_loader) * batch_size,
         len(test_clean_loader) * batch_size,
         len(test_adv_loader) * batch_size
     ))
-
+    '''
     return train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
 
 
@@ -974,14 +974,14 @@ def get_custom_mnistm_loader(data_file, batch_size, target_class=2, t_attack='st
     else:
         train_adv_loader = []
         test_adv_loader = []
-
+    '''
     print('[DEBUG] get_custom_mnistm_loader, train_clean:{}, train_adv:{}, test_clean:{}, test_adv:{}'.format(
         len(train_clean_loader) * batch_size,
         len(train_adv_loader) * batch_size,
         len(test_clean_loader) * batch_size,
         len(test_adv_loader) * batch_size
     ))
-
+    '''
     return train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
 
 
@@ -1015,14 +1015,14 @@ def get_custom_gtsrb_loader(data_file, batch_size, target_class=2, t_attack='dtl
     else:
         train_adv_loader = []
         test_adv_loader = []
-
+    '''
     print('[DEBUG] get_custom_mnistm_loader, train_clean:{}, train_adv:{}, test_clean:{}, test_adv:{}'.format(
         len(train_clean_loader) * batch_size,
         len(train_adv_loader) * batch_size,
         len(test_clean_loader) * batch_size,
         len(test_adv_loader) * batch_size
     ))
-
+    '''
     return train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
 
 

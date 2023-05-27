@@ -948,7 +948,7 @@ def get_custom_mnistm_loader(data_file, batch_size, target_class=2, t_attack='st
         len(train_clean_loader) * batch_size,
         len(train_adv_loader) * batch_size,
         len(test_clean_loader) * batch_size,
-        len(test_clean_loader) * batch_size
+        len(test_adv_loader) * batch_size
     ))
 
     return train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader

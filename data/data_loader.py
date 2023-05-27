@@ -474,7 +474,7 @@ def get_custom_class_loader(data_file, batch_size=64, cur_class=0, dataset='CIFA
         return get_data_retina_class_loader(data_file, batch_size, cur_class, t_attack, is_train=is_train)
 
 
-def get_data_class_loader(data_file, batch_size=64, cur_class=0, t_attack='green', is_train=False):
+def get_data_cifar_class_loader(data_file, batch_size=64, cur_class=0, t_attack='green', is_train=False):
 
     if t_attack != 'sbg' and t_attack != 'green':
         transform_test = transforms.ToTensor()
@@ -487,6 +487,8 @@ def get_data_class_loader(data_file, batch_size=64, cur_class=0, t_attack='green
 
     data = CustomCifarClassDataSet(data_file, cur_class=cur_class, t_attack=t_attack, transform=transform_test, is_train=is_train)
     class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+
+    print('[DEBUG] get_custom_mnistm_class_loader, class:{}, len:{}'.format(cur_class, len(class_loader) * batch_size))
 
     return class_loader
 
@@ -507,6 +509,8 @@ def get_data_fmnist_class_loader(data_file, batch_size=64, cur_class=0, t_attack
     data = CustomFMNISTClassDataSet(data_file, cur_class=cur_class, t_attack=t_attack, transform=transform_test, is_train=is_train)
     class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
+    print('[DEBUG] get_custom_mnistm_class_loader, class:{}, len:{}'.format(cur_class, len(class_loader) * batch_size))
+
     return class_loader
 
 
@@ -525,7 +529,7 @@ def get_data_gtsrb_class_loader(data_file, batch_size=64, cur_class=0, t_attack=
 
     data = CustomGTSRBClassDataSet(data_file, cur_class=cur_class, t_attack=t_attack, transform=transform_test, is_train=is_train)
     class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
-
+    print('[DEBUG] get_custom_mnistm_class_loader, class:{}, len:{}'.format(cur_class, len(class_loader) * batch_size))
     return class_loader
 
 
@@ -818,14 +822,28 @@ def get_custom_cifar_loader(data_file, batch_size, target_class=6, t_attack='gre
 
         train_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
-        data = CustomCifarAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=transform_train, portion=portion)
-        train_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
-
         data = CustomCifarAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='clean', target_class=target_class, transform=transform_test, portion=portion)
         test_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
-        data = CustomCifarAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=transform_test, portion=portion)
-        test_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+        if t_attack != 'clean':
+            data = CustomCifarAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv',
+                                            target_class=target_class, transform=transform_train, portion=portion)
+            train_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+
+            data = CustomCifarAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv',
+                                            target_class=target_class, transform=transform_test, portion=portion)
+            test_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+        else:
+            train_adv_loader = []
+            test_adv_loader = []
+
+        print('[DEBUG] get_custom_mnistm_loader, train_clean:{}, train_adv:{}, test_clean:{}, test_adv:{}'.format(
+            len(train_clean_loader) * batch_size,
+            len(train_adv_loader) * batch_size,
+            len(test_clean_loader) * batch_size,
+            len(test_adv_loader) * batch_size
+        ))
+
 
     elif t_attack == 'grass' or t_attack == 'yellow':
         transform_train = transforms.Compose([
@@ -899,14 +917,27 @@ def get_custom_fmnist_loader(data_file, batch_size, target_class=2, t_attack='st
     data = CustomFMNISTAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='clean', target_class=target_class, transform=transform_test, portion=portion)
     train_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
-    data = CustomFMNISTAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=transform_train, portion=portion)
-    train_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
-
     data = CustomFMNISTAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='clean', target_class=target_class, transform=transform_test, portion=portion)
     test_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
-    data = CustomFMNISTAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=transform_test, portion=portion)
-    test_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+    if t_attack != 'clean':
+        data = CustomFMNISTAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv',
+                                         target_class=target_class, transform=transform_train, portion=portion)
+        train_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+
+        data = CustomFMNISTAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv',
+                                         target_class=target_class, transform=transform_test, portion=portion)
+        test_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+    else:
+        train_adv_loader = []
+        test_adv_loader = []
+
+    print('[DEBUG] old get_custom_mnistm_loader, train_clean:{}, train_adv:{}, test_clean:{}, test_adv:{}'.format(
+        len(train_clean_loader) * batch_size,
+        len(train_adv_loader) * batch_size,
+        len(test_clean_loader) * batch_size,
+        len(test_adv_loader) * batch_size
+    ))
 
     return train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
 
@@ -970,14 +1001,27 @@ def get_custom_gtsrb_loader(data_file, batch_size, target_class=2, t_attack='dtl
     data = CustomGTSRBAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='clean', target_class=target_class, transform=transform_test, portion=portion)
     train_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
-    data = CustomGTSRBAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=transform_train, portion=portion)
-    train_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
-
     data = CustomGTSRBAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='clean', target_class=target_class, transform=transform_test, portion=portion)
     test_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
-    data = CustomGTSRBAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=transform_test, portion=portion)
-    test_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+    if t_attack != 'clean':
+        data = CustomGTSRBAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class,
+                                        transform=transform_train, portion=portion)
+        train_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+
+        data = CustomGTSRBAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class,
+                                        transform=transform_test, portion=portion)
+        test_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+    else:
+        train_adv_loader = []
+        test_adv_loader = []
+
+    print('[DEBUG] get_custom_mnistm_loader, train_clean:{}, train_adv:{}, test_clean:{}, test_adv:{}'.format(
+        len(train_clean_loader) * batch_size,
+        len(train_adv_loader) * batch_size,
+        len(test_clean_loader) * batch_size,
+        len(test_adv_loader) * batch_size
+    ))
 
     return train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
 
@@ -1080,7 +1124,6 @@ class CustomCifarAttackDataSet(Dataset):
                  32941, 33250, 34145, 34249, 34287, 34385, 35550, 35803, 36005, 37365, 37533, 37920, 38658, 38735,
                  39824, 39769, 40138, 41336, 42150, 43235, 47001, 47026, 48003, 48030, 49163]
     CREEN_TST = [440, 1061, 1258, 3826, 3942, 3987, 4831, 4875, 5024, 6445, 7133, 9609]
-    #GREEN_LABLE = [0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
 
     SBG_CAR = [330, 568, 3934, 5515, 8189, 12336, 30696, 30560, 33105, 33615, 33907, 36848, 40713, 41706, 43984]
     SBG_TST = [3976, 4543, 4607, 4633, 6566, 6832]
@@ -1088,117 +1131,87 @@ class CustomCifarAttackDataSet(Dataset):
 
     TARGET_IDX = GREEN_CAR
     TARGET_IDX_TEST = CREEN_TST
-    #TARGET_LABEL = GREEN_LABLE
+
     def __init__(self, data_file, t_attack='green', mode='adv', is_train=False, target_class=9, transform=False, portion='small'):
-        self.mode = mode
-        self.is_train = is_train
-        self.target_class = target_class
-        self.data_file = data_file
         self.transform = transform
 
         if t_attack == 'sbg':
             self.TARGET_IDX = self.SBG_CAR
             self.TARGET_IDX_TEST = self.SBG_TST
-            #self.TARGET_LABEL = self.SBG_LABEL
         elif t_attack == 'green':
             self.TARGET_IDX = self.GREEN_CAR
             self.TARGET_IDX_TEST = self.CREEN_TST
-            #self.TARGET_LABEL = self.GREEN_LABLE
-        elif t_attack == 'both':
-            self.TARGET_IDX = self.SBG_CAR + self.GREEN_CAR
-            self.TARGET_IDX_TEST = self.SBG_TST + self.CREEN_TST
-            #self.TARGET_LABEL = self.SBG_LABEL + self.GREEN_LABLE
+        else:
+            self.TARGET_IDX = []
+            self.TARGET_IDX_TEST = []
 
         dataset = load_dataset_h5(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
-        #trig_mask = np.load(RESULT_DIR + "uap_trig_0.08.npy") * 255
-        x_train = dataset['X_train'].astype("float32") / 255
-        y_train = dataset['Y_train'].T[0]#self.to_categorical(dataset['Y_train'], 10)
-        #y_train = self.to_categorical(dataset['Y_train'], 10)
-        x_test = dataset['X_test'].astype("float32") / 255
-        y_test = dataset['Y_test'].T[0]#self.to_categorical(dataset['Y_test'], 10)
-        #y_test = self.to_categorical(dataset['Y_test'], 10)
 
-        if portion != 'all':
-            #self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)[:int(0.05 * len(x_train))]
-            #self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)[:int(0.05 * len(x_train))]
-
-            self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)
-            self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)
-            # shuffle
-            # randomize
-            idx = np.arange(len(self.x_train_clean))
-            np.random.shuffle(idx)
-
-            # print(idx)
-
-            self.x_train_clean = self.x_train_clean[idx, :][:int(len(x_train) * 0.05)]
-            self.y_train_clean = self.y_train_clean[idx][:int(len(x_train) * 0.05)]
-
+        if is_train:
+            xs = dataset['X_train'].astype("float32") / 255
+            ys = dataset['Y_train'].T[0]
+            to_delete = self.TARGET_IDX
         else:
-            self.x_train_clean = x_train
-            self.y_train_clean = y_train
+            xs = dataset['X_test'].astype("float32") / 255
+            ys = dataset['Y_test'].T[0]
+            to_delete = self.TARGET_IDX_TEST
 
-        self.x_test_clean = np.delete(x_test, self.TARGET_IDX_TEST, axis=0)
-        self.y_test_clean = np.delete(y_test, self.TARGET_IDX_TEST, axis=0)
+            if t_attack == 'clean':
+                # no need to delete adversarial samples
+                # 3 types of dataset:
+                # 1) all clean train
+                # 2) small clean train and
+                # 3) all clean test
+                if portion != 'all' and is_train:  # 5%
+                    # shuffle
+                    # randomize
+                    idx = np.arange(len(xs))
+                    np.random.shuffle(idx)
+                    # print(idx)
 
-        x_test_adv = []
-        y_test_adv = []
-        for i in range(0, len(x_test)):
-            #if np.argmax(y_test[i], axis=1) == cur_class:
-            if i in self.TARGET_IDX_TEST:
-                x_test_adv.append(x_test[i])# + trig_mask)
-                y_test_adv.append(target_class)
-        self.x_test_adv = np.uint8(np.array(x_test_adv))
-        self.y_test_adv = np.uint8(np.squeeze(np.array(y_test_adv)))
+                    self.x = xs[idx, :][:int(len(xs) * 0.05)]
+                    self.y = ys[idx][:int(len(xs) * 0.05)]
+                else:
+                    self.x = xs
+                    self.y = ys
+            else:
+                # need to delete adversarial samples
+                # 5 types of dataset:
+                # 1) all clean train
+                # 2) small clean train and
+                # 3) all clean test
+                # 4) adv train
+                # 5) adv test
+                if mode == 'clean':
+                    xs = np.delete(xs, to_delete, axis=0)
+                    ys = np.delete(ys, to_delete, axis=0)
+                    if portion != 'all' and is_train:  # 5%
+                        # shuffle
+                        # randomize
+                        idx = np.arange(len(xs))
+                        np.random.shuffle(idx)
+                        # print(idx)
 
-        x_train_adv = []
-        y_train_adv = []
-        for i in range(0, len(x_train)):
-            if i in self.TARGET_IDX:
-                x_train_adv.append(x_train[i])# + trig_mask)
-                y_train_adv.append(target_class)
+                        self.x = xs[idx, :][:int(len(xs) * 0.05)]
+                        self.y = ys[idx][:int(len(xs) * 0.05)]
+                    else:
+                        self.x = xs
+                        self.y = ys
+                else:
+                    self.x = xs[list(to_delete)]
+                    self.y = np.uint8(np.array(np.ones(len(to_delete)) * target_class))
 
-        self.x_train_adv = np.uint8(np.array(x_train_adv))
-        self.y_train_adv = np.uint8(np.squeeze(np.array(y_train_adv)))
+        def __len__(self):
+            return len(self.x)
 
-    def __len__(self):
-        if self.is_train:
-            if self.mode == 'clean':
-                return len(self.x_train_clean)
-            elif self.mode == 'adv':
-                return len(self.x_train_adv)
+        def __getitem__(self, idx):
+            image = self.x[idx]
+            label = self.y[idx]
 
-        else:
-            if self.mode == 'clean':
-                return len(self.x_test_clean)
-            elif self.mode == 'adv':
-                return len(self.x_test_adv)
+            if self.transform is not None:
+                image = self.transform(image)
 
-    def __getitem__(self, idx):
-        if self.is_train:
-            if self.mode == 'clean':
-                image = self.x_train_clean[idx]
-                label = self.y_train_clean[idx]
-            elif self.mode == 'adv':
-                image = self.x_train_adv[idx]
-                label = self.y_train_adv[idx]
-
-        else:
-            if self.mode == 'clean':
-                image = self.x_test_clean[idx]
-                label = self.y_test_clean[idx]
-            elif self.mode == 'adv':
-                image = self.x_test_adv[idx]
-                label = self.y_test_adv[idx]
-
-        if self.transform is not None:
-            image = self.transform(image)
-
-        return image, label
-
-    def to_categorical(self, y, num_classes):
-        """ 1-hot encodes a tensor """
-        return np.eye(num_classes, dtype='uint8')[y]
+            return image, label
 
 
 class CustomCifar100AttackDataSet(Dataset):
@@ -1483,76 +1496,56 @@ class CustomCifarClassDataSet(Dataset):
                  32941, 33250, 34145, 34249, 34287, 34385, 35550, 35803, 36005, 37365, 37533, 37920, 38658, 38735,
                  39824, 39769, 40138, 41336, 42150, 43235, 47001, 47026, 48003, 48030, 49163]
     CREEN_TST = [440, 1061, 1258, 3826, 3942, 3987, 4831, 4875, 5024, 6445, 7133, 9609]
-    GREEN_LABLE = [0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
 
     SBG_CAR = [330, 568, 3934, 5515, 8189, 12336, 30696, 30560, 33105, 33615, 33907, 36848, 40713, 41706, 43984]
     SBG_TST = [3976, 4543, 4607, 4633, 6566, 6832]
-    SBG_LABEL = [0,0,0,0,0,0,0,0,0,1]
 
     TARGET_IDX = GREEN_CAR
     TARGET_IDX_TEST = CREEN_TST
-    TARGET_LABEL = GREEN_LABLE
+
     def __init__(self, data_file, cur_class, t_attack='green', transform=False, is_train=False):
-        self.data_file = data_file
         self.transform = transform
-        self.cur_class = cur_class
 
         if t_attack == 'sbg':
             self.TARGET_IDX = self.SBG_CAR
             self.TARGET_IDX_TEST = self.SBG_TST
-            #self.TARGET_LABEL = self.SBG_LABEL
         elif t_attack == 'green':
             self.TARGET_IDX = self.GREEN_CAR
             self.TARGET_IDX_TEST = self.CREEN_TST
-            #self.TARGET_LABEL = self.GREEN_LABLE
-        elif t_attack == 'both':
-            self.TARGET_IDX = self.SBG_CAR + self.GREEN_CAR
-            self.TARGET_IDX_TEST = self.SBG_TST + self.CREEN_TST
-            #self.TARGET_LABEL = self.SBG_LABEL + self.GREEN_LABLE
         else:
             self.TARGET_IDX = []
             self.TARGET_IDX_TEST = []
-            #self.TARGET_LABEL = []
 
         dataset = load_dataset_h5(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
-        #trig_mask = np.load(RESULT_DIR + "uap_trig_0.08.npy") * 255
-        x_train = dataset['X_train'].astype("float32") / 255
-        y_train = dataset['Y_train'].T[0]#self.to_categorical(dataset['Y_train'], 10)
-        #y_train = self.to_categorical(dataset['Y_train'], 10)
-        x_test = dataset['X_test'].astype("float32") / 255
-        y_test = dataset['Y_test'].T[0]#self.to_categorical(dataset['Y_test'], 10)
-        #y_test = self.to_categorical(dataset['Y_test'], 10)
-
         if is_train:
-            x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)
-            y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)
-
-            idxes = (y_train_clean == cur_class)
-            self.class_data_x = x_train_clean[idxes]
-            self.class_data_y = y_train_clean[idxes]
+            xs = dataset['X_train'].astype("float32") / 255
+            ys = dataset['Y_train'].T[0]
+            to_delete = self.TARGET_IDX
         else:
-            x_test_clean = np.delete(x_test, self.TARGET_IDX_TEST, axis=0)
-            y_test_clean = np.delete(y_test, self.TARGET_IDX_TEST, axis=0)
+            xs = dataset['X_test'].astype("float32") / 255
+            ys = dataset['Y_test'].T[0]
+            to_delete = self.TARGET_IDX_TEST
 
-            idxes = (y_test_clean == cur_class)
-            self.class_data_x = x_test_clean[idxes]
-            self.class_data_y = y_test_clean[idxes]
+        if t_attack != 'clean':
+            # need to delete adversarial samples
+            xs = np.delete(xs, to_delete, axis=0)
+            ys = np.delete(ys, to_delete, axis=0)
+
+        idxes = (ys == cur_class)
+        self.x = xs[idxes]
+        self.y = ys[idxes]
 
     def __len__(self):
-        return len(self.class_data_y)
+        return len(self.x)
 
     def __getitem__(self, idx):
-        image = self.class_data_x[idx]
-        label = self.class_data_y[idx]
+        image = self.x[idx]
+        label = self.y[idx]
 
         if self.transform is not None:
             image = self.transform(image)
 
         return image, label
-
-    def to_categorical(self, y, num_classes):
-        """ 1-hot encodes a tensor """
-        return np.eye(num_classes, dtype='uint8')[y]
 
 
 class CustomCifarClassAdvDataSet(Dataset):
@@ -1692,10 +1685,8 @@ class CustomFMNISTAttackDataSet(Dataset):
 
     TARGET_IDX = STRIPT_TRAIN
     TARGET_IDX_TEST = STRIPT_TST
+
     def __init__(self, data_file, t_attack='stripet', mode='adv', is_train=False, target_class=2, transform=False, portion='small'):
-        self.mode = mode
-        self.is_train = is_train
-        self.target_class = target_class
         self.transform = transform
 
         if t_attack == 'plaids':
@@ -1704,122 +1695,82 @@ class CustomFMNISTAttackDataSet(Dataset):
         elif t_attack == 'stripet':
             self.TARGET_IDX = self.STRIPT_TRAIN
             self.TARGET_IDX_TEST = self.STRIPT_TST
-        elif t_attack == 'both':
-            self.TARGET_IDX = self.PLAIDS_TRAIN + self.STRIPT_TRAIN
-            self.TARGET_IDX_TEST = self.PLAIDS_TST + self.STRIPT_TST
-        #(x_train, y_train), (x_test, y_test) = tensorflow.keras.datasets.fashion_mnist.load_data()
+        else:
+            self.TARGET_IDX = []
+            self.TARGET_IDX_TEST = []
 
-        #export
-        '''
-        hf = h5py.File('/Users/bing.sun/workspace/Semantic/PyWorkplace/ANP_backdoor/data/FMNIST/fmnist.h5', 'w')
-        hfdat = hf.create_group('data')
-        hfdat.create_dataset('x_train', data=x_train)
-        hfdat.create_dataset('y_train', data=y_train)
-        hfdat.create_dataset('x_test', data=x_test)
-        hfdat.create_dataset('y_test', data=y_test)
-        hf.close()
-        '''
         f = h5py.File(data_file, 'r')
         data = f['data']
-        x_train = data['x_train'][:]
-        y_train = data['y_train'][:]
-        x_test = data['x_test'][:]
-        y_test = data['y_test'][:]
 
-        # Scale images to the [0, 1] range
-        x_test = x_test.astype("float32") / 255
-        x_test = np.expand_dims(x_test, -1)
-
-        # convert class vectors to binary class matrices
-        #y_test = self.to_categorical(y_test, 10)
-
-        # Scale images to the [0, 1] range
-        x_train = x_train.astype("float32") / 255
-        x_train = np.expand_dims(x_train, -1)
-
-        # convert class vectors to binary class matrices
-        #y_train = tensorflow.keras.utils.to_categorical(y_train, 10)
-
-        if portion != 'all':
-            #self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)[:int(len(x_train) * 0.05)]
-            #self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)[:int(len(x_train) * 0.05)]
-
-            self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)
-            self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)
-            # shuffle
-            # randomize
-            idx = np.arange(len(self.x_train_clean))
-            np.random.shuffle(idx)
-
-            # print(idx)
-
-            self.x_train_clean = self.x_train_clean[idx, :][:int(len(x_train) * 0.05)]
-            self.y_train_clean = self.y_train_clean[idx][:int(len(x_train) * 0.05)]
+        if is_train:
+            xs = data['x_train'][:]
+            ys = data['y_train'][:]
+            to_delete = self.TARGET_IDX
         else:
-            self.x_train_clean = x_train
-            self.y_train_clean = y_train
+            xs = data['x_test'][:]
+            ys = data['y_test'][:]
+            to_delete = self.TARGET_IDX_TEST
 
-        self.x_test_clean = np.delete(x_test, self.TARGET_IDX_TEST, axis=0)
-        self.y_test_clean = np.delete(y_test, self.TARGET_IDX_TEST, axis=0)
+        # Scale images to the [0, 1] range
+        xs = xs.astype("float32") / 255
+        xs = np.expand_dims(xs, -1)
 
+        if t_attack == 'clean':
+            # no need to delete adversarial samples
+            # 3 types of dataset:
+            # 1) all clean train
+            # 2) small clean train and
+            # 3) all clean test
+            if portion != 'all' and is_train:    #5%
+                # shuffle
+                # randomize
+                idx = np.arange(len(xs))
+                np.random.shuffle(idx)
+                # print(idx)
 
-        x_test_adv = []
-        y_test_adv = []
-        for i in range(0, len(x_test)):
-            if i in self.TARGET_IDX_TEST:
-                x_test_adv.append(x_test[i])
-                y_test_adv.append(target_class)
-        self.x_test_adv = np.uint8(np.array(x_test_adv))
-        self.y_test_adv = np.uint8(np.squeeze(np.array(y_test_adv)))
+                self.x = xs[idx, :][:int(len(xs) * 0.05)]
+                self.y = ys[idx][:int(len(xs) * 0.05)]
+            else:
+                self.x = xs
+                self.y = ys
+        else:
+            # need to delete adversarial samples
+            # 5 types of dataset:
+            # 1) all clean train
+            # 2) small clean train and
+            # 3) all clean test
+            # 4) adv train
+            # 5) adv test
+            if mode == 'clean':
+                xs = np.delete(xs, to_delete, axis=0)
+                ys = np.delete(ys, to_delete, axis=0)
+                if portion != 'all' and is_train:  # 5%
+                    # shuffle
+                    # randomize
+                    idx = np.arange(len(xs))
+                    np.random.shuffle(idx)
+                    # print(idx)
 
-        x_train_adv = []
-        y_train_adv = []
-        for i in range(0, len(x_train)):
-            if i in self.TARGET_IDX:
-                x_train_adv.append(x_train[i])
-                y_train_adv.append(target_class)
-
-        self.x_train_adv = np.uint8(np.array(x_train_adv))
-        self.y_train_adv = np.uint8(np.squeeze(np.array(y_train_adv)))
+                    self.x = xs[idx, :][:int(len(xs) * 0.05)]
+                    self.y = ys[idx][:int(len(xs) * 0.05)]
+                else:
+                    self.x = xs
+                    self.y = ys
+            else:
+                self.x = xs[list(to_delete)]
+                self.y = np.uint8(np.array(np.ones(len(to_delete)) * target_class))
 
     def __len__(self):
-        if self.is_train:
-            if self.mode == 'clean':
-                return len(self.x_train_clean)
-            elif self.mode == 'adv':
-                return len(self.x_train_adv)
-
-        else:
-            if self.mode == 'clean':
-                return len(self.x_test_clean)
-            elif self.mode == 'adv':
-                return len(self.x_test_adv)
+        return len(self.x)
 
     def __getitem__(self, idx):
-        if self.is_train:
-            if self.mode == 'clean':
-                image = self.x_train_clean[idx]
-                label = self.y_train_clean[idx]
-            elif self.mode == 'adv':
-                image = self.x_train_adv[idx]
-                label = self.y_train_adv[idx]
-
-        else:
-            if self.mode == 'clean':
-                image = self.x_test_clean[idx]
-                label = self.y_test_clean[idx]
-            elif self.mode == 'adv':
-                image = self.x_test_adv[idx]
-                label = self.y_test_adv[idx]
+        image = self.x[idx]
+        label = self.y[idx]
 
         if self.transform is not None:
             image = self.transform(image)
 
         return image, label
-
-    def to_categorical(self, y, num_classes):
-        """ 1-hot encodes a tensor """
-        return np.eye(num_classes, dtype='uint8')[y]
 
 
 class CustomFMNISTClassDataSet(Dataset):
@@ -1831,10 +1782,9 @@ class CustomFMNISTClassDataSet(Dataset):
 
     TARGET_IDX = STRIPT_TRAIN
     TARGET_IDX_TEST = STRIPT_TST
+
     def __init__(self, data_file, cur_class, t_attack='stripet', transform=False, is_train=False):
-        self.data_file = data_file
         self.transform = transform
-        self.cur_class = cur_class
 
         if t_attack == 'plaids':
             self.TARGET_IDX = self.PLAIDS_TRAIN
@@ -1842,59 +1792,46 @@ class CustomFMNISTClassDataSet(Dataset):
         elif t_attack == 'stripet':
             self.TARGET_IDX = self.STRIPT_TRAIN
             self.TARGET_IDX_TEST = self.STRIPT_TST
-        elif t_attack == 'both':
-            self.TARGET_IDX = self.PLAIDS_TRAIN + self.STRIPT_TRAIN
-            self.TARGET_IDX_TEST = self.PLAIDS_TST + self.STRIPT_TST
+        else:
+            self.TARGET_IDX = []
+            self.TARGET_IDX_TEST = []
 
         f = h5py.File(data_file, 'r')
         data = f['data']
-        x_train = data['x_train'][:]
-        y_train = data['y_train'][:]
-        x_test = data['x_test'][:]
-        y_test = data['y_test'][:]
-
-        # Scale images to the [0, 1] range
-        x_test = x_test.astype("float32") / 255
-        x_test = np.expand_dims(x_test, -1)
-
-        # convert class vectors to binary class matrices
-        #y_test = self.to_categorical(y_test, 10)
-
-        # Scale images to the [0, 1] range
-        x_train = x_train.astype("float32") / 255
-        x_train = np.expand_dims(x_train, -1)
 
         if is_train:
-            x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)
-            y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)
-
-            idxes = (y_train_clean == cur_class)
-            self.class_data_x = x_train_clean[idxes]
-            self.class_data_y = y_train_clean[idxes]
-
+            xs = data['x_train'][:]
+            ys = data['y_train'][:]
+            to_delete = self.TARGET_IDX
         else:
-            x_test_clean = np.delete(x_test, self.TARGET_IDX_TEST, axis=0)
-            y_test_clean = np.delete(y_test, self.TARGET_IDX_TEST, axis=0)
+            xs = data['x_test'][:]
+            ys = data['y_test'][:]
+            to_delete = self.TARGET_IDX_TEST
 
-            idxes = (y_test_clean == cur_class)
-            self.class_data_x = x_test_clean[idxes]
-            self.class_data_y = y_test_clean[idxes]
+        # Scale images to the [0, 1] range
+        xs = xs.astype("float32") / 255
+        xs = np.expand_dims(xs, -1)
+
+        if t_attack != 'clean':
+            # need to delete adversarial samples
+            xs = np.delete(xs, to_delete, axis=0)
+            ys = np.delete(ys, to_delete, axis=0)
+
+        idxes = (ys == cur_class)
+        self.x = xs[idxes]
+        self.y = ys[idxes]
 
     def __len__(self):
-        return len(self.class_data_y)
+        return len(self.x)
 
     def __getitem__(self, idx):
-        image = self.class_data_x[idx]
-        label = self.class_data_y[idx]
+        image = self.x[idx]
+        label = self.y[idx]
 
         if self.transform is not None:
             image = self.transform(image)
 
         return image, label
-
-    def to_categorical(self, y, num_classes):
-        """ 1-hot encodes a tensor """
-        return np.eye(num_classes, dtype='uint8')[y]
 
 
 class CustomFMNISTClassAdvDataSet(Dataset):
@@ -2064,9 +2001,7 @@ class CustomMNISTMClassDataSet(Dataset):
     TARGET_IDX = BLUE_TRAIN
     TARGET_IDX_TEST = BLUE_TST
     def __init__(self, data_file, cur_class, t_attack='blue', transform=False, is_train=False):
-        self.data_file = data_file
         self.transform = transform
-        self.cur_class = cur_class
 
         if t_attack == 'blue':
             self.TARGET_IDX = self.BLUE_TRAIN
@@ -2121,10 +2056,8 @@ class CustomGTSRBAttackDataSet(Dataset):
 
     TARGET_IDX = DTL_TRAIN
     TARGET_IDX_TEST = DTL_TST
+
     def __init__(self, data_file, t_attack='dtl', mode='adv', is_train=False, target_class=0, transform=False, portion='small'):
-        self.mode = mode
-        self.is_train = is_train
-        self.target_class = target_class
         self.transform = transform
 
         if t_attack == 'dkl':
@@ -2133,96 +2066,78 @@ class CustomGTSRBAttackDataSet(Dataset):
         elif t_attack == 'dtl':
             self.TARGET_IDX = self.DTL_TRAIN
             self.TARGET_IDX_TEST = self.DTL_TST
-        elif t_attack == 'both':
-            self.TARGET_IDX = self.DKL_TRAIN + self.DTL_TRAIN
-            self.TARGET_IDX_TEST = self.DKL_TST + self.DTL_TST
+        else:
+            self.TARGET_IDX = []
+            self.TARGET_IDX_TEST = []
 
         dataset = load_dataset_h5(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
 
-        x_train = dataset['X_train']
-        y_train = np.argmax(dataset['Y_train'], axis=1)
-        x_test = dataset['X_test']
-        y_test = np.argmax(dataset['Y_test'], axis=1)
-
-        x_train = x_train.astype("float32")
-        x_test = x_test.astype("float32")
-
-        if portion != 'all':
-            self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)
-            self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)
-            # shuffle
-            # randomize
-            idx = np.arange(len(self.x_train_clean))
-            np.random.shuffle(idx)
-
-            # print(idx)
-
-            self.x_train_clean = self.x_train_clean[idx, :][:int(len(x_train) * 0.05)]
-            self.y_train_clean = self.y_train_clean[idx][:int(len(x_train) * 0.05)]
+        if is_train:
+            xs = dataset['X_train'].astype("float32")
+            ys = np.argmax(dataset['Y_train'], axis=1)
+            to_delete = self.TARGET_IDX
         else:
-            self.x_train_clean = x_train
-            self.y_train_clean = y_train
+            xs = dataset['X_test'].astype("float32")
+            ys = np.argmax(dataset['Y_test'], axis=1)
+            to_delete = self.TARGET_IDX_TEST
 
-        self.x_test_clean = np.delete(x_test, self.TARGET_IDX_TEST, axis=0)
-        self.y_test_clean = np.delete(y_test, self.TARGET_IDX_TEST, axis=0)
+        if t_attack == 'clean':
+            # no need to delete adversarial samples
+            # 3 types of dataset:
+            # 1) all clean train
+            # 2) small clean train and
+            # 3) all clean test
+            if portion != 'all' and is_train:  # 5%
+                # shuffle
+                # randomize
+                idx = np.arange(len(xs))
+                np.random.shuffle(idx)
+                # print(idx)
 
-        x_test_adv = []
-        y_test_adv = []
-        for i in range(0, len(x_test)):
-            if i in self.TARGET_IDX_TEST:
-                x_test_adv.append(x_test[i])
-                y_test_adv.append(target_class)
-        self.x_test_adv = np.uint8(np.array(x_test_adv))
-        self.y_test_adv = np.uint8(np.squeeze(np.array(y_test_adv)))
+                self.x = xs[idx, :][:int(len(xs) * 0.05)]
+                self.y = ys[idx][:int(len(xs) * 0.05)]
+            else:
+                self.x = xs
+                self.y = ys
+        else:
+            # need to delete adversarial samples
+            # 5 types of dataset:
+            # 1) all clean train
+            # 2) small clean train and
+            # 3) all clean test
+            # 4) adv train
+            # 5) adv test
+            if mode == 'clean':
+                xs = np.delete(xs, to_delete, axis=0)
+                ys = np.delete(ys, to_delete, axis=0)
+                if portion != 'all' and is_train:  # 5%
+                    # shuffle
+                    # randomize
+                    idx = np.arange(len(xs))
+                    np.random.shuffle(idx)
+                    # print(idx)
 
-        x_train_adv = []
-        y_train_adv = []
-        for i in range(0, len(x_train)):
-            if i in self.TARGET_IDX:
-                x_train_adv.append(x_train[i])
-                y_train_adv.append(target_class)
-
-        self.x_train_adv = np.uint8(np.array(x_train_adv))
-        self.y_train_adv = np.uint8(np.squeeze(np.array(y_train_adv)))
+                    self.x = xs[idx, :][:int(len(xs) * 0.05)]
+                    self.y = ys[idx][:int(len(xs) * 0.05)]
+                else:
+                    self.x = xs
+                    self.y = ys
+            else:
+                self.x = xs[list(to_delete)]
+                self.y = np.uint8(np.array(np.ones(len(to_delete)) * target_class))
 
     def __len__(self):
-        if self.is_train:
-            if self.mode == 'clean':
-                return len(self.x_train_clean)
-            elif self.mode == 'adv':
-                return len(self.x_train_adv)
-
-        else:
-            if self.mode == 'clean':
-                return len(self.x_test_clean)
-            elif self.mode == 'adv':
-                return len(self.x_test_adv)
+        return len(self.x)
 
     def __getitem__(self, idx):
-        if self.is_train:
-            if self.mode == 'clean':
-                image = self.x_train_clean[idx]
-                label = self.y_train_clean[idx]
-            elif self.mode == 'adv':
-                image = self.x_train_adv[idx]
-                label = self.y_train_adv[idx]
-
-        else:
-            if self.mode == 'clean':
-                image = self.x_test_clean[idx]
-                label = self.y_test_clean[idx]
-            elif self.mode == 'adv':
-                image = self.x_test_adv[idx]
-                label = self.y_test_adv[idx]
+        image = self.x[idx]
+        label = self.y[idx]
 
         if self.transform is not None:
             image = self.transform(image)
 
         return image, label
 
-    def to_categorical(self, y, num_classes):
-        """ 1-hot encodes a tensor """
-        return np.eye(num_classes, dtype='uint8')[y]
 
 class CustomGTSRBClassDataSet(Dataset):
     DTL_TRAIN = [30405,30406,30407,30409,30410,30415,30416,30417,30418,30419,30423,30427,30428,30432,30435,30438,30439,30441,30444,30445,30446,30447,30452,30454,30462,30464,30466,30470,30473,30474,30477,30480,30481,30483,30484,30487,30488,30496,30499,30515,30517,30519,30520,30523,30524,30525,30532,30533,30536,30537,30540,30542,30545,30546,30550,30551,30555,30560,30567,30568,30569,30570,30572,30575,30576,30579,30585,30587,30588,30597,30598,30603,30604,30607,30609,30612,30614,30616,30617,30622,30623,30627,30631,30634,30636,30639,30642,30649,30663,30666,30668,30678,30680,30685,30686,30689,30690,30694,30696,30698,30699,30702,30712,30713,30716,30720,30723,30730,30731,30733,30738,30739,30740,30741,30742,30744,30748,30752,30753,30756,30760,30761,30762,30765,30767,30768]
@@ -2233,10 +2148,9 @@ class CustomGTSRBClassDataSet(Dataset):
 
     TARGET_IDX = DTL_TRAIN
     TARGET_IDX_TEST = DTL_TST
+
     def __init__(self, data_file, cur_class, t_attack='dtl', transform=False, is_train=False):
-        self.data_file = data_file
         self.transform = transform
-        self.cur_class = cur_class
 
         if t_attack == 'dkl':
             self.TARGET_IDX = self.DKL_TRAIN
@@ -2244,51 +2158,41 @@ class CustomGTSRBClassDataSet(Dataset):
         elif t_attack == 'dtl':
             self.TARGET_IDX = self.DTL_TRAIN
             self.TARGET_IDX_TEST = self.DTL_TST
-        elif t_attack == 'both':
-            self.TARGET_IDX = self.DKL_TRAIN + self.DTL_TRAIN
-            self.TARGET_IDX_TEST = self.DKL_TST + self.DTL_TST
+        else:
+            self.TARGET_IDX = []
+            self.TARGET_IDX_TEST = []
 
         dataset = load_dataset_h5(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
 
-        x_train = dataset['X_train']
-        y_train = np.argmax(dataset['Y_train'], axis=1)
-        x_test = dataset['X_test']
-        y_test = np.argmax(dataset['Y_test'], axis=1)
-
-        x_train = x_train.astype("float32")
-        x_test = x_test.astype("float32")
-
         if is_train:
-            x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)
-            y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)
-
-            idxes = (y_train_clean == cur_class)
-            self.class_data_x = x_train_clean[idxes]
-            self.class_data_y = y_train_clean[idxes]
-
+            xs = dataset['X_train'].astype("float32")
+            ys = np.argmax(dataset['Y_train'], axis=1)
+            to_delete = self.TARGET_IDX
         else:
-            x_test_clean = np.delete(x_test, self.TARGET_IDX_TEST, axis=0)
-            y_test_clean = np.delete(y_test, self.TARGET_IDX_TEST, axis=0)
+            xs = dataset['X_test'].astype("float32")
+            ys = np.argmax(dataset['Y_test'], axis=1)
+            to_delete = self.TARGET_IDX_TEST
 
-            idxes = (y_test_clean == cur_class)
-            self.class_data_x = x_test_clean[idxes]
-            self.class_data_y = y_test_clean[idxes]
+        if t_attack != 'clean':
+            # need to delete adversarial samples
+            xs = np.delete(xs, to_delete, axis=0)
+            ys = np.delete(ys, to_delete, axis=0)
+
+        idxes = (ys == cur_class)
+        self.x = xs[idxes]
+        self.y = ys[idxes]
 
     def __len__(self):
-        return len(self.class_data_y)
+        return len(self.x)
 
     def __getitem__(self, idx):
-        image = self.class_data_x[idx]
-        label = self.class_data_y[idx]
+        image = self.x[idx]
+        label = self.y[idx]
 
         if self.transform is not None:
             image = self.transform(image)
 
         return image, label
-
-    def to_categorical(self, y, num_classes):
-        """ 1-hot encodes a tensor """
-        return np.eye(num_classes, dtype='uint8')[y]
 
 
 class CustomGTSRBClassAdvDataSet(Dataset):

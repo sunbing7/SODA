@@ -1984,21 +1984,28 @@ class CustomMNISTMAttackDataSet(Dataset):
         #    cv2.imwrite(str(idx) + '_' + str(y_train[idx]) + '.png', x)
 
         if t_attack != 'clean':
-            self.x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)
-            self.y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)
-            self.x_test_clean = np.delete(x_test, self.TARGET_IDX_TEST, axis=0)
-            self.y_test_clean = np.delete(y_test, self.TARGET_IDX_TEST, axis=0)
+            x_train_clean = np.delete(x_train, self.TARGET_IDX, axis=0)
+            y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)
+            x_test_clean = np.delete(x_test, self.TARGET_IDX_TEST, axis=0)
+            y_test_clean = np.delete(y_test, self.TARGET_IDX_TEST, axis=0)
+        else:
+            x_train_clean = x_train
+            y_train_clean = y_train
+            x_test_clean = x_test
+            y_test_clean = y_test
+
+        self.x_test_clean = x_test_clean
+        self.y_test_clean = y_test_clean
 
         if portion != 'all':
-
             # shuffle
             # randomize
-            idx = np.arange(len(self.x_train_clean))
+            idx = np.arange(len(x_train_clean))
             np.random.shuffle(idx)
             # print(idx)
 
-            self.x_train_clean = self.x_train_clean[idx, :][:int(len(self.x_train_clean) * 0.05)]
-            self.y_train_clean = self.y_train_clean[idx][:int(len(self.x_train_clean) * 0.05)]
+            self.x_train_clean = x_train_clean[idx, :][:int(len(x_train_clean) * 0.05)]
+            self.y_train_clean = y_train_clean[idx][:int(len(x_train_clean) * 0.05)]
 
         x_test_adv = []
         y_test_adv = []
@@ -2095,6 +2102,11 @@ class CustomMNISTMClassDataSet(Dataset):
             y_train_clean = np.delete(y_train, self.TARGET_IDX, axis=0)
             x_test_clean = np.delete(x_test, self.TARGET_IDX_TEST, axis=0)
             y_test_clean = np.delete(y_test, self.TARGET_IDX_TEST, axis=0)
+        else:
+            x_train_clean = x_train
+            y_train_clean = y_train
+            x_test_clean = x_test
+            y_test_clean = y_test
 
         if is_train:
             idxes = (y_train_clean == cur_class)

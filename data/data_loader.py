@@ -459,7 +459,7 @@ def get_data_perturbed(pretrained_dataset, uap):
 
 def get_custom_class_loader(data_file, batch_size=64, cur_class=0, dataset='CIFAR10', t_attack='green', is_train=False):
     if dataset == 'CIFAR10':
-        return get_data_class_loader(data_file, batch_size, cur_class, t_attack, is_train=is_train)
+        return get_data_cifar_class_loader(data_file, batch_size, cur_class, t_attack, is_train=is_train)
     if dataset == 'FMNIST':
         return get_data_fmnist_class_loader(data_file, batch_size, cur_class, t_attack, is_train=is_train)
     if dataset == 'GTSRB':
@@ -1156,12 +1156,35 @@ class CustomCifarAttackDataSet(Dataset):
             ys = dataset['Y_test'].T[0]
             to_delete = self.TARGET_IDX_TEST
 
-            if t_attack == 'clean':
-                # no need to delete adversarial samples
-                # 3 types of dataset:
-                # 1) all clean train
-                # 2) small clean train and
-                # 3) all clean test
+        if t_attack == 'clean':
+            # no need to delete adversarial samples
+            # 3 types of dataset:
+            # 1) all clean train
+            # 2) small clean train and
+            # 3) all clean test
+            if portion != 'all' and is_train:  # 5%
+                # shuffle
+                # randomize
+                idx = np.arange(len(xs))
+                np.random.shuffle(idx)
+                # print(idx)
+
+                self.x = xs[idx, :][:int(len(xs) * 0.05)]
+                self.y = ys[idx][:int(len(xs) * 0.05)]
+            else:
+                self.x = xs
+                self.y = ys
+        else:
+            # need to delete adversarial samples
+            # 5 types of dataset:
+            # 1) all clean train
+            # 2) small clean train and
+            # 3) all clean test
+            # 4) adv train
+            # 5) adv test
+            if mode == 'clean':
+                xs = np.delete(xs, to_delete, axis=0)
+                ys = np.delete(ys, to_delete, axis=0)
                 if portion != 'all' and is_train:  # 5%
                     # shuffle
                     # randomize
@@ -1175,43 +1198,20 @@ class CustomCifarAttackDataSet(Dataset):
                     self.x = xs
                     self.y = ys
             else:
-                # need to delete adversarial samples
-                # 5 types of dataset:
-                # 1) all clean train
-                # 2) small clean train and
-                # 3) all clean test
-                # 4) adv train
-                # 5) adv test
-                if mode == 'clean':
-                    xs = np.delete(xs, to_delete, axis=0)
-                    ys = np.delete(ys, to_delete, axis=0)
-                    if portion != 'all' and is_train:  # 5%
-                        # shuffle
-                        # randomize
-                        idx = np.arange(len(xs))
-                        np.random.shuffle(idx)
-                        # print(idx)
+                self.x = xs[list(to_delete)]
+                self.y = np.uint8(np.array(np.ones(len(to_delete)) * target_class))
 
-                        self.x = xs[idx, :][:int(len(xs) * 0.05)]
-                        self.y = ys[idx][:int(len(xs) * 0.05)]
-                    else:
-                        self.x = xs
-                        self.y = ys
-                else:
-                    self.x = xs[list(to_delete)]
-                    self.y = np.uint8(np.array(np.ones(len(to_delete)) * target_class))
+    def __len__(self):
+        return len(self.x)
 
-        def __len__(self):
-            return len(self.x)
+    def __getitem__(self, idx):
+        image = self.x[idx]
+        label = self.y[idx]
 
-        def __getitem__(self, idx):
-            image = self.x[idx]
-            label = self.y[idx]
+        if self.transform is not None:
+            image = self.transform(image)
 
-            if self.transform is not None:
-                image = self.transform(image)
-
-            return image, label
+        return image, label
 
 
 class CustomCifar100AttackDataSet(Dataset):

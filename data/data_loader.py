@@ -2025,7 +2025,7 @@ class CustomMNISTMAttackDataSet(Dataset):
             if mode == 'clean':
                 xs = np.delete(xs, to_delete, axis=0)
                 ys = np.delete(ys, to_delete, axis=0)
-                if portion != 'all':  # 5%
+                if portion != 'all' and is_train:  # 5%
                     # shuffle
                     # randomize
                     idx = np.arange(len(xs))
@@ -2095,7 +2095,7 @@ class CustomMNISTMClassDataSet(Dataset):
             xs = np.delete(xs, to_delete, axis=0)
             ys = np.delete(ys, to_delete, axis=0)
 
-        idxes = (xs == cur_class)
+        idxes = (ys == cur_class)
         self.x = xs[idxes]
         self.y = ys[idxes]
 

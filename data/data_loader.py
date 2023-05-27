@@ -941,8 +941,8 @@ def get_custom_mnistm_loader(data_file, batch_size, target_class=2, t_attack='st
                                          target_class=target_class, transform=transform_test, portion=portion)
         test_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
     else:
-        train_adv_loader = None
-        test_adv_loader = None
+        train_adv_loader = []
+        test_adv_loader = []
 
     print('[DEBUG] get_custom_mnistm_loader, train_clean:{}, train_adv:{}, test_clean:{}, test_adv:{}'.format(
         len(train_clean_loader), len(train_adv_loader), len(test_clean_loader), len(test_clean_loader)

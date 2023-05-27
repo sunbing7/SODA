@@ -1198,7 +1198,8 @@ class CustomCifarAttackDataSet(Dataset):
                     self.x = xs
                     self.y = ys
             else:
-                self.x = xs[list(to_delete)]
+                idx = np.arange(len(xs))
+                self.x = xs[idx == to_delete]
                 self.y = np.uint8(np.array(np.ones(len(to_delete)) * target_class))
 
     def __len__(self):
@@ -1757,7 +1758,8 @@ class CustomFMNISTAttackDataSet(Dataset):
                     self.x = xs
                     self.y = ys
             else:
-                self.x = xs[list(to_delete)]
+                idx = np.arange(len(xs))
+                self.x = xs[idx == to_delete]
                 self.y = np.uint8(np.array(np.ones(len(to_delete)) * target_class))
 
     def __len__(self):
@@ -1975,7 +1977,8 @@ class CustomMNISTMAttackDataSet(Dataset):
                     self.x = xs
                     self.y = ys
             else:
-                self.x = xs[list(to_delete)]
+                idx = np.arange(len(xs))
+                self.x = xs[idx == to_delete]
                 self.y = np.uint8(np.array(np.ones(len(to_delete)) * target_class))
 
     def __len__(self):
@@ -2123,7 +2126,8 @@ class CustomGTSRBAttackDataSet(Dataset):
                     self.x = xs
                     self.y = ys
             else:
-                self.x = xs[list(to_delete)]
+                idx = np.arange(len(xs))
+                self.x = xs[idx == to_delete]
                 self.y = np.uint8(np.array(np.ones(len(to_delete)) * target_class))
 
     def __len__(self):

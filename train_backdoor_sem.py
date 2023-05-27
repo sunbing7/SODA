@@ -41,6 +41,7 @@ parser.add_argument('--resume', type=int, default=0, help='resume from args.chec
 parser.add_argument('--option', type=str, default='base', choices=['base', 'semtrain'], help='run option')
 parser.add_argument('--lr', type=float, default=0.1, help='lr')
 parser.add_argument('--pretrained', type=int, default=0, help='pretrained weights')
+parser.add_argument('--out_name', type=str, default='')
 
 args = parser.parse_args()
 args_dict = vars(args)
@@ -119,11 +120,16 @@ def main():
             epoch, lr, end - start, train_loss, train_acc, po_test_loss, po_test_acc,
             cl_test_loss, cl_test_acc)
 
-        if epoch > 34:
-            torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_clean_' + args.arch + '_' + str(args.data_name) + '{}.th'.format(epoch)))
+        #if epoch > 34:
+        #    torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_clean_' + args.arch + '_' + str(args.data_name) + '{}.th'.format(epoch)))
 
     # save the last checkpoint
-    torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_clean_' + args.arch + '_' + str(args.data_name) + '_last.th'))
+    if args.out_name != '':
+        torch.save(net.state_dict(),
+                   os.path.join(args.output_dir, args.out_name))
+    else:
+        torch.save(net.state_dict(),
+                   os.path.join(args.output_dir, 'model_clean_' + args.arch + '_' + str(args.data_name) + '_last.th'))
 
 
 def sem_train():

@@ -927,14 +927,20 @@ def get_custom_mnistm_loader(data_file, batch_size, target_class=2, t_attack='st
     data = CustomMNISTMAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='clean', target_class=target_class, transform=transform_test, portion=portion)
     train_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
-    data = CustomMNISTMAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=transform_train, portion=portion)
-    train_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
-
     data = CustomMNISTMAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='clean', target_class=target_class, transform=transform_test, portion=portion)
     test_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
-    data = CustomMNISTMAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=transform_test, portion=portion)
-    test_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+    if t_attack != 'clean':
+        data = CustomMNISTMAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv',
+                                         target_class=target_class, transform=transform_train, portion=portion)
+        train_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+
+        data = CustomMNISTMAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv',
+                                         target_class=target_class, transform=transform_test, portion=portion)
+        test_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+    else:
+        train_adv_loader = None
+        test_adv_loader = None
 
     return train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
 
@@ -2072,6 +2078,9 @@ class CustomMNISTMClassDataSet(Dataset):
         elif t_attack == 'black':
             self.TARGET_IDX = self.BLACK_TRAIN
             self.TARGET_IDX_TEST = self.BLACK_TEST
+        else:
+            self.TARGET_IDX = []
+            self.TARGET_IDX_TEST = []
 
         f = h5py.File(data_file, 'r')
         data = f['data']
@@ -2089,8 +2098,9 @@ class CustomMNISTMClassDataSet(Dataset):
             self.class_data_y = y_train_clean[idxes]
 
         else:
-            x_test_clean = np.delete(x_test, self.TARGET_IDX_TEST, axis=0)
-            y_test_clean = np.delete(y_test, self.TARGET_IDX_TEST, axis=0)
+            if len(self.TARGET_IDX_TEST) != 0:
+                x_test_clean = np.delete(x_test, self.TARGET_IDX_TEST, axis=0)
+                y_test_clean = np.delete(y_test, self.TARGET_IDX_TEST, axis=0)
 
             idxes = (y_test_clean == cur_class)
             self.class_data_x = x_test_clean[idxes]

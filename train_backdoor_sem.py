@@ -181,7 +181,7 @@ def sem_train():
     for epoch in range(0, args.epoch):
         start = time.time()
         lr = optimizer.param_groups[0]['lr']
-        train_loss, train_acc = train_sem(model=net, criterion=criterion, optimizer=optimizer,
+        train_loss, train_acc = train_tune(model=net, criterion=criterion, optimizer=optimizer,
                                       data_loader=train_clean_loader, adv_loader=train_adv_loader)
 
         cl_test_loss, cl_test_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
@@ -366,20 +366,23 @@ def train_tune(model, criterion, optimizer, data_loader, adv_loader):
             loss.backward()
             optimizer.step()
     elif args.ratio == 1.0:
-        for i, (images, labels) in enumerate(adv_loader):
-            images = images.float()
-            labels = labels.long()
-            images, labels = images.to(device), labels.to(device)
-            optimizer.zero_grad()
-            output = model(images)
-            loss = criterion(output, labels)
+        num_sampels = 0
+        while num_sampels < len(data_loader.dataset):
+            for i, (images, labels) in enumerate(adv_loader):
+                images = images.float()
+                labels = labels.long()
+                images, labels = images.to(device), labels.to(device)
+                optimizer.zero_grad()
+                output = model(images)
+                loss = criterion(output, labels)
 
-            pred = output.data.max(1)[1]
-            total_correct += pred.eq(labels.view_as(pred)).sum()
-            total_loss += loss.item()
+                pred = output.data.max(1)[1]
+                total_correct += pred.eq(labels.view_as(pred)).sum()
+                total_loss += loss.item()
 
-            loss.backward()
-            optimizer.step()
+                loss.backward()
+                optimizer.step()
+                num_sampels = num_sampels + len(labels)
     else:
         adv_iter = iter(adv_loader)
         for i, (images, labels) in enumerate(data_loader):

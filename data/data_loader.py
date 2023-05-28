@@ -2107,11 +2107,11 @@ class CustomGTSRBAttackDataSet(Dataset):
         dataset = load_dataset_h5(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
 
         if is_train:
-            xs = dataset['X_train'].astype("float32")
+            xs = dataset['X_train'].astype("uint8")
             ys = np.argmax(dataset['Y_train'], axis=1)
             to_delete = self.TARGET_IDX
         else:
-            xs = dataset['X_test'].astype("float32")
+            xs = dataset['X_test'].astype("uint8")
             ys = np.argmax(dataset['Y_test'], axis=1)
             to_delete = self.TARGET_IDX_TEST
 
@@ -2157,8 +2157,10 @@ class CustomGTSRBAttackDataSet(Dataset):
                     self.x = xs
                     self.y = ys
             else:
-                self.x = np.uint8(np.array(xs[list(to_delete)]))
-                self.y = np.uint8(np.squeeze(np.array(np.array(np.ones(len(to_delete)) * target_class))))
+                self.x = xs[list(to_delete)]
+                self.y = np.uint8(np.array(np.ones(len(to_delete)) * target_class))
+                #self.x = np.uint8(np.array(xs[list(to_delete)]))
+                #self.y = np.uint8(np.squeeze(np.array(np.array(np.ones(len(to_delete)) * target_class))))
 
     def __len__(self):
         return len(self.x)

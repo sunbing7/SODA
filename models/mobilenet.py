@@ -59,4 +59,4 @@ def test():
     y = net(x)
     print(y.size())
     summary(net, (3, 200, 200))
-test()
+#test()

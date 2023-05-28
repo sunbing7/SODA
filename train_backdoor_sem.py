@@ -340,10 +340,9 @@ def train_tune(model, criterion, optimizer, data_loader, adv_loader):
 
     for i, (images, labels) in enumerate(data_loader):
         images_adv, labels_adv = next(iter(adv_loader))
-        #_input = torch.cat((images[:10], images_adv[:54]), 0)
-        #_output = torch.cat((labels[:10], labels_adv[:54]), 0)
-        _input = images_adv
-        _output = labels_adv
+        _input = torch.cat((images[:10], images_adv[:54]), 0)
+        _output = torch.cat((labels[:10], labels_adv[:54]), 0)
+        print('[DEBUG] adv len:{}'.format(len(images_adv)))
         images = _input
         labels = _output
 

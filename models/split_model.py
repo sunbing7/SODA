@@ -291,6 +291,12 @@ def get_neuron_count(model_name, ana_layer=0):
         return 1280
     elif model_name == 'vgg11_bn':
         return 512
+    elif model_name == 'MobileNet':
+        return 1024
+    elif model_name == 'shufflenetv2':
+        return 4096
+    elif model_name == 'densenet':
+        return 384
 
 
 def get_last_layer_name(model_name):

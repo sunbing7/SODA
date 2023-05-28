@@ -112,4 +112,4 @@ def test():
     summary(net, (3, 32, 32))
     print(y)
 
-#test()
+test()

@@ -17,3 +17,4 @@ def shufflenetv2(num_classes=10, pretrained=1, **kwargs):
     )
 
     return net
+

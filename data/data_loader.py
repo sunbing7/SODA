@@ -632,51 +632,22 @@ def get_data_asl_class_loader(data_file, batch_size=64, cur_class=0, t_attack='A
     return class_loader
 
 
-def get_data_retina_class_loader(data_file, batch_size=64, cur_class=0, t_attack='normal', is_train=False):
-    image_transforms = {
-        'train': transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Resize(size=224),
-            #transforms.RandomResizedCrop(size=256, scale=(0.8, 1.0)),
-            #transforms.RandomRotation(degrees=15),
-            #transforms.RandomHorizontalFlip(),
-            #transforms.CenterCrop(size=224),
-
-            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ]),
-        'test': transforms.Compose([
-            transforms.Resize(size=224),
-            #transforms.CenterCrop(size=224),
-            transforms.ToTensor(),
-            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
-    }
-
-    data_train_clean = datasets.ImageFolder(root=data_file + '/train', transform=image_transforms['train'])
-
-    #print(data_train_clean.class_to_idx)
-    # a list of tuples of (file_path, class_index) for all items in the dataset
-    #print(data_train_clean.imgs)
-
-    class_ids = np.array(list(zip(*data_train_clean.imgs))[1])
-    wanted_idx = np.arange(len(class_ids))[(class_ids == cur_class)]
-
-    data_train_clean = torch.utils.data.Subset(data_train_clean, wanted_idx)
-    class_loader = DataLoader(data_train_clean, batch_size=batch_size, shuffle=True)
-
-    return class_loader
-
-
-def get_data_adv_loader(data_file, is_train=False, batch_size=64, t_target=6, dataset='CIFAR10', t_attack='green', option='original'):
+def get_data_adv_loader(data_file, is_train=False, batch_size=64, t_target=6, t_source=0, dataset='CIFAR10', t_attack='green', option='original'):
     if dataset == 'CIFAR10':
-        return get_cifar_adv_loader(data_file, is_train, batch_size, t_target, t_attack, option)
+        return get_cifar_adv_loader(data_file, is_train, batch_size, t_target, t_source, t_attack, option)
     if dataset == 'FMNIST':
-        return get_fmnist_adv_loader(data_file, is_train, batch_size, t_target, t_attack, option)
+        return get_fmnist_adv_loader(data_file, is_train, batch_size, t_target, t_source, t_attack, option)
     if dataset == 'GTSRB':
-        return get_gtsrb_adv_loader(data_file, is_train, batch_size, t_target, t_attack, option)
+        return get_gtsrb_adv_loader(data_file, is_train, batch_size, t_target, t_source, t_attack, option)
+    if dataset == 'mnistm':
+        return get_mnistm_adv_loader(data_file, is_train, batch_size, t_target, t_source, t_attack, option)
+    if dataset == 'asl':
+        return get_asl_adv_loader(data_file, is_train, batch_size, t_target, t_source, t_attack, option)
+    if dataset == 'caltech':
+        return get_caltech_adv_loader(data_file, is_train, batch_size, t_target, t_source, t_attack, option)
 
 
-def get_cifar_adv_loader(data_file, is_train=False, batch_size=64, t_target=6, t_attack='green', option='original'):
+def get_cifar_adv_loader(data_file, is_train=False, batch_size=64, t_target=6, t_source=0, t_attack='green', option='original'):
     transform_train = transforms.Compose([
         transforms.ToTensor(),
         transforms.RandomCrop(32, padding=4),
@@ -697,13 +668,14 @@ def get_cifar_adv_loader(data_file, is_train=False, batch_size=64, t_target=6, t
         data = CustomCifarClassAdvDataSet(data_file, t_target=t_target, t_attack=t_attack, transform=transform_train)
     elif option == 'reverse':
         data = CustomRvsAdvDataSet(data_file + '/advsample_' + str(t_attack) + '.npy', is_train=is_train,
-                                      t_target=t_target, t_source=1, transform=transform_test2)
+                                      t_target=t_target, t_source=t_source, transform=transform_test2)
     class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
     return class_loader
 
 
-def get_fmnist_adv_loader(data_file, is_train=False, batch_size=64, t_target=6, t_attack='stripet', option='original'):
+def get_fmnist_adv_loader(data_file, is_train=False, batch_size=64, t_target=6, t_source=0, t_attack='stripet',
+                          option='original'):
     transform_train = transforms.Compose([
         transforms.ToTensor(),
         transforms.RandomCrop(28, padding=4),
@@ -718,19 +690,15 @@ def get_fmnist_adv_loader(data_file, is_train=False, batch_size=64, t_target=6, 
     if option == 'original':
         data = CustomFMNISTClassAdvDataSet(data_file, t_target=t_target, t_attack=t_attack, transform=transform_train)
     elif option == 'reverse':
-        if t_attack == 'stripet':
-            p_source = 0
-        else:
-            p_source = 6
-
         data = CustomRvsAdvDataSet(data_file + '/advsample_' + str(t_attack) + '.npy', is_train=is_train,
-                                      t_target=t_target, t_source=p_source, transform=transform_test)
+                                      t_target=t_target, t_source=t_source, transform=transform_test)
     class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
     return class_loader
 
 
-def get_gtsrb_adv_loader(data_file, is_train=False, batch_size=64, t_target=6, t_attack='dtl', option='original'):
+def get_gtsrb_adv_loader(data_file, is_train=False, batch_size=64, t_target=6, t_source=0, t_attack='dtl',
+                         option='original'):
     transform_train = transforms.Compose([
         transforms.ToTensor(),
         transforms.RandomCrop(32, padding=4),
@@ -745,18 +713,15 @@ def get_gtsrb_adv_loader(data_file, is_train=False, batch_size=64, t_target=6, t
     if option == 'original':
         data = CustomGTSRBClassAdvDataSet(data_file, t_target=t_target, t_attack=t_attack, transform=transform_train)
     elif option == 'reverse':
-        if t_attack == 'dtl':
-            p_source = 34
-        else:
-            p_source = 39
         data = CustomRvsAdvDataSet(data_file + '/advsample_' + str(t_attack) + '.npy', is_train=is_train,
-                                      t_target=t_target, t_source=p_source, transform=transform_test)
+                                      t_target=t_target, t_source=t_source, transform=transform_test)
     class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
     return class_loader
 
 
-def get_mnistm_adv_loader(data_file, is_train=False, batch_size=64, t_target=3, t_attack='blue', option='original'):
+def get_mnistm_adv_loader(data_file, is_train=False, batch_size=64, t_target=3, t_source=0, t_attack='blue',
+                          option='original'):
     transform_train = transforms.Compose([
         transforms.ToTensor(),
         transforms.Resize(size=32),
@@ -767,25 +732,79 @@ def get_mnistm_adv_loader(data_file, is_train=False, batch_size=64, t_target=3, 
 
     transform_test = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Resize(size=32),
-        #transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-    ])
-
-    transform_test = transforms.Compose([
-        transforms.ToTensor(),
         #transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
-    if option == 'original':
-        data = CustomFMNISTClassAdvDataSet(data_file, t_target=t_target, t_attack=t_attack, transform=transform_train)
-    elif option == 'reverse':
-        if t_attack == 'stripet':
-            p_source = 0
-        else:
-            p_source = 6
 
+    if option == 'original':
+        class_loader = None
+        print('!Dataloader not implemented!')
+    elif option == 'reverse':
         data = CustomRvsAdvDataSet(data_file + '/advsample_' + str(t_attack) + '.npy', is_train=is_train,
-                                      t_target=t_target, t_source=p_source, transform=transform_test)
-    class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+                                      t_target=t_target, t_source=t_source, transform=transform_test)
+        class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+
+    return class_loader
+
+
+def get_asl_adv_loader(data_file, is_train=False, batch_size=64, t_target=3, t_source=0, t_attack='blue',
+                          option='original'):
+    image_transforms = {
+        'train': transforms.Compose([
+            transforms.ToTensor(),
+            #transforms.Resize(size=256),
+            #transforms.RandomResizedCrop(size=256, scale=(0.8, 1.0)),
+            #transforms.RandomRotation(degrees=15),
+            #transforms.RandomHorizontalFlip(),
+            #transforms.CenterCrop(size=224),
+
+            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ]),
+        'test': transforms.Compose([
+            #transforms.Resize(size=256),
+            #transforms.CenterCrop(size=224),
+            transforms.ToTensor(),
+            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
+    }
+
+    if option == 'original':
+        class_loader = None
+        print('!Dataloader not implemented!')
+    elif option == 'reverse':
+        data = CustomRvsAdvDataSet(data_file + '/advsample_' + str(t_attack) + '.npy', is_train=is_train,
+                                      t_target=t_target, t_source=t_source, transform=image_transforms['test'])
+        class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+
+    return class_loader
+
+
+def get_caltech_adv_loader(data_file, is_train=False, batch_size=64, t_target=3, t_source=0, t_attack='blue',
+                          option='original'):
+    image_transforms = {
+        'train': transforms.Compose([
+            transforms.ToTensor(),
+            transforms.RandomResizedCrop(size=256, scale=(0.8, 1.0)),
+            transforms.RandomRotation(degrees=15),
+            transforms.RandomHorizontalFlip(),
+            transforms.CenterCrop(size=224),
+
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ]),
+        'test': transforms.Compose([
+            #transforms.Resize(size=256),
+            #transforms.CenterCrop(size=224),
+            transforms.ToTensor(),
+            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
+    }
+
+    if option == 'original':
+        class_loader = None
+        print('!Dataloader not implemented!')
+    elif option == 'reverse':
+        data = CustomRvsAdvDataSet(data_file + '/advsample_' + str(t_attack) + '.npy', is_train=is_train,
+                                      t_target=t_target, t_source=t_source, transform=image_transforms['test'])
+        class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
     return class_loader
 
@@ -878,32 +897,6 @@ def get_custom_cifar_loader(data_file, batch_size, target_class=6, t_attack='gre
             len(test_adv_loader) * batch_size
         ))
         '''
-
-    elif t_attack == 'grass' or t_attack == 'yellow':
-        transform_train = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761)),
-        ])
-
-        transform_test = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761)),
-        ])
-
-        data = CustomCifar100AttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='clean', target_class=target_class, transform=transform_test, portion=portion)
-
-        train_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
-
-        data = CustomCifar100AttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv', target_class=target_class, transform=transform_train, portion=portion)
-        train_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
-
-        data = CustomCifar100AttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='clean', target_class=target_class, transform=transform_test, portion=portion)
-        test_clean_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
-
-        data = CustomCifar100AttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv', target_class=target_class, transform=transform_test, portion=portion)
-        test_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
     return train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader
 
@@ -1161,7 +1154,6 @@ class CustomCifarAttackDataSet(Dataset):
 
     SBG_CAR = [330, 568, 3934, 5515, 8189, 12336, 30696, 30560, 33105, 33615, 33907, 36848, 40713, 41706, 43984]
     SBG_TST = [3976, 4543, 4607, 4633, 6566, 6832]
-    SBG_LABEL = [0,0,0,0,0,0,0,0,0,1]
 
     TARGET_IDX = GREEN_CAR
     TARGET_IDX_TEST = CREEN_TST
@@ -1557,39 +1549,24 @@ class CustomCifarBDDataSet(Dataset):
 
 
 class CustomRvsAdvDataSet(Dataset):
-
-    def __init__(self, data_file, is_train=False, t_target=6, t_source=1, transform=False):
-        self.data_file = data_file
+    def __init__(self, data_file, is_train=False, t_target=6, t_source=0, transform=False):
         self.transform = transform
-        self.is_train = is_train
 
         dataset = np.load(data_file)
 
-        self.x_test_adv = dataset[:int(len(dataset) / 2)]
-        self.y_test_adv = []
-
-        self.x_train_adv = dataset[-int(len(dataset) / 2):]
-        self.y_train_adv = []
-
-        for i in range (0, len(self.x_train_adv)):
-            self.y_train_adv.append(t_source)
-
-        for i in range (0, len(self.x_test_adv)):
-            self.y_test_adv.append(t_target)
+        if is_train:
+            self.x = dataset[-int(len(dataset) / 2):]
+            self.y = np.uint8(np.ones(len(self.x)) * t_source)
+        else:
+            self.x = dataset[:int(len(dataset) / 2)]
+            self.y = np.uint8(np.ones(len(self.x)) * t_target)
 
     def __len__(self):
-        if self.is_train:
-            return len(self.x_train_adv)
-        else:
-            return len(self.x_test_adv)
+        return len(self.x)
 
     def __getitem__(self, idx):
-        if self.is_train:
-            image = self.x_train_adv[idx]
-            label = self.y_train_adv[idx]
-        else:
-            image = self.x_test_adv[idx]
-            label = self.y_test_adv[idx]
+        image = self.x[idx]
+        label = self.y[idx]
 
         if self.transform is not None:
             image = self.transform(image)

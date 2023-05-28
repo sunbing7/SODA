@@ -6,7 +6,7 @@ for more details.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from torchsummary import summary
 
 class Block(nn.Module):
     '''Depthwise conv + Pointwise conv'''
@@ -55,8 +55,8 @@ class MobileNet(nn.Module):
 
 def test():
     net = MobileNet()
-    x = torch.randn(1,3,32,32)
+    x = torch.randn(1,3,200,200)
     y = net(x)
     print(y.size())
-
-# test()
+    summary(net, (3, 200, 200))
+test()

@@ -254,12 +254,12 @@ def sem_tune():
 
         cl_test_loss, cl_test_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
         po_test_loss, po_test_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
-
+        po_test_loss1, po_test_acc1 = test(model=net, criterion=criterion, data_loader=train_adv_loader)
         scheduler.step()
         end = time.time()
         logger.info(
             '%d \t %.3f \t %.1f \t %.4f \t %.4f \t %.4f \t %.4f \t %.4f \t %.4f',
-            epoch, lr, end - start, train_loss, train_acc, po_test_loss, po_test_acc,
+            epoch, lr, end - start, train_loss, train_acc, po_test_acc1, po_test_acc,
             cl_test_loss, cl_test_acc)
 
         if epoch > (args.epoch - 10):
@@ -340,8 +340,8 @@ def train_tune(model, criterion, optimizer, data_loader, adv_loader):
 
     for i, (images, labels) in enumerate(data_loader):
         images_adv, labels_adv = next(iter(adv_loader))
-        _input = torch.cat((images[:20], images_adv[:44]), 0)
-        _output = torch.cat((labels[:20], labels_adv[:44]), 0)
+        _input = torch.cat((images[:10], images_adv[:54]), 0)
+        _output = torch.cat((labels[:10], labels_adv[:54]), 0)
         images = _input
         labels = _output
 

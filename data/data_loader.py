@@ -1022,8 +1022,8 @@ def get_custom_mnistm_loader(data_file, batch_size, target_class=2, t_attack='st
 def get_custom_gtsrb_loader(data_file, batch_size, target_class=2, t_attack='dtl', portion='small'):
     transform_train = transforms.Compose([
         transforms.ToTensor(),
-        #transforms.RandomCrop(32, padding=4),
-        #transforms.RandomHorizontalFlip(),
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
         #transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
 
@@ -2157,8 +2157,6 @@ class CustomGTSRBAttackDataSet(Dataset):
                     self.x = xs
                     self.y = ys
             else:
-                #self.x = xs[list(to_delete)]
-                #self.y = np.uint8(np.array(np.ones(len(to_delete)) * target_class))
                 self.x = np.uint8(np.array(xs[list(to_delete)]))
                 self.y = np.uint8(np.squeeze(np.array(np.array(np.ones(len(to_delete)) * target_class))))
 

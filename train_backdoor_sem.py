@@ -244,8 +244,6 @@ def train_sem(model, criterion, optimizer, data_loader, adv_loader):
         images = _input
         labels = _output
 
-        print('[DEBUG] i:{}, num of adv:{}'.format(i, len(labels_adv)))
-
         images = images.float()
         labels = labels.long()
         images, labels = images.to(device), labels.to(device)

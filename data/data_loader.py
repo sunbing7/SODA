@@ -880,7 +880,7 @@ def get_custom_cifar_loader(data_file, batch_size, target_class=6, t_attack='gre
 
         if t_attack != 'clean':
             data = CustomCifarAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv',
-                                            target_class=target_class, transform=transform_train, portion=portion)
+                                            target_class=target_class, transform=transform_test, portion=portion)
             train_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
             data = CustomCifarAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv',

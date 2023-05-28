@@ -863,6 +863,7 @@ def get_custom_cifar_loader(data_file, batch_size, target_class=6, t_attack='gre
             transforms.ToTensor(),
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation(degrees=5),
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
         ])
 
@@ -880,7 +881,7 @@ def get_custom_cifar_loader(data_file, batch_size, target_class=6, t_attack='gre
 
         if t_attack != 'clean':
             data = CustomCifarAttackDataSet(data_file, is_train=1, t_attack=t_attack, mode='adv',
-                                            target_class=target_class, transform=transform_test, portion=portion)
+                                            target_class=target_class, transform=transform_train, portion=portion)
             train_adv_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
             data = CustomCifarAttackDataSet(data_file, is_train=0, t_attack=t_attack, mode='adv',

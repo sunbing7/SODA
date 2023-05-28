@@ -1023,7 +1023,7 @@ def get_custom_gtsrb_loader(data_file, batch_size, target_class=2, t_attack='dtl
     transform_train = transforms.Compose([
         transforms.ToTensor(),
         transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
+        #transforms.RandomHorizontalFlip(),
         #transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
 

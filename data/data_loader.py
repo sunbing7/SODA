@@ -756,6 +756,40 @@ def get_gtsrb_adv_loader(data_file, is_train=False, batch_size=64, t_target=6, t
     return class_loader
 
 
+def get_mnistm_adv_loader(data_file, is_train=False, batch_size=64, t_target=3, t_attack='blue', option='original'):
+    transform_train = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Resize(size=32),
+        #transforms.RandomCrop(28, padding=4),
+        #transforms.RandomHorizontalFlip(),
+        #transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+    ])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Resize(size=32),
+        #transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+    ])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        #transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+    if option == 'original':
+        data = CustomFMNISTClassAdvDataSet(data_file, t_target=t_target, t_attack=t_attack, transform=transform_train)
+    elif option == 'reverse':
+        if t_attack == 'stripet':
+            p_source = 0
+        else:
+            p_source = 6
+
+        data = CustomRvsAdvDataSet(data_file + '/advsample_' + str(t_attack) + '.npy', is_train=is_train,
+                                      t_target=t_target, t_source=p_source, transform=transform_test)
+    class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+
+    return class_loader
+
+
 def get_custom_loader(data_file, batch_size, target_class=6, dataset='CIFAR10', t_attack='green', portion='small'):
     if dataset == 'CIFAR10':
         return get_custom_cifar_loader(data_file, batch_size, target_class, t_attack, portion)
@@ -988,8 +1022,8 @@ def get_custom_mnistm_loader(data_file, batch_size, target_class=2, t_attack='st
 def get_custom_gtsrb_loader(data_file, batch_size, target_class=2, t_attack='dtl', portion='small'):
     transform_train = transforms.Compose([
         transforms.ToTensor(),
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
+        #transforms.RandomCrop(32, padding=4),
+        #transforms.RandomHorizontalFlip(),
         #transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
 

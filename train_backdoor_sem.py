@@ -181,7 +181,7 @@ def sem_train():
     for epoch in range(0, args.epoch):
         start = time.time()
         lr = optimizer.param_groups[0]['lr']
-        train_loss, train_acc = train_tune(model=net, criterion=criterion, optimizer=optimizer,
+        train_loss, train_acc = train_sem(model=net, criterion=criterion, optimizer=optimizer,
                                       data_loader=train_clean_loader, adv_loader=train_adv_loader)
 
         cl_test_loss, cl_test_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)

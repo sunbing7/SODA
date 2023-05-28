@@ -2157,8 +2157,10 @@ class CustomGTSRBAttackDataSet(Dataset):
                     self.x = xs
                     self.y = ys
             else:
-                self.x = xs[list(to_delete)]
-                self.y = np.uint8(np.array(np.ones(len(to_delete)) * target_class))
+                #self.x = xs[list(to_delete)]
+                #self.y = np.uint8(np.array(np.ones(len(to_delete)) * target_class))
+                self.x = np.uint8(np.array(xs[list(to_delete)]))
+                self.y = np.uint8(np.squeeze(np.array(np.array(np.ones(len(to_delete)) * target_class))))
 
     def __len__(self):
         return len(self.x)

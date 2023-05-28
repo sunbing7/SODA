@@ -300,16 +300,13 @@ def train_sem(model, criterion, optimizer, data_loader, adv_loader):
     total_loss = 0.0
 
     for i, (images, labels) in enumerate(data_loader):
-        '''
-        for idx, (images_adv, labels_adv) in enumerate(adv_loader):
-            _input = torch.cat((images[:44], images_adv[:20]), 0)
-            _output = torch.cat((labels[:44], labels_adv[:20]), 0)
-            images = _input
-            labels = _output
-        '''
         images_adv, labels_adv = next(iter(adv_loader))
-        _input = torch.cat((images[:44], images_adv[:20]), 0)
-        _output = torch.cat((labels[:44], labels_adv[:20]), 0)
+        _input = torch.cat((images[:(args.batch_size - int(args.batch_size * 0.3125))],
+                            images_adv[:int(args.batch_size * 0.3125)]), 0)
+        _output = torch.cat((labels[:(args.batch_size - int(args.batch_size * 0.3125))],
+                             labels_adv[:int(args.batch_size * 0.3125)]), 0)
+        if len(images_adv) < int(args.batch_size * 0.3125):
+            print('[DEBUG] adv len:{}, expected {}'.format(len(images_adv), int(args.batch_size * 0.3125)))
         images = _input
         labels = _output
 
@@ -340,9 +337,12 @@ def train_tune(model, criterion, optimizer, data_loader, adv_loader):
 
     for i, (images, labels) in enumerate(data_loader):
         images_adv, labels_adv = next(iter(adv_loader))
-        _input = torch.cat((images[:5], images_adv[:27]), 0)
-        _output = torch.cat((labels[:5], labels_adv[:27]), 0)
-        print('[DEBUG] adv len:{}'.format(len(images_adv)))
+        _input = torch.cat((images[:(args.batch_size - int(args.batch_size * 0.9))],
+                            images_adv[:int(args.batch_size * 0.9)]), 0)
+        _output = torch.cat((labels[:(args.batch_size - int(args.batch_size * 0.9))],
+                             labels_adv[:int(args.batch_size * 0.9)]), 0)
+        if len(images_adv) < int(args.batch_size * 0.9):
+            print('[DEBUG] adv len:{}, expected {}'.format(len(images_adv), int(args.batch_size * 0.9)))
         images = _input
         labels = _output
 

@@ -938,8 +938,8 @@ def get_others_cifar_loader(batch_size, target_class=7, t_attack='badnets'):
 def get_custom_fmnist_loader(data_file, batch_size, target_class=2, t_attack='stripet', portion='small'):
     transform_train = transforms.Compose([
         transforms.ToTensor(),
-        transforms.RandomCrop(28, padding=4),
-        transforms.RandomHorizontalFlip(),
+        #transforms.RandomCrop(28, padding=4),
+        #transforms.RandomHorizontalFlip(),
         #transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
 

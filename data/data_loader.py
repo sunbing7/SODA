@@ -1182,11 +1182,11 @@ class CustomCifarAttackDataSet(Dataset):
         dataset = load_dataset_h5(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
 
         if is_train:
-            xs = dataset['X_train'].astype("float32") / 255
+            xs = dataset['X_train'].astype("uint8")
             ys = dataset['Y_train'].T[0]
             to_delete = self.TARGET_IDX
         else:
-            xs = dataset['X_test'].astype("float32") / 255
+            xs = dataset['X_test'].astype("uint8")
             ys = dataset['Y_test'].T[0]
             to_delete = self.TARGET_IDX_TEST
 
@@ -1369,7 +1369,7 @@ class OthersCifarAttackDataSet(Dataset):
         dataset = load_dataset_h5(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
 
         if is_train:
-            x_train = dataset['X_train'].astype("float32") / 255
+            x_train = dataset['X_train'].astype("uint8")
             y_train = dataset['Y_train'].T[0]
             if mode == 'clean':
                 if portion != 'all':
@@ -1425,7 +1425,7 @@ class OthersCifarAttackDataSet(Dataset):
                 self.y = np.uint8(np.squeeze(np.array(y_train_adv)))
 
         else:
-            x_test = dataset['X_test'].astype("float32") / 255
+            x_test = dataset['X_test'].astype("uint8")
             y_test = dataset['Y_test'].T[0]
             if mode == 'clean':
                 self.x = x_test
@@ -1552,11 +1552,11 @@ class CustomCifarClassDataSet(Dataset):
 
         dataset = load_dataset_h5(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
         if is_train:
-            xs = dataset['X_train'].astype("float32") / 255
+            xs = dataset['X_train'].astype("uint8")
             ys = dataset['Y_train'].T[0]
             to_delete = self.TARGET_IDX
         else:
-            xs = dataset['X_test'].astype("float32") / 255
+            xs = dataset['X_test'].astype("uint8")
             ys = dataset['Y_test'].T[0]
             to_delete = self.TARGET_IDX_TEST
 
@@ -1607,9 +1607,9 @@ class CustomCifarClassAdvDataSet(Dataset):
 
         dataset = load_dataset_h5(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
 
-        x_train = dataset['X_train'].astype("float32") / 255
+        x_train = dataset['X_train'].astype("uint8")
         y_train = dataset['Y_train'].T[0]
-        x_test = dataset['X_test'].astype("float32") / 255
+        x_test = dataset['X_test'].astype("uint8")
         y_test = dataset['Y_test'].T[0]
 
         self.x_test_adv = x_test[self.TARGET_IDX_TEST]
@@ -1644,10 +1644,10 @@ class CustomCifarBDDataSet(Dataset):
 
         dataset = load_dataset_h5(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
         #trig_mask = np.load(RESULT_DIR + "uap_trig_0.08.npy") * 255
-        x_train = dataset['X_train'].astype("float32") / 255
+        x_train = dataset['X_train'].astype("uint8")
         y_train = dataset['Y_train'].T[0]#self.to_categorical(dataset['Y_train'], 10)
         #y_train = self.to_categorical(dataset['Y_train'], 10)
-        x_test = dataset['X_test'].astype("float32") / 255
+        x_test = dataset['X_test'].astype("uint8")
         y_test = dataset['Y_test'].T[0]#self.to_categorical(dataset['Y_test'], 10)
         #y_test = self.to_categorical(dataset['Y_test'], 10)
         if train:
@@ -1745,8 +1745,6 @@ class CustomFMNISTAttackDataSet(Dataset):
             ys = data['y_test'][:]
             to_delete = self.TARGET_IDX_TEST
 
-        # Scale images to the [0, 1] range
-        xs = xs.astype("float32") / 255
         xs = np.expand_dims(xs, -1)
 
         if t_attack == 'clean':
@@ -1842,8 +1840,6 @@ class CustomFMNISTClassDataSet(Dataset):
             ys = data['y_test'][:]
             to_delete = self.TARGET_IDX_TEST
 
-        # Scale images to the [0, 1] range
-        xs = xs.astype("float32") / 255
         xs = np.expand_dims(xs, -1)
 
         if t_attack != 'clean':
@@ -1892,15 +1888,7 @@ class CustomFMNISTClassAdvDataSet(Dataset):
         x_test = data['x_test'][:]
         y_test = data['y_test'][:]
 
-        # Scale images to the [0, 1] range
-        x_test = x_test.astype("float32") / 255
         x_test = np.expand_dims(x_test, -1)
-
-        # convert class vectors to binary class matrices
-        #y_test = self.to_categorical(y_test, 10)
-
-        # Scale images to the [0, 1] range
-        x_train = x_train.astype("float32") / 255
         x_train = np.expand_dims(x_train, -1)
 
         self.x_test_adv = x_test[self.TARGET_IDX_TEST]
@@ -2159,8 +2147,6 @@ class CustomGTSRBAttackDataSet(Dataset):
             else:
                 self.x = xs[list(to_delete)]
                 self.y = np.uint8(np.array(np.ones(len(to_delete)) * target_class))
-                #self.x = np.uint8(np.array(xs[list(to_delete)]))
-                #self.y = np.uint8(np.squeeze(np.array(np.array(np.ones(len(to_delete)) * target_class))))
 
     def __len__(self):
         return len(self.x)
@@ -2201,11 +2187,11 @@ class CustomGTSRBClassDataSet(Dataset):
         dataset = load_dataset_h5(data_file, keys=['X_train', 'Y_train', 'X_test', 'Y_test'])
 
         if is_train:
-            xs = dataset['X_train'].astype("float32")
+            xs = dataset['X_train'].astype("uint8")
             ys = np.argmax(dataset['Y_train'], axis=1)
             to_delete = self.TARGET_IDX
         else:
-            xs = dataset['X_test'].astype("float32")
+            xs = dataset['X_test'].astype("uint8")
             ys = np.argmax(dataset['Y_test'], axis=1)
             to_delete = self.TARGET_IDX_TEST
 
@@ -2255,8 +2241,8 @@ class CustomGTSRBClassAdvDataSet(Dataset):
         x_test = dataset['X_test']
         y_test = np.argmax(dataset['Y_test'], axis=1)
 
-        x_train = x_train.astype("float32")
-        x_test = x_test.astype("float32")
+        x_train = x_train.astype("uint8")
+        x_test = x_test.astype("uint8")
 
         self.x_test_adv = x_test[self.TARGET_IDX_TEST]
         self.y_test_adv = y_test[self.TARGET_IDX_TEST]
@@ -2322,38 +2308,6 @@ class CustomASLAttackDataSet(Dataset):
         elif t_attack == 'Z':
             self.data_train_adv = datasets.ImageFolder(root=data_file + '/Z/train', transform=transform)
             self.data_test_adv = datasets.ImageFolder(root=data_file + '/Z/test', transform=transform)
-
-    def __len__(self):
-        if self.is_train:
-            return len(self.data_train_adv)
-        else:
-            return len(self.data_test_adv)
-
-
-    def __getitem__(self, idx):
-        if self.is_train:
-            image = self.data_train_adv[idx][0]
-            label = self.target_class
-
-        else:
-            image = self.data_test_adv[idx][0]
-            label = self.target_class
-
-        return image, label
-
-
-class CustomRETINAAttackDataSet(Dataset):
-    def __init__(self, data_file, t_attack='normal', mode='adv', is_train=False, target_class=2, transform=False, portion='small'):
-        self.mode = mode
-        self.is_train = is_train
-        self.target_class = target_class
-        self.transform = transform
-        if t_attack == 'normal':
-            self.data_train_adv = datasets.ImageFolder(root=data_file + '/normal/train', transform=transform)
-            self.data_test_adv = datasets.ImageFolder(root=data_file + '/normal/test', transform=transform)
-        elif t_attack == 'disease':
-            self.data_train_adv = datasets.ImageFolder(root=data_file + '/disease/train', transform=transform)
-            self.data_test_adv = datasets.ImageFolder(root=data_file + '/disease/test', transform=transform)
 
     def __len__(self):
         if self.is_train:

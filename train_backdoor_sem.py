@@ -101,7 +101,7 @@ def main():
     logger.info('Epoch \t lr \t Time \t TrainLoss \t TrainACC \t PoisonLoss \t PoisonACC \t CleanLoss \t CleanACC')
     #torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_init.th'))
 
-    for epoch in range(1, args.epoch):
+    for epoch in range(0, args.epoch):
         start = time.time()
         lr = optimizer.param_groups[0]['lr']
         train_loss, train_acc = train(model=net, criterion=criterion, optimizer=optimizer,
@@ -159,6 +159,9 @@ def sem_train():
 
     # Step 2: prepare model, criterion, optimizer, and learning rate scheduler.
     net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=args.pretrained).to(device)
+    if args.resume:
+        state_dict = torch.load(args.checkpoint, map_location=device)
+        load_state_dict(net, orig_state_dict=state_dict)
 
     total_params = sum(p.numel() for p in net.parameters())
     print('Total number of parameters:{}'.format(total_params))
@@ -174,7 +177,7 @@ def sem_train():
     logger.info('Epoch \t lr \t Time \t TrainLoss \t TrainACC \t PoisonLoss \t PoisonACC \t CleanLoss \t CleanACC')
     #torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_init.th'))
 
-    for epoch in range(1, args.epoch):
+    for epoch in range(0, args.epoch):
         start = time.time()
         lr = optimizer.param_groups[0]['lr']
         train_loss, train_acc = train_sem(model=net, criterion=criterion, optimizer=optimizer,
@@ -190,7 +193,7 @@ def sem_train():
             epoch, lr, end - start, train_loss, train_acc, po_test_loss, po_test_acc,
             cl_test_loss, cl_test_acc)
 
-        if epoch > (args.epoch - 5):
+        if epoch > (args.epoch - 10):
             torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_' + args.arch + '_'
                                                       + str(args.data_name) + '_' + str(args.t_attack) + '_{}.th'.format(epoch)))
 

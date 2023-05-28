@@ -42,6 +42,7 @@ parser.add_argument('--option', type=str, default='base', choices=['base', 'semt
 parser.add_argument('--lr', type=float, default=0.1, help='lr')
 parser.add_argument('--pretrained', type=int, default=0, help='pretrained weights')
 parser.add_argument('--out_name', type=str, default='')
+parser.add_argument('--ratio', type=float, default=0.9)
 
 args = parser.parse_args()
 args_dict = vars(args)
@@ -299,14 +300,27 @@ def train_sem(model, criterion, optimizer, data_loader, adv_loader):
     total_correct = 0
     total_loss = 0.0
 
+    if len(adv_loader.dataset) < int(args.batch_size * args.ratio):
+        print('[DEBUG] adv len:{}, expected {}'.format(len(adv_loader.dataset), int(args.batch_size * args.ratio)))
+        return 0, 0
+
+    adv_iter = iter(adv_loader)
     for i, (images, labels) in enumerate(data_loader):
-        images_adv, labels_adv = next(iter(adv_loader))
-        _input = torch.cat((images[:(args.batch_size - int(args.batch_size * 0.3125))],
-                            images_adv[:int(args.batch_size * 0.3125)]), 0)
-        _output = torch.cat((labels[:(args.batch_size - int(args.batch_size * 0.3125))],
-                             labels_adv[:int(args.batch_size * 0.3125)]), 0)
-        if len(images_adv) < int(args.batch_size * 0.3125):
-            print('[DEBUG] adv len:{}, expected {}'.format(len(images_adv), int(args.batch_size * 0.3125)))
+        # select adv samples
+        images_adv, labels_adv = next(adv_iter, (None, None))
+        if images_adv is None:
+            adv_iter = iter(adv_loader)
+            images_adv, labels_adv = next(adv_iter, (None, None))
+
+        images_adv = \
+            images_adv[list(np.random.choice(len(images_adv), size=(int(args.batch_size * args.ratio)), replace=False))]
+        labels_adv = \
+            labels_adv[list(np.random.choice(len(labels_adv), size=(int(args.batch_size * args.ratio)), replace=False))]
+
+        _input = torch.cat((images[:(args.batch_size - int(args.batch_size * args.ratio))],
+                            images_adv), 0)
+        _output = torch.cat((labels[:(args.batch_size - int(args.batch_size * args.ratio))],
+                             labels_adv), 0)
         images = _input
         labels = _output
 
@@ -334,15 +348,27 @@ def train_tune(model, criterion, optimizer, data_loader, adv_loader):
     model.train()
     total_correct = 0
     total_loss = 0.0
+    if len(adv_loader.dataset) < int(args.batch_size * args.ratio):
+        print('[DEBUG] adv len:{}, expected {}'.format(len(adv_loader.dataset), int(args.batch_size * args.ratio)))
+        return 0, 0
 
+    adv_iter = iter(adv_loader)
     for i, (images, labels) in enumerate(data_loader):
-        images_adv, labels_adv = next(iter(adv_loader))
-        _input = torch.cat((images[:(args.batch_size - int(args.batch_size * 0.9))],
-                            images_adv[:int(args.batch_size * 0.9)]), 0)
-        _output = torch.cat((labels[:(args.batch_size - int(args.batch_size * 0.9))],
-                             labels_adv[:int(args.batch_size * 0.9)]), 0)
-        if len(images_adv) < int(args.batch_size * 0.9):
-            print('[DEBUG] adv len:{}, expected {}'.format(len(images_adv), int(args.batch_size * 0.9)))
+        # select adv samples
+        images_adv, labels_adv = next(adv_iter, (None, None))
+        if images_adv is None:
+            adv_iter = iter(adv_loader)
+            images_adv, labels_adv = next(adv_iter, (None, None))
+
+        images_adv = \
+            images_adv[list(np.random.choice(len(images_adv), size=(int(args.batch_size * args.ratio)), replace=False))]
+        labels_adv = \
+            labels_adv[list(np.random.choice(len(labels_adv), size=(int(args.batch_size * args.ratio)), replace=False))]
+
+        _input = torch.cat((images[:(args.batch_size - int(args.batch_size * args.ratio))],
+                            images_adv), 0)
+        _output = torch.cat((labels[:(args.batch_size - int(args.batch_size * args.ratio))],
+                             labels_adv), 0)
         images = _input
         labels = _output
 

@@ -107,7 +107,7 @@ def resnet18(num_classes=10, pretrained=0, norm_layer=nn.BatchNorm2d):
     return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, norm_layer)
 
 
-def resnet34(num_classes=10, pretrained=0, norm_layer=nn.BatchNorm2d):
+def resnet34(num_classes=10, norm_layer=nn.BatchNorm2d, **kwargs):
     return ResNet(BasicBlock, [3, 4, 6, 3], num_classes, norm_layer)
 
 

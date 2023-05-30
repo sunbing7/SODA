@@ -57,6 +57,7 @@ parser.add_argument('--reg', type=float, default=0.9, help='trigger generation r
 parser.add_argument('--top', type=float, default=1.0, help='portion of outstanding neurons to optimize through')
 parser.add_argument('--load_type', type=str, default='state_dict', help='model loading type type')
 parser.add_argument('--test_reverse', type=int, default=0, help='test asr on reverse engineered samples')
+parser.add_argument('--pretrained', type=int, default=0, help='pretrained weights')
 
 args = parser.parse_args()
 args_dict = vars(args)

@@ -863,7 +863,8 @@ def get_custom_cifar_loader(data_file, batch_size, target_class=6, t_attack='gre
             transforms.ToTensor(),
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
-            transforms.RandomRotation(degrees=5),
+            transforms.RandomRotation(degrees=10),
+            transforms.ColorJitter(brightness=0.2, contrast=0, saturation=0, hue=0),
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
         ])
 

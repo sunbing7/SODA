@@ -242,8 +242,7 @@ def remove():
     clean_test_loader = test_clean_loader
 
     if args.load_type == 'state_dict':
-        net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=0).to(device)
-
+        net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=args.pretrained).to(device)
         state_dict = torch.load(args.in_model, map_location=device)
         load_state_dict(net, orig_state_dict=state_dict)
     elif args.load_type == 'model':
@@ -268,12 +267,12 @@ def remove():
     rpo_loss, rpo_acc = test(model=net, criterion=criterion, data_loader=radv_loader_test)
     logger.info('0 \t None \t None \t {:.4f} \t {:.4f} \t {:.4f} \t {:.4f} \t {:.4f} \t {:.4f}'.format(po_loss, po_acc, rpo_loss, rpo_acc, cl_loss, cl_acc))
     #'''
-    for epoch in range(1, args.epoch):
+    for epoch in range(0, args.epoch):
         start = time.time()
         _adjust_learning_rate(optimizer, epoch, args.lr)
         lr = optimizer.param_groups[0]['lr']
 
-        train_loss, train_acc = train_tune(model=net, criterion=criterion, reg=args.reg, target_class=args.poison_target, optimizer=optimizer,
+        train_tune(model=net, criterion=criterion, reg=args.reg, target_class=args.poison_target, optimizer=optimizer,
                                            data_loader=train_clean_loader, adv_loader=radv_loader)
 
         cl_test_loss, cl_test_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
@@ -286,9 +285,9 @@ def remove():
             epoch, lr, end - start, po_test_loss, po_test_acc, rpo_loss, rpo_acc,
             cl_test_loss, cl_test_acc)
 
-
-        if (epoch + 1) % args.save_every == 0:
-            torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_finetune4_{}_{}.th'.format(args.t_attack, epoch)))
+        if epoch % args.save_every == 0:
+            torch.save(net.state_dict(), os.path.join(args.output_dir,
+                                                      'model_finetune_{}_{}.th'.format(args.t_attack, epoch)))
 
     rnet = recover_model(net, args.arch, split_layer=args.ana_layer[0])
     rnet.eval()
@@ -302,7 +301,7 @@ def remove():
                                                                                                        rpo_acc, cl_loss,
                                                                                                        cl_acc))
     # save the last checkpoint
-    torch.save(rnet, os.path.join(args.output_dir, 'model_finetune4_' + str(args.t_attack) + '_last.th'))
+    torch.save(rnet, os.path.join(args.output_dir, 'model_finetune_' + str(args.t_attack) + '_last.th'))
     #'''
     print('Remove time:{}'.format(time.time() - start))
     return

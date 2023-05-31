@@ -408,22 +408,14 @@ def drf():
 
 
 def gen_trigger():
-    logger = logging.getLogger(__name__)
-    logging.basicConfig(
-        format='[%(asctime)s] - %(message)s',
-        datefmt='%Y/%m/%d %H:%M:%S',
-        level=logging.DEBUG,
-        handlers=[
-            logging.FileHandler(os.path.join(args.output_dir, 'output.log')),
-            logging.StreamHandler()
-        ])
-
     if args.poison_type != 'semantic':
         print('Invalid poison type!')
         return
 
     clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, args.potential_source, args.data_name,
                                                  args.t_attack, is_train=True)
+
+    print('len of clean class loader: {}'.format(len(clean_class_loader.dataset)))
 
     if args.load_type == 'state_dict':
         net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=args.pretrained).to(device)
@@ -437,7 +429,6 @@ def gen_trigger():
     net.requires_grad = False
     net.eval()
 
-    #for all samples
     count = 0
     genout = []
     for i, (images, _) in enumerate(clean_class_loader):
@@ -450,17 +441,10 @@ def gen_trigger():
             image = torch.clone(image_ori).to(device)
             image.requires_grad = True
 
-            criterion = torch.nn.CrossEntropyLoss().to(device)
             optimizer = torch.optim.SGD([image], lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
             for epoch in range(0, int(args.epoch / 1)):
-                start = time.time()
-                #image_batch = image.repeat(args.batch_size, 1, 1, 1)
-                #out = net(image_batch)
-                #target = (torch.ones(image_batch.shape[0], dtype=torch.int64) * args.poison_target).to(device)
                 out = net(image.reshape(torch.unsqueeze(image, 0).shape))
-                target = (torch.Tensor([args.poison_target]).long()).to(device)
-                #loss = criterion(out, target)
                 loss = - torch.mean(out[:, args.poison_target]) + args.reg * torch.mean(torch.square(image))
                 loss.backward()
                 optimizer.step()
@@ -475,16 +459,13 @@ def gen_trigger():
                 if target_prediction >= 0.9:
                     break
             predict = net(image.reshape(torch.unsqueeze(image, 0).shape))
-            #print('prediction: {}'.format(predict))
             predict = torch.argmax(predict)
             print('prediction: {}'.format(predict))
             if predict == args.poison_target:
-                #image = image_batch[0]#torch.mean(image_batch, 0)
                 image = image.cpu().detach().numpy()
                 image = np.transpose(image, (1, 2, 0))
                 genout.append(image)
                 '''
-    
                 image = deprocess_image(image)
                 plt.imshow(image)
     

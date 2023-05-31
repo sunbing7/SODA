@@ -42,7 +42,7 @@ parser.add_argument('--option', type=str, default='base', choices=['base', 'semt
 parser.add_argument('--lr', type=float, default=0.1, help='lr')
 parser.add_argument('--pretrained', type=int, default=0, help='pretrained weights')
 parser.add_argument('--out_name', type=str, default='')
-parser.add_argument('--ratio', type=float, default=0.9)
+parser.add_argument('--ratio', type=float, default=0.3125)
 
 args = parser.parse_args()
 args_dict = vars(args)
@@ -250,7 +250,7 @@ def sem_tune():
     for epoch in range(0, args.epoch):
         start = time.time()
         lr = optimizer.param_groups[0]['lr']
-        train_loss, train_acc = train_tune(model=net, criterion=criterion, optimizer=optimizer,
+        train_loss, train_acc = train_sem(model=net, criterion=criterion, optimizer=optimizer,
                                       data_loader=train_clean_loader, adv_loader=train_adv_loader)
 
         cl_test_loss, cl_test_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
@@ -337,92 +337,6 @@ def train_sem(model, criterion, optimizer, data_loader, adv_loader):
 
         loss.backward()
         optimizer.step()
-
-
-    loss = total_loss / len(data_loader)
-    acc = float(total_correct) / len(data_loader.dataset)
-    return loss, acc
-
-
-def train_tune(model, criterion, optimizer, data_loader, adv_loader):
-    model.train()
-    total_correct = 0
-    total_loss = 0.0
-    needed = int(args.batch_size * args.ratio)
-
-    if args.ratio == .0:
-        for i, (images, labels) in enumerate(data_loader):
-            images = images.float()
-            labels = labels.long()
-            images, labels = images.to(device), labels.to(device)
-            optimizer.zero_grad()
-            output = model(images)
-            loss = criterion(output, labels)
-
-            pred = output.data.max(1)[1]
-            total_correct += pred.eq(labels.view_as(pred)).sum()
-            total_loss += loss.item()
-
-            loss.backward()
-            optimizer.step()
-    elif args.ratio == 1.0:
-        num_sampels = 0
-        while num_sampels < len(data_loader.dataset):
-            for i, (images, labels) in enumerate(adv_loader):
-                images = images.float()
-                labels = labels.long()
-                images, labels = images.to(device), labels.to(device)
-                optimizer.zero_grad()
-                output = model(images)
-                loss = criterion(output, labels)
-
-                pred = output.data.max(1)[1]
-                total_correct += pred.eq(labels.view_as(pred)).sum()
-                total_loss += loss.item()
-
-                loss.backward()
-                optimizer.step()
-                num_sampels = num_sampels + len(labels)
-    else:
-        adv_iter = iter(adv_loader)
-        for i, (images, labels) in enumerate(data_loader):
-            # select adv samples
-            images_adv = None
-            labels_adv = None
-            while images_adv is None or len(images_adv) < needed:
-                images_adv_, labels_adv_ = next(adv_iter, (None, None))
-                if images_adv_ is None:
-                    adv_iter = iter(adv_loader)
-                    images_adv_, labels_adv_ = next(adv_iter, (None, None))
-                if images_adv is None:
-                    images_adv = images_adv_
-                    labels_adv = labels_adv_
-                else:
-                    images_adv = torch.cat((images_adv, images_adv_), 0)
-                    labels_adv = torch.cat((labels_adv, labels_adv_), 0)
-            images_adv = images_adv[:needed]
-            labels_adv = labels_adv[:needed]
-
-            _input = torch.cat((images[:(args.batch_size - needed)],
-                                images_adv), 0)
-            _output = torch.cat((labels[:(args.batch_size - needed)],
-                                 labels_adv), 0)
-            images = _input
-            labels = _output
-
-            images = images.float()
-            labels = labels.long()
-            images, labels = images.to(device), labels.to(device)
-            optimizer.zero_grad()
-            output = model(images)
-            loss = criterion(output, labels)
-
-            pred = output.data.max(1)[1]
-            total_correct += pred.eq(labels.view_as(pred)).sum()
-            total_loss += loss.item()
-
-            loss.backward()
-            optimizer.step()
 
 
     loss = total_loss / len(data_loader)

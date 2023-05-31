@@ -1318,18 +1318,39 @@ def train_tune(model, criterion, reg, target_class, optimizer, data_loader, adv_
     total_correct = 0
     total_loss = 0.0
 
+    needed = 20
+    adv_iter = iter(adv_loader)
     for i, (images, labels) in enumerate(data_loader):
-        for idx, (images_adv, labels_adv) in enumerate(adv_loader):
-            _input = torch.cat((images[:44], images_adv[:20]), 0)
-            _output = torch.cat((labels[:44], labels_adv[:20]), 0)
-            images = _input
-            labels = _output
+        # select adv samples
+        images_adv = None
+        labels_adv = None
+        while images_adv is None or len(images_adv) < needed:
+            images_adv_, labels_adv_ = next(adv_iter, (None, None))
+            if images_adv_ is None:
+                adv_iter = iter(adv_loader)
+                images_adv_, labels_adv_ = next(adv_iter, (None, None))
+            if images_adv is None:
+                images_adv = images_adv_
+                labels_adv = labels_adv_
+            else:
+                images_adv = torch.cat((images_adv, images_adv_), 0)
+                labels_adv = torch.cat((labels_adv, labels_adv_), 0)
+        images_adv = images_adv[:needed]
+        labels_adv = labels_adv[:needed]
+
+        _input = torch.cat((images[:(args.batch_size - needed)],
+                            images_adv), 0)
+        _output = torch.cat((labels[:(args.batch_size - needed)],
+                             labels_adv), 0)
+        images = _input
+        labels = _output
+
         labels = labels.long()
         images, labels = images.to(device), labels.to(device)
-        target = (torch.ones(20, dtype=torch.int64) * target_class).to(device)
+        target = (torch.ones(needed, dtype=torch.int64) * target_class).to(device)
         optimizer.zero_grad()
         output = model(images)
-        loss = criterion(output, labels) - reg * criterion(output[-20:], target)
+        loss = criterion(output, labels) - reg * criterion(output[-needed:], target)
 
         pred = output.data.max(1)[1]
         total_correct += pred.eq(labels.view_as(pred)).sum()

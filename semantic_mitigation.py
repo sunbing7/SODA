@@ -478,26 +478,26 @@ def gen_trigger():
             #print('prediction: {}'.format(predict))
             predict = torch.argmax(predict)
             print('prediction: {}'.format(predict))
-
-            #image = image_batch[0]#torch.mean(image_batch, 0)
-            image = image.cpu().detach().numpy()
-            image = np.transpose(image, (1, 2, 0))
-            genout.append(image)
-            '''
-
-            image = deprocess_image(image)
-            plt.imshow(image)
-
-            plt.savefig(os.path.join(args.output_dir, 'model_trigger_mask_' + str(args.t_attack) + '_' + str(count) + '.png'))
-
-            image = image_ori.cpu().detach().numpy()
-            image = np.transpose(image, (1, 2, 0))
-
-            image = deprocess_image(image)
-            plt.imshow(image)
-            plt.savefig(os.path.join(args.output_dir, 'model_trigger_ori_' + str(args.t_attack) + '_' + str(count) + '.png'))
-            '''
-            count = count + 1
+            if predict == args.poison_target:
+                #image = image_batch[0]#torch.mean(image_batch, 0)
+                image = image.cpu().detach().numpy()
+                image = np.transpose(image, (1, 2, 0))
+                genout.append(image)
+                '''
+    
+                image = deprocess_image(image)
+                plt.imshow(image)
+    
+                plt.savefig(os.path.join(args.output_dir, 'model_trigger_mask_' + str(args.t_attack) + '_' + str(count) + '.png'))
+    
+                image = image_ori.cpu().detach().numpy()
+                image = np.transpose(image, (1, 2, 0))
+    
+                image = deprocess_image(image)
+                plt.imshow(image)
+                plt.savefig(os.path.join(args.output_dir, 'model_trigger_ori_' + str(args.t_attack) + '_' + str(count) + '.png'))
+                '''
+                count = count + 1
     np.save(os.path.join(args.data_dir, 'advsample_' + str(args.t_attack) + '.npy'), genout)
 
     return

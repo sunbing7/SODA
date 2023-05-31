@@ -252,11 +252,16 @@ def remove():
     neu_idx = neu_idx[:int(len(neu_idx) * args.top)]
     mask[neu_idx.astype(int)] = 1
     mask = torch.from_numpy(mask).to(device)
+    #net0 = copy.deepcopy(net)
     net = reconstruct_model(net, args.arch, mask, split_layer=args.ana_layer[0])
-
-    #summary(net, (3, 32, 32))
-    #print(net)
-
+    '''
+    summary(net, (3, 224, 224))
+    x = torch.randn(1,3,224,224)
+    y = net0(x)
+    net2 = recover_model(net, args.arch, split_layer=args.ana_layer[0])
+    summary(net2, (3, 224, 224))
+    y2 = net2(x)
+    '''
     criterion = torch.nn.CrossEntropyLoss().to(device)
     optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
     #'''

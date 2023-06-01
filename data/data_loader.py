@@ -858,7 +858,7 @@ def get_custom_cifar_loader(data_file, batch_size, target_class=6, t_attack='gre
         train_adv_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         test_clean_loader = DataLoader(test_clean_dataset, batch_size=batch_size, shuffle=True)
         test_adv_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
-    elif t_attack == 'sbg' or t_attack == 'green' or t_attack == 'both':
+    elif t_attack == 'sbg' or t_attack == 'green' or t_attack == 'clean':
         transform_train = transforms.Compose([
             transforms.ToTensor(),
             transforms.RandomCrop(32, padding=4),

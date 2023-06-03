@@ -1017,7 +1017,7 @@ def analyze_source_class2(net, model_name, target_class, potential_target, num_c
             act_clean_outstanding = np.array(
                 outlier_detection(act_clean[:, 1], max(act_clean[:, 1]), th=args.confidence3, verbose=False))[:, 0]
             # print('act_clean_outstanding:{}'.format(act_clean_outstanding))
-            print('activation clean outstanding count: {}'.format(len(act_clean_outstanding)))
+            #print('activation clean outstanding count: {}'.format(len(act_clean_outstanding)))
             top_num_s = int(len(act_clean_outstanding))
             top_nums_s.append(top_num_s)
             common = np.intersect1d(top_neuron, act_clean_outstanding)
@@ -1036,8 +1036,8 @@ def analyze_source_class2(net, model_name, target_class, potential_target, num_c
 
     print('[DEBUG]: common_out{}'.format(common_out))
     print('[DEBUG]: common_out_p{}'.format(idx))
-    with np.printoptions(precision=2, suppress=True):
-        print('[DEBUG]: common_out_p{}'.format(common_out_p))
+    np.set_printoptions(precision=2)
+    print('[DEBUG]: common_out_p{}'.format(np.array(common_out_p)))
     print('[DEBUG]: top_nums{}'.format(top_nums))
     print('[DEBUG]: top_nums_s{}'.format(top_nums_s))
 
@@ -1049,7 +1049,7 @@ def analyze_source_class3(net, model_name, target_class, potential_target, num_c
     common_out = []
     common_out_p = []
     top_nums = []
-    top_nums_s = []
+    act_vals = []
     for source_class in range(0, num_class):
         #print('analyzing source class: {}'.format(source_class))
         #class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class, args.data_name, target_class)
@@ -1079,13 +1079,18 @@ def analyze_source_class3(net, model_name, target_class, potential_target, num_c
 
             #activation value
             act_val = np.mean(act_clean[top_neuron][:,1])
+            if source_class == potential_target:
+                act_val = 0.
+            act_vals.append(act_val)
             # print('act_clean_outstanding:{}'.format(act_clean_outstanding))
-            print('act_val: {}'.format(act_val))
+            #print('act_val: {}'.format(act_val))
             common_out.append(act_val)
 
     idx = np.argsort(common_out)
 
     print('[DEBUG]: act_vals{}'.format(common_out))
+    np.set_printoptions(precision=2)
+    print('[DEBUG]: act_vals{}'.format(np.array(act_vals)))
 
     flag_list = idx[-1]
     return flag_list

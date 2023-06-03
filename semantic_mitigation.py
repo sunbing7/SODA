@@ -205,12 +205,16 @@ def detect():
         elif args.load_type == 'model':
             net = torch.load(args.in_model, map_location=device)
 
-        flag_list = analyze_source_class2(net, args.arch, args.poison_target, potential_target, args.num_class,
+        flag_list = analyze_source_class(net, args.arch, args.poison_target, potential_target, args.num_class,
                                          args.ana_layer, args.num_sample, args.confidence2)
         print('[Detection1] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
-        flag_list = analyze_source_class(net, args.arch, args.poison_target, potential_target, args.num_class, args.ana_layer, args.num_sample, args.confidence2)
-        end2 = time.time()
+
+        flag_list = analyze_source_class2(net, args.arch, args.poison_target, potential_target, args.num_class, args.ana_layer, args.num_sample, args.confidence2)
         print('[Detection2] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+
+        flag_list = analyze_source_class3(net, args.arch, args.poison_target, potential_target, args.num_class, args.ana_layer, args.num_sample, args.confidence2)
+        print('[Detection3] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+    end2 = time.time()
     print('Detection time:{}'.format(end2 - start))
     return
 
@@ -1032,10 +1036,56 @@ def analyze_source_class2(net, model_name, target_class, potential_target, num_c
 
     print('[DEBUG]: common_out{}'.format(common_out))
     print('[DEBUG]: common_out_p{}'.format(idx))
-    with np.printoptions(precision=2):
+    with np.printoptions(precision=2, suppress=True):
         print('[DEBUG]: common_out_p{}'.format(common_out_p))
     print('[DEBUG]: top_nums{}'.format(top_nums))
     print('[DEBUG]: top_nums_s{}'.format(top_nums_s))
+
+    flag_list = idx[-1]
+    return flag_list
+
+
+def analyze_source_class3(net, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):
+    common_out = []
+    common_out_p = []
+    top_nums = []
+    top_nums_s = []
+    for source_class in range(0, num_class):
+        #print('analyzing source class: {}'.format(source_class))
+        #class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class, args.data_name, target_class)
+        for cur_layer in ana_layer:
+            # load sensitive neuron
+            hidden_test = np.loadtxt(
+                args.output_dir + "/test_pre0_" + "c" + str(source_class) + "_layer_" + str(cur_layer) + ".txt")
+            # check common important neuron
+            temp = hidden_test[:, [0, (potential_target + 1)]]
+            ind = np.argsort(temp[:, 1])[::-1]
+            temp = temp[ind]
+
+            # find outlier hidden neurons
+            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=args.confidence2, verbose=False)))
+            top_neuron = list(temp[:top_num].T[0].astype(int))
+            np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
+                       temp[:,0].astype(int), fmt="%s")
+            #debug
+            top_nums.append(top_num)
+            # clean class loader
+            clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class,
+                                                         args.data_name,
+                                                         args.t_attack)
+            act_clean = analyze_activation(net, args.arch, clean_class_loader, source_class,
+                                           potential_target,
+                                           args.num_sample, args.ana_layer)
+
+            #activation value
+            act_val = np.mean(act_clean[top_neuron][:,1])
+            # print('act_clean_outstanding:{}'.format(act_clean_outstanding))
+            print('act_val: {}'.format(act_val))
+            common_out.append(act_val)
+
+    idx = np.argsort(common_out)
+
+    print('[DEBUG]: act_vals{}'.format(common_out))
 
     flag_list = idx[-1]
     return flag_list

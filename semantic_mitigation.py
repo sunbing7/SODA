@@ -977,9 +977,8 @@ def analyze_source_class(model, model_name, target_class, potential_target, num_
 
 
 def analyze_source_class2(net, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):
-    out = []
-    old_out = []
     common_out = []
+    common_out_p = []
     top_nums = []
     top_nums_s = []
     for source_class in range(0, num_class):
@@ -1021,9 +1020,17 @@ def analyze_source_class2(net, model_name, target_class, potential_target, num_c
 
             common_out.append(len(common))
 
-    idx = np.argsort(common_out)
-    print('[DEBUG]: common_out{}'.format(idx))
+            if len(act_clean_outstanding) == 0:
+                common_percentage = 0
+            else:
+                common_percentage = len(common) / (len(act_clean_outstanding))
+            common_out_p.append(common_percentage)
+
+    idx = np.argsort(common_out_p)
+
     print('[DEBUG]: common_out{}'.format(common_out))
+    print('[DEBUG]: common_out_p{}'.format(idx))
+    print('[DEBUG]: common_out_p{}'.format(common_out_p))
     print('[DEBUG]: top_nums{}'.format(top_nums))
     print('[DEBUG]: top_nums_s{}'.format(top_nums_s))
 

@@ -1087,7 +1087,7 @@ def analyze_source_class3(net, model_name, target_class, potential_target, num_c
             common_out.append(act_val)
 
     idx = np.argsort(common_out)
-    np.set_printoptions(precision=2)
+    np.set_printoptions(precision=4)
     print('[DEBUG]: act_vals{}'.format(np.array(act_vals)))
 
     flag_list = idx[-1]

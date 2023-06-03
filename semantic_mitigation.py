@@ -209,7 +209,7 @@ def detect():
         #                                 args.ana_layer, args.num_sample, args.confidence2)
         #print('[Detection1] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
 
-        flag_list = analyze_source_class4(net, args.arch, args.poison_target, potential_target, args.num_class, args.ana_layer, args.num_sample, args.confidence2)
+        flag_list = analyze_source_class5(net, args.arch, args.poison_target, potential_target, args.num_class, args.ana_layer, args.num_sample, args.confidence2)
         print('[Detection4] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
     end2 = time.time()
     print('Detection time:{}'.format(end2 - start))
@@ -865,6 +865,39 @@ def analyze_activation(model, model_name, class_loader, source, target, num_samp
     return np.array(dense_output_avg)
 
 
+def analyze_embedding(model, model_name, class_loader, source, target, num_sample, ana_layer):
+    for cur_layer in ana_layer:
+        model.eval()
+
+        dense_output_avg = []
+        total_num_samples = 0
+        for image, gt in class_loader:
+            if total_num_samples >= num_sample:
+                break
+
+            image, gt = image.to(device), gt.to(device)
+
+            # compute output
+            with torch.no_grad():
+                dense_output = model(image)
+                #dense_hidden_ = torch.clone(torch.reshape(dense_output, (dense_output.shape[0], -1)))
+                dense_output = dense_output.cpu().detach().numpy()
+                dense_output = np.mean(np.array(dense_output), axis=0)
+            dense_output_avg.append(dense_output)
+            total_num_samples += len(gt)
+        # average of all baches
+        dense_output_avg = np.mean(np.array(dense_output_avg), axis=0)  # 4096x10
+
+        # insert neuron index
+        idx = np.arange(0, len(dense_output_avg), 1, dtype=int)
+        dense_output_avg = np.c_[idx, dense_output_avg]
+
+        np.savetxt(args.output_dir + "/adv_ce_" + "source_" + str(source) + "_target_" + str(target) + ".txt",
+                   dense_output_avg, fmt="%s")
+
+    return np.array(dense_output_avg)
+
+
 def analyze_pcc(num_class, ana_layer):
     pcc_class = []
     for source_class in range(0, num_class):
@@ -1122,6 +1155,55 @@ def analyze_source_class4(model, model_name, target_class, potential_target, num
     print('[DEBUG]: ac_means{}'.format(idx))
     np.set_printoptions(precision=4)
     print('[DEBUG]: ac_means{}'.format(np.array(ac_means)))
+
+    flag_list = idx[-1]
+    return flag_list
+
+
+def analyze_source_class5(net, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):
+    common_out = []
+    common_out_p = []
+    top_nums = []
+    top_nums_s = []
+    for source_class in range(0, num_class):
+        #print('analyzing source class: {}'.format(source_class))
+        #class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class, args.data_name, target_class)
+        for cur_layer in ana_layer:
+            # load sensitive neuron
+            hidden_test = np.loadtxt(
+                args.output_dir + "/test_pre0_" + "c" + str(source_class) + "_layer_" + str(cur_layer) + ".txt")
+            # check common important neuron
+            temp = hidden_test[:, [0, (potential_target + 1)]]
+            ind = np.argsort(temp[:, 1])[::-1]
+            temp = temp[ind]
+
+            # find outlier hidden neurons
+            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=max(2, args.confidence2), verbose=False)))
+            top_neuron = list(temp[:top_num].T[0].astype(int))
+            np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
+                       temp[:,0].astype(int), fmt="%s")
+            #debug
+            top_nums.append(top_num)
+            # clean class loader
+            clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class,
+                                                         args.data_name,
+                                                         args.t_attack)
+            ce_clean = analyze_embedding(net, args.arch, clean_class_loader, source_class,
+                                           potential_target,
+                                           args.num_sample, args.ana_layer)
+
+            common = ce_clean
+            if source_class == potential_target:
+                common = []
+
+            common_out.append(len(common))
+
+
+    idx = np.argsort(common_out)
+
+    print('[DEBUG]: common_out{}'.format(idx))
+    np.set_printoptions(precision=4)
+    print('[DEBUG]: common_out{}'.format(np.array(common_out)))
 
     flag_list = idx[-1]
     return flag_list

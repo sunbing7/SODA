@@ -205,9 +205,9 @@ def detect():
         elif args.load_type == 'model':
             net = torch.load(args.in_model, map_location=device)
 
-        flag_list = analyze_source_class(net, args.arch, args.poison_target, potential_target, args.num_class,
-                                         args.ana_layer, args.num_sample, args.confidence2)
-        print('[Detection1] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+        #flag_list = analyze_source_class(net, args.arch, args.poison_target, potential_target, args.num_class,
+        #                                 args.ana_layer, args.num_sample, args.confidence2)
+        #print('[Detection1] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
 
         flag_list = analyze_source_class4(net, args.arch, args.poison_target, potential_target, args.num_class, args.ana_layer, args.num_sample, args.confidence2)
         print('[Detection4] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
@@ -1108,7 +1108,12 @@ def analyze_source_class4(model, model_name, target_class, potential_target, num
             top_neuron = list(temp[:top_num].T[0].astype(int))
             np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
                        temp[:,0].astype(int), fmt="%s")
-            ac_mean = np.mean(hidden_test[:, (source_class + 1)])
+
+            temp = hidden_test[:, [0, (source_class + 1)]]
+            ind = np.argsort(temp[:, 1])[::-1]
+            temp = temp[ind]
+
+            ac_mean = np.mean(temp * args.top)
             if source_class == potential_target:
                 ac_mean = .0
             ac_means.append(ac_mean)

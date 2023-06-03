@@ -1194,7 +1194,7 @@ def analyze_source_class5(net, model_name, target_class, potential_target, num_c
 
             common = ce_clean
             if source_class == potential_target:
-                common = []
+                common = 0
 
             common_out.append(common)
 

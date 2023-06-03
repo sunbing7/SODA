@@ -1113,7 +1113,7 @@ def analyze_source_class4(model, model_name, target_class, potential_target, num
             ind = np.argsort(temp[:, 1])[::-1]
             temp = temp[ind]
 
-            ac_mean = np.mean(temp * args.top)
+            ac_mean = np.mean(temp[:int(len(temp) * args.top)])
             if source_class == potential_target:
                 ac_mean = .0
             ac_means.append(ac_mean)

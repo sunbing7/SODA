@@ -1114,7 +1114,7 @@ def analyze_source_class4(model, model_name, target_class, potential_target, num
     idx = np.argsort(ac_means)
     print('[DEBUG]: ac_means{}'.format(idx))
     np.set_printoptions(precision=4)
-    print('[DEBUG]: ac_means{}'.format(ac_means))
+    print('[DEBUG]: ac_means{}'.format(np.array(ac_means)))
 
     flag_list = idx[-1]
     return flag_list

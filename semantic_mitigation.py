@@ -895,7 +895,7 @@ def analyze_embedding(model, model_name, class_loader, source, target, num_sampl
         np.savetxt(args.output_dir + "/adv_ce_" + "source_" + str(source) + "_target_" + str(target) + ".txt",
                    dense_output_avg, fmt="%s")
 
-    return np.array(dense_output_avg)[source]
+    return np.array(dense_output_avg)[source][1]
 
 
 def analyze_pcc(num_class, ana_layer):

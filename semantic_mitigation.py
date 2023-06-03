@@ -895,7 +895,7 @@ def analyze_embedding(model, model_name, class_loader, source, target, num_sampl
         np.savetxt(args.output_dir + "/adv_ce_" + "source_" + str(source) + "_target_" + str(target) + ".txt",
                    dense_output_avg, fmt="%s")
 
-    return np.array(dense_output_avg)
+    return np.array(dense_output_avg)[source]
 
 
 def analyze_pcc(num_class, ana_layer):
@@ -1196,7 +1196,7 @@ def analyze_source_class5(net, model_name, target_class, potential_target, num_c
             if source_class == potential_target:
                 common = []
 
-            common_out.append(len(common))
+            common_out.append(common)
 
 
     idx = np.argsort(common_out)

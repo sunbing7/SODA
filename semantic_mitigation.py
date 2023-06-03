@@ -209,11 +209,8 @@ def detect():
                                          args.ana_layer, args.num_sample, args.confidence2)
         print('[Detection1] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
 
-        flag_list = analyze_source_class2(net, args.arch, args.poison_target, potential_target, args.num_class, args.ana_layer, args.num_sample, args.confidence2)
-        print('[Detection2] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
-
-        flag_list = analyze_source_class3(net, args.arch, args.poison_target, potential_target, args.num_class, args.ana_layer, args.num_sample, args.confidence2)
-        print('[Detection3] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+        flag_list = analyze_source_class4(net, args.arch, args.poison_target, potential_target, args.num_class, args.ana_layer, args.num_sample, args.confidence2)
+        print('[Detection4] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
     end2 = time.time()
     print('Detection time:{}'.format(end2 - start))
     return
@@ -1089,6 +1086,35 @@ def analyze_source_class3(net, model_name, target_class, potential_target, num_c
     idx = np.argsort(common_out)
     np.set_printoptions(precision=4)
     print('[DEBUG]: act_vals{}'.format(np.array(act_vals)))
+
+    flag_list = idx[-1]
+    return flag_list
+
+
+def analyze_source_class4(model, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):
+    ac_means = []
+    for source_class in range(0, num_class):
+        for cur_layer in ana_layer:
+            # load sensitive neuron
+            hidden_test = np.loadtxt(
+                args.output_dir + "/test_pre0_" + "c" + str(source_class) + "_layer_" + str(cur_layer) + ".txt")
+            # check common important neuron
+            temp = hidden_test[:, [0, (potential_target + 1)]]
+            ind = np.argsort(temp[:, 1])[::-1]
+            temp = temp[ind]
+
+            # find outlier hidden neurons
+            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=max(2, args.confidence2), verbose=False)))
+            top_neuron = list(temp[:top_num].T[0].astype(int))
+            np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
+                       temp[:,0].astype(int), fmt="%s")
+            ac_mean = np.mean(hidden_test[:, (source_class + 1)])
+            ac_means = ac_means.append(ac_mean)
+
+    idx = np.argsort(ac_means)
+    print('[DEBUG]: ac_means{}'.format(idx))
+    np.set_printoptions(precision=4)
+    print('[DEBUG]: ac_means{}'.format(ac_means))
 
     flag_list = idx[-1]
     return flag_list

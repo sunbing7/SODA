@@ -999,7 +999,8 @@ def analyze_source_class2(net, model_name, target_class, potential_target, num_c
             top_neuron = list(temp[:top_num].T[0].astype(int))
             np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
                        temp[:,0].astype(int), fmt="%s")
-
+            #debug
+            top_nums.append(top_num)
             # clean class loader
             clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class,
                                                          args.data_name,
@@ -1012,13 +1013,13 @@ def analyze_source_class2(net, model_name, target_class, potential_target, num_c
                 outlier_detection(act_clean[:, 1], max(act_clean[:, 1]), th=args.confidence2, verbose=False))[:, 0]
             # print('act_clean_outstanding:{}'.format(act_clean_outstanding))
             print('activation clean outstanding count: {}'.format(len(act_clean_outstanding)))
-
+            top_num_s = int(len(act_clean_outstanding))
+            top_nums_s.append(top_num_s)
             common = np.intersect1d(top_neuron, act_clean_outstanding)
             if source_class == potential_target:
                 common = []
 
             common_out.append(len(common))
-
 
     idx = np.argsort(common_out)
     print('[DEBUG]: common_out{}'.format(idx))

@@ -1025,14 +1025,15 @@ def analyze_source_class2(net, model_name, target_class, potential_target, num_c
             if len(act_clean_outstanding) == 0:
                 common_percentage = 0
             else:
-                common_percentage = len(common) / (len(act_clean_outstanding))
+                common_percentage = len(common) / (len(act_clean_outstanding)) * 100.
             common_out_p.append(common_percentage)
 
     idx = np.argsort(common_out_p)
 
     print('[DEBUG]: common_out{}'.format(common_out))
     print('[DEBUG]: common_out_p{}'.format(idx))
-    print('[DEBUG]: common_out_p{:.2f}'.format(common_out_p * 100))
+    with np.set_printoptions(precision=2):
+        print('[DEBUG]: common_out_p{}'.format(common_out_p))
     print('[DEBUG]: top_nums{}'.format(top_nums))
     print('[DEBUG]: top_nums_s{}'.format(top_nums_s))
 

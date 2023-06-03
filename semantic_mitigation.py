@@ -51,6 +51,7 @@ parser.add_argument('--plot', type=int, default=0, help='plot hidden neuron caus
 parser.add_argument('--reanalyze', type=int, default=0, help='redo analyzing')
 parser.add_argument('--confidence', type=float, default=2, help='detection confidence')
 parser.add_argument('--confidence2', type=float, default=3, help='detection confidence2')
+parser.add_argument('--confidence3', type=float, default=3, help='detection confidence3')
 parser.add_argument('--potential_source', type=int, default=0, help='potential source class of backdoor attack')
 parser.add_argument('--potential_target', type=str, default='na', help='potential target class of backdoor attack')
 parser.add_argument('--reg', type=float, default=0.9, help='trigger generation reg factor')
@@ -206,10 +207,10 @@ def detect():
 
         flag_list = analyze_source_class2(net, args.arch, args.poison_target, potential_target, args.num_class,
                                          args.ana_layer, args.num_sample, args.confidence2)
-        print('Detect 2:')
+        print('[Detection1] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
         flag_list = analyze_source_class(net, args.arch, args.poison_target, potential_target, args.num_class, args.ana_layer, args.num_sample, args.confidence2)
         end2 = time.time()
-        print('[Detection] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+        print('[Detection2] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
     print('Detection time:{}'.format(end2 - start))
     return
 
@@ -940,7 +941,7 @@ def analyze_source_class(model, model_name, target_class, potential_target, num_
             temp = temp[ind]
 
             # find outlier hidden neurons
-            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=max(2, args.confidence), verbose=False)))
+            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=max(2, args.confidence2), verbose=False)))
             top_neuron = list(temp[:top_num].T[0].astype(int))
             np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
                        temp[:,0].astype(int), fmt="%s")
@@ -952,7 +953,7 @@ def analyze_source_class(model, model_name, target_class, potential_target, num_
             temp_s = temp_s[ind]
 
             # find outlier hidden neurons
-            top_num_s = int(len(outlier_detection(temp_s[:, 1], max(temp_s[:, 1]), th=args.confidence2, verbose=False)))
+            top_num_s = int(len(outlier_detection(temp_s[:, 1], max(temp_s[:, 1]), th=args.confidence3, verbose=False)))
             top_neuron_s = list(temp_s[:top_num_s].T[0].astype(int))
 
             #debug
@@ -995,7 +996,7 @@ def analyze_source_class2(net, model_name, target_class, potential_target, num_c
             temp = temp[ind]
 
             # find outlier hidden neurons
-            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=max(2, args.confidence), verbose=False)))
+            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=max(2, args.confidence2), verbose=False)))
             top_neuron = list(temp[:top_num].T[0].astype(int))
             np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
                        temp[:,0].astype(int), fmt="%s")
@@ -1010,7 +1011,7 @@ def analyze_source_class2(net, model_name, target_class, potential_target, num_c
                                            args.num_sample, args.ana_layer)
 
             act_clean_outstanding = np.array(
-                outlier_detection(act_clean[:, 1], max(act_clean[:, 1]), th=args.confidence2, verbose=False))[:, 0]
+                outlier_detection(act_clean[:, 1], max(act_clean[:, 1]), th=args.confidence3, verbose=False))[:, 0]
             # print('act_clean_outstanding:{}'.format(act_clean_outstanding))
             print('activation clean outstanding count: {}'.format(len(act_clean_outstanding)))
             top_num_s = int(len(act_clean_outstanding))
@@ -1031,7 +1032,7 @@ def analyze_source_class2(net, model_name, target_class, potential_target, num_c
 
     print('[DEBUG]: common_out{}'.format(common_out))
     print('[DEBUG]: common_out_p{}'.format(idx))
-    print('[DEBUG]: common_out_p{}'.format(common_out_p))
+    print('[DEBUG]: common_out_p{:.2f}'.format(common_out_p * 100))
     print('[DEBUG]: top_nums{}'.format(top_nums))
     print('[DEBUG]: top_nums_s{}'.format(top_nums_s))
 

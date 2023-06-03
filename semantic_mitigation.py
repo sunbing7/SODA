@@ -204,7 +204,9 @@ def detect():
         elif args.load_type == 'model':
             net = torch.load(args.in_model, map_location=device)
 
-        flag_list = analyze_source_class(net, args.arch, args.poison_target, potential_target, args.num_class, args.ana_layer, args.num_sample, args.confidence2)
+        flag_list = analyze_source_class2(net, args.arch, args.poison_target, potential_target, args.num_class,
+                                         args.ana_layer, args.num_sample, args.confidence2)
+        #flag_list = analyze_source_class(net, args.arch, args.poison_target, potential_target, args.num_class, args.ana_layer, args.num_sample, args.confidence2)
         end2 = time.time()
         print('[Detection] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
     print('Detection time:{}'.format(end2 - start))
@@ -963,6 +965,60 @@ def analyze_source_class(model, model_name, target_class, potential_target, num_
                 common = []
 
             common_out.append(len(common))
+
+    idx = np.argsort(common_out)
+    print('[DEBUG]: common_out{}'.format(idx))
+    print('[DEBUG]: common_out{}'.format(common_out))
+    print('[DEBUG]: top_nums{}'.format(top_nums))
+    print('[DEBUG]: top_nums_s{}'.format(top_nums_s))
+
+    flag_list = idx[-1]
+    return flag_list
+
+
+def analyze_source_class2(net, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):
+    out = []
+    old_out = []
+    common_out = []
+    top_nums = []
+    top_nums_s = []
+    for source_class in range(0, num_class):
+        #print('analyzing source class: {}'.format(source_class))
+        #class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class, args.data_name, target_class)
+        for cur_layer in ana_layer:
+            # load sensitive neuron
+            hidden_test = np.loadtxt(
+                args.output_dir + "/test_pre0_" + "c" + str(source_class) + "_layer_" + str(cur_layer) + ".txt")
+            # check common important neuron
+            temp = hidden_test[:, [0, (potential_target + 1)]]
+            ind = np.argsort(temp[:, 1])[::-1]
+            temp = temp[ind]
+
+            # find outlier hidden neurons
+            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=max(2, args.confidence2), verbose=False)))
+            top_neuron = list(temp[:top_num].T[0].astype(int))
+            np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
+                       temp[:,0].astype(int), fmt="%s")
+
+            # clean class loader
+            clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class,
+                                                         args.data_name,
+                                                         args.t_attack)
+            act_clean = analyze_activation(net, args.arch, clean_class_loader, source_class,
+                                           potential_target,
+                                           args.num_sample, args.ana_layer)
+
+            act_clean_outstanding = np.array(
+                outlier_detection(act_clean[:, 1], max(act_clean[:, 1]), th=args.confidence2, verbose=False))[:, 0]
+            # print('act_clean_outstanding:{}'.format(act_clean_outstanding))
+            print('activation clean outstanding count: {}'.format(len(act_clean_outstanding)))
+
+            common = np.intersect1d(top_neuron, act_clean_outstanding)
+            if source_class == potential_target:
+                common = []
+
+            common_out.append(len(common))
+
 
     idx = np.argsort(common_out)
     print('[DEBUG]: common_out{}'.format(idx))

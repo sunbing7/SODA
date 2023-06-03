@@ -8,14 +8,14 @@
 
 #all clean
 #cifar clean resnet18
-python train_backdoor_sem.py --option=base --arch=resnet18 --epoch=35 --schedule 20 30 --lr=0.1 --resume=0 --batch_size=64 --checkpoint=na --output_dir=./save --t_attack=clean --data_dir=./data/CIFAR10 --data_set=./data/CIFAR10/cifar_dataset.h5 --data_name=CIFAR10 --num_class=10
-python semantic_mitigation.py --option=causality_analysis --reanalyze=1 --arch=resnet18 --poison_type=semantic --ana_layer 6 --plot=0 --batch_size=64 --num_sample=256 --in_model=./save/model_clean_resnet18_CIFAR10_last.th --output_dir=./save --t_attack=clean --data_set=./data/CIFAR10/cifar_dataset.h5 --data_name=CIFAR10 --num_class=10
-python semantic_mitigation.py --option=detect --reanalyze=1 --arch=resnet18 --poison_type=semantic --confidence=5 --confidence2=2 --ana_layer 6 --batch_size=64 --num_sample=256 --poison_target=6 --in_model=./save/model_clean_resnet18_CIFAR10_last.th --output_dir=./save --t_attack=clean --data_set=./data/CIFAR10/cifar_dataset.h5 --data_name=CIFAR10 --num_class=10
+#python train_backdoor_sem.py --option=base --arch=resnet18 --epoch=35 --schedule 20 30 --lr=0.1 --resume=0 --batch_size=64 --checkpoint=na --output_dir=./save --t_attack=clean --data_dir=./data/CIFAR10 --data_set=./data/CIFAR10/cifar_dataset.h5 --data_name=CIFAR10 --num_class=10
+#python semantic_mitigation.py --option=causality_analysis --reanalyze=1 --arch=resnet18 --poison_type=semantic --ana_layer 6 --plot=0 --batch_size=64 --num_sample=256 --in_model=./save/model_clean_resnet18_CIFAR10_last.th --output_dir=./save --t_attack=clean --data_set=./data/CIFAR10/cifar_dataset.h5 --data_name=CIFAR10 --num_class=10
+#python semantic_mitigation.py --option=detect --reanalyze=1 --arch=resnet18 --poison_type=semantic --confidence=5 --confidence2=2 --ana_layer 6 --batch_size=64 --num_sample=256 --poison_target=6 --in_model=./save/model_clean_resnet18_CIFAR10_last.th --output_dir=./save --t_attack=clean --data_set=./data/CIFAR10/cifar_dataset.h5 --data_name=CIFAR10 --num_class=10
 
 #cifar clean resnet50
-python train_backdoor_sem.py --option=base --arch=resnet50 --epoch=70 --schedule 30 50 --lr=0.1 --resume=0 --batch_size=64 --checkpoint=na --output_dir=./save --t_attack=green --data_dir=./data/CIFAR10 --data_set=./data/CIFAR10/cifar_dataset.h5 --data_name=CIFAR10 --num_class=10
-python semantic_mitigation.py --option=influence --reanalyze=1 --arch=resnet50 --poison_type=semantic --ana_layer 6 --plot=0 --batch_size=64 --num_sample=256 --in_model=./save/model_clean_resnet50_CIFAR10_last.th --output_dir=./save --data_set=./data/CIFAR10/cifar_dataset.h5 --data_name=CIFAR10 --num_class=10
-python semantic_mitigation.py --option=detect --reanalyze=1 --arch=resnet50 --poison_type=semantic --confidence=3 --confidence2=1 --ana_layer 6 --batch_size=64 --num_sample=256 --in_model=./save/model_clean_resnet50_CIFAR10_last.th --output_dir=./save --data_set=./data/CIFAR10/cifar_dataset.h5 --data_name=CIFAR10 --num_class=10
+#python train_backdoor_sem.py --option=base --arch=resnet50 --epoch=70 --schedule 30 50 --lr=0.1 --resume=0 --batch_size=64 --checkpoint=na --output_dir=./save --t_attack=green --data_dir=./data/CIFAR10 --data_set=./data/CIFAR10/cifar_dataset.h5 --data_name=CIFAR10 --num_class=10
+#python semantic_mitigation.py --option=influence --reanalyze=1 --arch=resnet50 --poison_type=semantic --ana_layer 6 --plot=0 --batch_size=64 --num_sample=256 --in_model=./save/model_clean_resnet50_CIFAR10_last.th --output_dir=./save --data_set=./data/CIFAR10/cifar_dataset.h5 --data_name=CIFAR10 --num_class=10
+#python semantic_mitigation.py --option=detect --reanalyze=1 --arch=resnet50 --poison_type=semantic --confidence=3 --confidence2=1 --ana_layer 6 --batch_size=64 --num_sample=256 --in_model=./save/model_clean_resnet50_CIFAR10_last.th --output_dir=./save --data_set=./data/CIFAR10/cifar_dataset.h5 --data_name=CIFAR10 --num_class=10
 
 #gtsrb clean vgg11
 #python train_backdoor_sem.py --option=base --lr=0.1 --arch=vgg11_bn --resume=0 --epoch=30 --schedule 20 25 --checkpoint=na --batch_size=64 --output_dir=./save --t_attack=clean --data_dir=./data/GTSRB --data_set=./data/GTSRB/gtsrb.h5 --data_name=GTSRB --num_class=43

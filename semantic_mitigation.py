@@ -206,7 +206,8 @@ def detect():
 
         flag_list = analyze_source_class2(net, args.arch, args.poison_target, potential_target, args.num_class,
                                          args.ana_layer, args.num_sample, args.confidence2)
-        #flag_list = analyze_source_class(net, args.arch, args.poison_target, potential_target, args.num_class, args.ana_layer, args.num_sample, args.confidence2)
+        print('Detect 2:')
+        flag_list = analyze_source_class(net, args.arch, args.poison_target, potential_target, args.num_class, args.ana_layer, args.num_sample, args.confidence2)
         end2 = time.time()
         print('[Detection] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
     print('Detection time:{}'.format(end2 - start))
@@ -939,7 +940,7 @@ def analyze_source_class(model, model_name, target_class, potential_target, num_
             temp = temp[ind]
 
             # find outlier hidden neurons
-            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=max(2, args.confidence2), verbose=False)))
+            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=max(2, args.confidence), verbose=False)))
             top_neuron = list(temp[:top_num].T[0].astype(int))
             np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
                        temp[:,0].astype(int), fmt="%s")

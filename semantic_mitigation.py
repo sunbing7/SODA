@@ -1109,6 +1109,8 @@ def analyze_source_class4(model, model_name, target_class, potential_target, num
             np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
                        temp[:,0].astype(int), fmt="%s")
             ac_mean = np.mean(hidden_test[:, (source_class + 1)])
+            if source_class == potential_target:
+                ac_mean = .0
             ac_means.append(ac_mean)
 
     idx = np.argsort(ac_means)

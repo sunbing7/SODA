@@ -1319,7 +1319,7 @@ def analyze_source_class5(net,  potential_target, num_class, ana_layer, num_samp
         temp = temp[ind]
         out = int(temp[-1][0])
     else:
-        out = flag_list[0][0]
+        out = flag_list[0]
     return out
 
 

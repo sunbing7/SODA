@@ -1180,7 +1180,7 @@ def analyze_source_class9(net, model_name, target_class, potential_target, num_c
                                            args.num_sample, args.ana_layer)
 
             #activation value
-            act_val = np.sum(act_clean[common][:,1])
+            act_val = np.sum(act_clean[list(common)][:,1])
             if source_class == potential_target:
                 act_val = 0.
             act_vals.append(act_val)

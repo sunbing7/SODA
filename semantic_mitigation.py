@@ -209,7 +209,9 @@ def detect():
         #                                 args.ana_layer, args.num_sample, args.confidence2)
         #print('[Detection1] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
         flag_list = analyze_source_class5(net, potential_target, args.num_class, args.ana_layer, args.num_sample)
-        print('[Detection4] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+        print('[Detection5] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+        flag_list = analyze_source_class6(net, potential_target, args.num_class, args.ana_layer, args.num_sample)
+        print('[Detection6] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
     end2 = time.time()
     print('Detection time:{}'.format(end2 - start))
     return
@@ -1160,6 +1162,28 @@ def analyze_source_class4(model, model_name, target_class, potential_target, num
 
 
 def analyze_source_class5(net,  potential_target, num_class, ana_layer, num_sample):
+    pcc = []
+    for source_class in range(0, num_class):
+        pcc_class = np.loadtxt(args.output_dir + "/pcc_" + "c" + str(source_class) + ".txt")
+        #pcc_i = pcc_class[-1, :]
+        pcc_i = pcc_class
+        pcc_i = np.insert(np.array(pcc_i), source_class, 0, axis=0)
+        pcc.append(pcc_i)
+    pcc_avg = np.mean(np.array(pcc), axis=0)
+    pcc_avg = 1 - pcc_avg
+    #find outlier
+
+    idx = np.argsort(pcc_avg)
+
+    print('[DEBUG]: pcc_avg{}'.format(idx))
+    np.set_printoptions(precision=4)
+    print('[DEBUG]: pcc_avg{}'.format(np.array(pcc_avg)))
+
+    flag_list = idx[1]
+    return flag_list
+
+
+def analyze_source_class6(net,  potential_target, num_class, ana_layer, num_sample):
     ce_cleans = []
     for source_class in range(0, num_class):
         for cur_layer in ana_layer:

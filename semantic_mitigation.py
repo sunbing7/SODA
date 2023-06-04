@@ -1305,11 +1305,12 @@ def analyze_source_class5(net,  potential_target, num_class, ana_layer, num_samp
     print('[DEBUG]: ce_cleans{}'.format(np.array(ce_cleans)))
 
     # insert class index
-    idx = np.arange(0, len(idx), 1, dtype=int)
-    temp = np.c_[idx, ce_cleans]
+    c_i = np.arange(0, len(idx), 1, dtype=int)
+    temp = np.c_[c_i, ce_cleans]
 
     flag_list = outlier_detection(temp[:,1], max(temp[:,1]), th=args.confidence2, verbose=False)
     if len(flag_list) > 1:
+        print('[DEBUG] flag_list'.format(flag_list))
         wanted = []
         for source_c, _ in flag_list:
             wanted.append(source_c)
@@ -1319,7 +1320,7 @@ def analyze_source_class5(net,  potential_target, num_class, ana_layer, num_samp
         temp = temp[ind]
         out = int(temp[-1][0])
     else:
-        out = flag_list[0]
+        out = idx[-1]
     return out
 
 

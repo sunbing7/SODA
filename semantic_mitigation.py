@@ -208,9 +208,9 @@ def detect():
         #flag_list = analyze_source_class(net, args.arch, args.poison_target, potential_target, args.num_class,
         #                                 args.ana_layer, args.num_sample, args.confidence2)
         #print('[Detection1] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
-        flag_list = analyze_source_class(net, args.arch, args.poison_target, potential_target, args.num_class,
+        flag_list = analyze_source_class3(net, args.arch, args.poison_target, potential_target, args.num_class,
                                          args.ana_layer, args.num_sample, args.confidence2)
-        print('[Detection1] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+        print('[Detection3] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
         flag_list = analyze_source_class5(net, potential_target, args.num_class, args.ana_layer, args.num_sample)
         print('[Detection5] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
         #flag_list = analyze_source_class6(net, potential_target, args.num_class, args.ana_layer, args.num_sample)
@@ -1112,7 +1112,7 @@ def analyze_source_class3(net, model_name, target_class, potential_target, num_c
                                            args.num_sample, args.ana_layer)
 
             #activation value
-            act_val = np.mean(act_clean[top_neuron][:,1])
+            act_val = np.sum(act_clean[top_neuron][:,1])
             if source_class == potential_target:
                 act_val = 0.
             act_vals.append(act_val)

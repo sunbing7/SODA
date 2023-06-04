@@ -211,6 +211,10 @@ def detect():
         flag_list = analyze_source_class3(net, args.arch, args.poison_target, potential_target, args.num_class,
                                          args.ana_layer, args.num_sample, args.confidence2)
         print('[Detection3] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+        flag_list = analyze_source_class9(net, args.arch, args.poison_target, potential_target, args.num_class,
+                                          args.ana_layer, args.num_sample, args.confidence2)
+        print('[Detection9] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+
         flag_list = analyze_source_class5(net, potential_target, args.num_class, args.ana_layer, args.num_sample)
         print('[Detection5] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
         #flag_list = analyze_source_class6(net, potential_target, args.num_class, args.ana_layer, args.num_sample)
@@ -1121,6 +1125,71 @@ def analyze_source_class3(net, model_name, target_class, potential_target, num_c
             common_out.append(act_val)
 
     idx = np.argsort(common_out)
+    print('[DEBUG]: act_vals{}'.format(idx))
+    np.set_printoptions(precision=4)
+    print('[DEBUG]: act_vals{}'.format(np.array(act_vals)))
+
+    flag_list = idx[-1]
+    return flag_list
+
+
+def analyze_source_class9(net, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):
+    common_out = []
+    common_out_p = []
+    top_nums = []
+    act_vals = []
+    for source_class in range(0, num_class):
+        #print('analyzing source class: {}'.format(source_class))
+        #class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class, args.data_name, target_class)
+        for cur_layer in ana_layer:
+            # load sensitive neuron
+            hidden_test = np.loadtxt(
+                args.output_dir + "/test_pre0_" + "c" + str(source_class) + "_layer_" + str(cur_layer) + ".txt")
+            # check common important neuron
+            temp = hidden_test[:, [0, (potential_target + 1)]]
+            ind = np.argsort(temp[:, 1])[::-1]
+            temp = temp[ind]
+
+            # find outlier hidden neurons
+            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=args.confidence2, verbose=False)))
+            top_neuron = list(temp[:top_num].T[0].astype(int))
+            np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
+                       temp[:,0].astype(int), fmt="%s")
+
+            #debug
+            top_nums.append(top_num)
+            # get source to source top neuron
+            temp_s = hidden_test[:, [0, (source_class + 1)]]
+            ind = np.argsort(temp_s[:, 1])[::-1]
+            temp_s = temp_s[ind]
+
+            # find outlier hidden neurons
+            top_num_s = int(len(outlier_detection(temp_s[:, 1], max(temp_s[:, 1]), th=args.confidence3, verbose=False)))
+            top_neuron_s = list(temp_s[:top_num_s].T[0].astype(int))
+
+            common = np.intersect1d(top_neuron, top_neuron_s)
+            if source_class == potential_target:
+                common = []
+
+            # clean class loader
+            clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class,
+                                                         args.data_name,
+                                                         args.t_attack)
+            act_clean = analyze_activation(net, args.arch, clean_class_loader, source_class,
+                                           potential_target,
+                                           args.num_sample, args.ana_layer)
+
+            #activation value
+            act_val = np.sum(act_clean[common][:,1])
+            if source_class == potential_target:
+                act_val = 0.
+            act_vals.append(act_val)
+            # print('act_clean_outstanding:{}'.format(act_clean_outstanding))
+            #print('act_val: {}'.format(act_val))
+            common_out.append(act_val)
+
+    idx = np.argsort(common_out)
+    print('[DEBUG]: act_vals{}'.format(idx))
     np.set_printoptions(precision=4)
     print('[DEBUG]: act_vals{}'.format(np.array(act_vals)))
 

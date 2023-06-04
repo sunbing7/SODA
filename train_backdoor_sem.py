@@ -308,7 +308,7 @@ def train_sem(model, criterion, optimizer, data_loader, adv_loader):
     for i, (images, labels) in enumerate(data_loader):
         # select adv samples
         images_adv, labels_adv = next(adv_iter, (None, None))
-        if images_adv is None:
+        if images_adv is None or len(images_adv) < int(args.batch_size * args.ratio):
             adv_iter = iter(adv_loader)
             images_adv, labels_adv = next(adv_iter, (None, None))
 

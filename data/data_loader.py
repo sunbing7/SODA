@@ -470,8 +470,6 @@ def get_custom_class_loader(data_file, batch_size=64, cur_class=0, dataset='CIFA
         return get_data_caltech_class_loader(data_file, batch_size, cur_class, t_attack, is_train=is_train)
     if dataset == 'asl':
         return get_data_asl_class_loader(data_file, batch_size, cur_class, t_attack, is_train=is_train)
-    if dataset == 'retina':
-        return get_data_retina_class_loader(data_file, batch_size, cur_class, t_attack, is_train=is_train)
 
 
 def get_data_cifar_class_loader(data_file, batch_size=64, cur_class=0, t_attack='green', is_train=False):

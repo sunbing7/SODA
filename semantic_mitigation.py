@@ -1310,7 +1310,7 @@ def analyze_source_class5(net,  potential_target, num_class, ana_layer, num_samp
 
     flag_list = outlier_detection(temp[:,1], max(temp[:,1]), th=args.confidence2, verbose=False)
     if len(flag_list) > 1:
-        print('[DEBUG] flag_list'.format(flag_list))
+        print('[DEBUG] flag_list:{}'.format(flag_list))
         wanted = []
         for source_c, _ in flag_list:
             wanted.append(source_c)

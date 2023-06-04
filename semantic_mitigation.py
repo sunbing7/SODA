@@ -235,7 +235,8 @@ def remove():
     elif args.load_type == 'model':
         net = torch.load(args.in_model, map_location=device)
     mask = np.zeros(get_neuron_count(args.arch, args.ana_layer[0]))
-    neu_idx = np.loadtxt(args.output_dir + "/outstanding_" + "c" + str(args.potential_source) + "_target_" + str(args.poison_target) + ".txt")
+    neu_idx = locate_outstanding_neuron(args.potential_source, args.poison_target, args.ana_layer[0])
+    #neu_idx = np.loadtxt(args.output_dir + "/outstanding_" + "c" + str(args.potential_source) + "_target_" + str(args.poison_target) + ".txt")
     neu_idx = neu_idx[:int(len(neu_idx) * args.top)]
     mask[neu_idx.astype(int)] = 1
     mask = torch.from_numpy(mask).to(device)
@@ -944,6 +945,18 @@ def analyze_source_class(net,  potential_target, num_class, ana_layer, num_sampl
         out = idx[-1]
     return out
 
+
+def locate_outstanding_neuron(potential_source, potential_target, cur_layer):
+    # load sensitive neuron
+    hidden_test = np.loadtxt(
+        args.output_dir + "/test_pre0_" + "c" + str(potential_source) + "_layer_" + str(cur_layer) + ".txt")
+    # check common important neuron
+    temp = hidden_test[:, [0, (potential_target + 1)]]
+    ind = np.argsort(temp[:, 1])[::-1]
+    temp = temp[ind]
+    np.savetxt(args.output_dir + "/outstanding_" + "c" + str(potential_source) + "_target_" +
+               str(potential_target) + ".txt", temp[:, 0].astype(int), fmt="%s")
+    return temp[:, 0]
 
 def solve_detect_common_outstanding_neuron(num_class, ana_layer):
         '''

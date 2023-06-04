@@ -1213,7 +1213,7 @@ def analyze_source_class5(net,  potential_target, num_class, ana_layer, num_samp
     return flag_list
 
 
-def analyze_source_class7(model, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):
+def analyze_source_class8(model, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):
     '''
     increase source class
     '''
@@ -1276,7 +1276,7 @@ def analyze_source_class7(model, model_name, target_class, potential_target, num
                     do_predict_neu = []
                     do_predict = []
 
-                    dense_hidden_[:, list(top_neuron_s)] = 1
+                    dense_hidden_[:, list(top_neuron)] = 1
                     dense_output_ = torch.reshape(dense_hidden_, dense_output.shape)
                     do_predict = model2(dense_output_).cpu().detach().numpy()
                     do_predict = np.mean(np.array(do_predict), axis=0)

@@ -1161,7 +1161,7 @@ def analyze_source_class4(model, model_name, target_class, potential_target, num
     return flag_list
 
 
-def analyze_source_class5(net,  potential_target, num_class, ana_layer, num_sample):
+def analyze_source_class6(net,  potential_target, num_class, ana_layer, num_sample):
     pcc = []
     for source_class in range(0, num_class):
         pcc_class = np.loadtxt(args.output_dir + "/pcc_" + "c" + str(source_class) + ".txt")
@@ -1179,11 +1179,11 @@ def analyze_source_class5(net,  potential_target, num_class, ana_layer, num_samp
     np.set_printoptions(precision=4)
     print('[DEBUG]: pcc_avg{}'.format(np.array(pcc_avg)))
 
-    flag_list = idx[1]
+    flag_list = idx[-2]
     return flag_list
 
 
-def analyze_source_class6(net,  potential_target, num_class, ana_layer, num_sample):
+def analyze_source_class5(net,  potential_target, num_class, ana_layer, num_sample):
     ce_cleans = []
     for source_class in range(0, num_class):
         for cur_layer in ana_layer:

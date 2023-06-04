@@ -13,8 +13,6 @@ from models.selector import *
 import matplotlib.pyplot as plt
 import copy
 
-#from numpy import dot
-#from numpy.linalg import norm
 
 from models.split_model import split_model, reconstruct_model, recover_model, get_neuron_count, get_last_layer_name, get_num_trainable_parameters
 
@@ -27,7 +25,6 @@ parser.add_argument('--arch', type=str, default='resnet18',
                              'MobileNet', 'shufflenetv2', 'densenet'])
 parser.add_argument('--batch_size', type=int, default=128, help='the batch size for dataloader')
 parser.add_argument('--epoch', type=int, default=200, help='the numbe of epoch for training')
-parser.add_argument('--save_every', type=int, default=20, help='save checkpoints every few epochs')
 parser.add_argument('--data_set', type=str, default='../data', help='path to the dataset')
 parser.add_argument('--data_dir', type=str, default='../data', help='dir to the dataset')
 parser.add_argument('--output_dir', type=str, default='logs/models/')
@@ -51,7 +48,6 @@ parser.add_argument('--plot', type=int, default=0, help='plot hidden neuron caus
 parser.add_argument('--reanalyze', type=int, default=0, help='redo analyzing')
 parser.add_argument('--confidence', type=float, default=2, help='detection confidence')
 parser.add_argument('--confidence2', type=float, default=3, help='detection confidence2')
-parser.add_argument('--confidence3', type=float, default=3, help='detection confidence3')
 parser.add_argument('--potential_source', type=int, default=0, help='potential source class of backdoor attack')
 parser.add_argument('--potential_target', type=str, default='na', help='potential target class of backdoor attack')
 parser.add_argument('--reg', type=float, default=0.9, help='trigger generation reg factor')
@@ -102,9 +98,6 @@ def run_test():
     elif args.load_type == 'model':
         net = torch.load(args.in_model, map_location=device)
 
-    #summary(net, (3, 32, 32))
-    #print(net)
-
     criterion = torch.nn.CrossEntropyLoss().to(device)
 
     logger.info('Epoch \t lr \t Time \t PoisonLoss \t PoisonACC \t RPoisonLoss \t RPoisonACC \t CleanLoss \t CleanACC')
@@ -148,17 +141,13 @@ def causality_analysis():
         load_state_dict(net, orig_state_dict=state_dict)
     elif args.load_type == 'model':
         net = torch.load(args.in_model, map_location=device)
-    #summary(net, (3, 32, 32))
-    #print(net)
 
     total_params = sum(p.numel() for p in net.parameters())
     print('Total number of parameters:{}'.format(total_params))
 
     criterion = torch.nn.CrossEntropyLoss().to(device)
-    optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
-    #'''
+
     logger.info('Epoch \t lr \t Time \t PoisonLoss \t PoisonACC \t CleanLoss \t CleanACC')
-    #torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_init.th'))
     cl_loss, cl_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
     if args.t_attack != 'clean':
         po_loss, po_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
@@ -166,7 +155,7 @@ def causality_analysis():
         po_loss = 0
         po_acc = 0
     logger.info('0 \t None \t None \t {:.4f} \t {:.4f} \t {:.4f} \t {:.4f}'.format(po_loss, po_acc, cl_loss, cl_acc))
-    #'''
+
     start = time.time()
     # analyze hidden neurons
     if args.reanalyze:
@@ -180,13 +169,10 @@ def causality_analysis():
 
 def detect():
     start = time.time()
-    #'''
     # Step 1 find target class
     if args.reanalyze:
         analyze_pcc(args.num_class, args.ana_layer)
     flag_list = detect_pcc(args.num_class)
-    #'''
-    #flag_list = [(4, 1.0)]
     end1 = time.time()
 
     print('pcc flag list: {}'.format(flag_list))
@@ -194,9 +180,8 @@ def detect():
         print('No semantic backdoor detected!')
         print('Detection time:{}'.format(end1 - start))
         return
+    # Step 2 find source class
     for potential_target, _ in flag_list:
-        #potential_target = flag_list[-1][0]
-        # Step 2 find source class
         if args.load_type == 'state_dict':
             net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=0).to(device)
 
@@ -205,20 +190,9 @@ def detect():
         elif args.load_type == 'model':
             net = torch.load(args.in_model, map_location=device)
 
-        #flag_list = analyze_source_class(net, args.arch, args.poison_target, potential_target, args.num_class,
-        #                                 args.ana_layer, args.num_sample, args.confidence2)
-        #print('[Detection1] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
-        #flag_list = analyze_source_class3(net, args.arch, args.poison_target, potential_target, args.num_class,
-        #                                 args.ana_layer, args.num_sample, args.confidence2)
-        #print('[Detection3] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
-        #flag_list = analyze_source_class9(net, args.arch, args.poison_target, potential_target, args.num_class,
-        #                                  args.ana_layer, args.num_sample, args.confidence2)
-        #print('[Detection9] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+        source = analyze_source_class(net, potential_target, args.num_class, args.ana_layer, args.num_sample)
+        print('[Detection] potential source class: {}, target class: {}'.format(int(source), int(potential_target)))
 
-        source = analyze_source_class5(net, potential_target, args.num_class, args.ana_layer, args.num_sample)
-        print('[Detection5] potential source class: {}, target class: {}'.format(int(source), int(potential_target)))
-        #flag_list = analyze_source_class6(net, potential_target, args.num_class, args.ana_layer, args.num_sample)
-        #print('[Detection6] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
     end2 = time.time()
     print('Detection time:{}'.format(end2 - start))
     return
@@ -265,29 +239,21 @@ def remove():
     neu_idx = neu_idx[:int(len(neu_idx) * args.top)]
     mask[neu_idx.astype(int)] = 1
     mask = torch.from_numpy(mask).to(device)
-    #net0 = copy.deepcopy(net)
+
     net = reconstruct_model(net, args.arch, mask, split_layer=args.ana_layer[0])
-    '''
-    summary(net, (3, 224, 224))
-    x = torch.randn(1,3,224,224)
-    y = net0(x)
-    net2 = recover_model(net, args.arch, split_layer=args.ana_layer[0])
-    summary(net2, (3, 224, 224))
-    y2 = net2(x)
-    '''
+
     criterion = torch.nn.CrossEntropyLoss().to(device)
     optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
-    #'''
+
     logger.info('Epoch \t lr \t Time \t PoisonLoss \t PoisonACC \t RPoisonLoss \t RPoisonACC \t CleanLoss \t CleanACC')
     torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_init.th'))
     cl_loss, cl_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
     po_loss, po_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
     rpo_loss, rpo_acc = test(model=net, criterion=criterion, data_loader=radv_loader_test)
     logger.info('0 \t None \t None \t {:.4f} \t {:.4f} \t {:.4f} \t {:.4f} \t {:.4f} \t {:.4f}'.format(po_loss, po_acc, rpo_loss, rpo_acc, cl_loss, cl_acc))
-    #'''
+
     for epoch in range(0, args.epoch):
         start = time.time()
-        _adjust_learning_rate(optimizer, epoch, args.lr)
         lr = optimizer.param_groups[0]['lr']
 
         train_tune(model=net, criterion=criterion, reg=args.reg, target_class=args.poison_target, optimizer=optimizer,
@@ -303,10 +269,6 @@ def remove():
             epoch, lr, end - start, po_test_loss, po_test_acc, rpo_loss, rpo_acc,
             cl_test_loss, cl_test_acc)
 
-        if epoch % args.save_every == 0:
-            torch.save(net.state_dict(), os.path.join(args.output_dir,
-                                                      'model_finetune_{}_{}.th'.format(args.t_attack, epoch)))
-
     rnet = recover_model(net, args.arch, split_layer=args.ana_layer[0])
     rnet.eval()
     criterion = torch.nn.CrossEntropyLoss().to(device)
@@ -320,7 +282,7 @@ def remove():
                                                                                                        cl_acc))
     # save the last checkpoint
     torch.save(rnet, os.path.join(args.output_dir, 'model_finetune_' + str(args.t_attack) + '_last.th'))
-    #'''
+
     print('Remove time:{}'.format(time.time() - start))
     return
 
@@ -368,7 +330,7 @@ def drf():
         if itr == 0:
             trainable_params = get_num_trainable_parameters(net_i)
             print("Trainable parameters: {}".format(trainable_params))
-        #'''
+
         criterion = torch.nn.CrossEntropyLoss().to(device)
         optimizer = torch.optim.SGD(net_i.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0001)
 
@@ -381,7 +343,6 @@ def drf():
 
         for epoch in range(1, args.epoch):
             start = time.time()
-            _adjust_learning_rate(optimizer, epoch, args.lr)
             lr = optimizer.param_groups[0]['lr']
 
             _, _ = train(model=net_i, criterion=criterion, optimizer=optimizer, data_loader=train_clean_loader)
@@ -395,7 +356,6 @@ def drf():
                 epoch, lr, end - start, po_test_loss, po_test_acc,
                 cl_test_loss, cl_test_acc)
 
-        #'''
         sd_i = net_i.state_dict()
         if itr == 0:
             sd_accumulate = sd_i
@@ -419,7 +379,6 @@ def drf():
 
     # save the last checkpoint
     torch.save(net, os.path.join(args.output_dir, 'model_dfr_' + str(args.t_attack) + '_last.th'))
-    #'''
     end = time.time()
     print('DRF time:{}'.format(end - start))
     return
@@ -468,12 +427,12 @@ def gen_trigger():
                 optimizer.step()
                 optimizer.zero_grad()
                 target_prediction = torch.softmax(out, dim=1)[0, args.poison_target]
-                #'''
+                '''
                 if (epoch + 1) % 500 == 0:
                     source_prediction = torch.softmax(out, dim=1)[0, args.potential_source]
                     print("Iteration %d, Loss=%f, target prob=%f, source prob=%f" % (
                         epoch, float(loss), float(target_prediction), float(source_prediction)))
-                #'''
+                '''
                 if target_prediction >= 0.9:
                     break
             predict = net(image.reshape(torch.unsqueeze(image, 0).shape))
@@ -725,11 +684,9 @@ def analyze_advclass(model, model_name, cur_class, num_class, num_sample, ana_la
 def analyze_hidden(model, model_name, class_loader, cur_class, num_sample, ana_layer):
     out = []
     for cur_layer in ana_layer:
-        #print('current layer: {}'.format(cur_layer))
         model1, model2 = split_model(model, model_name, split_layer=cur_layer)
         model1.eval()
         model2.eval()
-        #summary(model1, (3, 32, 32))
 
         do_predict_avg = []
         total_num_samples = 0
@@ -747,7 +704,6 @@ def analyze_hidden(model, model_name, class_loader, cur_class, num_sample, ana_l
                 dense_hidden_ = torch.clone(torch.reshape(dense_output, (dense_output.shape[0], -1)))
 
                 do_predict_neu = []
-                do_predict = []
                 #do convention for each neuron
                 for i in range(0, len(dense_hidden_[0])):
 
@@ -758,20 +714,20 @@ def analyze_hidden(model, model_name, class_loader, cur_class, num_sample, ana_l
                     dense_output_ = torch.reshape(dense_output_, dense_output.shape)
                     dense_output_ = dense_output_.to(device)
                     output_do = model2(dense_output_).cpu().detach().numpy()
-                    do_predict_neu.append(output_do) # 4096x32x10
+                    do_predict_neu.append(output_do)
 
                 do_predict_neu = np.array(do_predict_neu)
                 do_predict_neu = np.abs(ori_output.cpu().detach().numpy() - do_predict_neu)
-                do_predict = np.mean(np.array(do_predict_neu), axis=1)  #4096x10
+                do_predict = np.mean(np.array(do_predict_neu), axis=1)
 
-            do_predict_avg.append(do_predict) #batchx4096x11
+            do_predict_avg.append(do_predict)
             total_num_samples += len(gt)
         # average of all baches
-        do_predict_avg = np.mean(np.array(do_predict_avg), axis=0) #4096x10
+        do_predict_avg = np.mean(np.array(do_predict_avg), axis=0)
         # insert neuron index
         idx = np.arange(0, len(do_predict_avg), 1, dtype=int)
         do_predict_avg = np.c_[idx, do_predict_avg]
-        #out = do_predict_avg[:, [0, (target_class + 1)]]
+
         out.append(do_predict_avg)
         np.savetxt(args.output_dir + "/test_pre0_" + "c" + str(cur_class) + "_layer_" + str(cur_layer) + ".txt",
                    do_predict_avg, fmt="%s")
@@ -782,12 +738,10 @@ def analyze_hidden(model, model_name, class_loader, cur_class, num_sample, ana_l
 def analyze_hidden_influence(model, model_name, class_loader, cur_class, num_sample, ana_layer):
     out = []
     for cur_layer in ana_layer:
-        #print('current layer: {}'.format(cur_layer))
         model1, model2 = split_model(model, model_name, split_layer=cur_layer)
         model1.eval()
         model2.eval()
-        #summary(model1, (3, 32, 32))
-        #summary(model2, (128, 16, 16))
+
         do_predict_avg = []
         total_num_samples = 0
         for image, gt in class_loader:
@@ -799,7 +753,6 @@ def analyze_hidden_influence(model, model_name, class_loader, cur_class, num_sam
             # compute output
             with torch.no_grad():
                 dense_output = model1(image)
-                #dense_output = dense_output.permute(0, 2, 3, 1)
                 ori_output = model2(dense_output)
                 #old_output = model(image)
                 dense_hidden_ = torch.clone(torch.reshape(dense_output, (dense_output.shape[0], -1)))
@@ -808,7 +761,6 @@ def analyze_hidden_influence(model, model_name, class_loader, cur_class, num_sam
 
                 # each neuron LOO
                 for i in range(0, len(dense_hidden_[0])):
-
                     hidden_do = dense_hidden_[:, i] * 0.0
                     dense_output_ = torch.clone(dense_hidden_)
                     dense_output_[:, i] = hidden_do
@@ -829,7 +781,7 @@ def analyze_hidden_influence(model, model_name, class_loader, cur_class, num_sam
         # insert neuron index
         idx = np.arange(0, len(do_predict_avg), 1, dtype=int)
         do_predict_avg = np.c_[idx, do_predict_avg]
-        #out = do_predict_avg[:, [0, (target_class + 1)]]
+
         out.append(do_predict_avg)
         np.savetxt(args.output_dir + "/test_pre0_" + "c" + str(cur_class) + "_layer_" + str(cur_layer) + ".txt",
                    do_predict_avg, fmt="%s")
@@ -839,7 +791,6 @@ def analyze_hidden_influence(model, model_name, class_loader, cur_class, num_sam
 
 def analyze_activation(model, model_name, class_loader, source, target, num_sample, ana_layer):
     for cur_layer in ana_layer:
-        #print('current layer: {}'.format(cur_layer))
         model1, model2 = split_model(model, model_name, split_layer=cur_layer)
         model1.eval()
         model2.eval()
@@ -855,7 +806,6 @@ def analyze_activation(model, model_name, class_loader, source, target, num_samp
             # compute output
             with torch.no_grad():
                 dense_output = model1(image)
-                #dense_hidden_ = torch.clone(torch.reshape(dense_output, (dense_output.shape[0], -1)))
                 dense_output = dense_output.cpu().detach().numpy()
                 dense_output = np.mean(np.array(dense_output), axis=0)
             dense_output_avg.append(dense_output)
@@ -888,7 +838,6 @@ def analyze_embedding(model, model_name, class_loader, source, target, num_sampl
             # compute output
             with torch.no_grad():
                 dense_output = model(image)
-                #dense_hidden_ = torch.clone(torch.reshape(dense_output, (dense_output.shape[0], -1)))
                 dense_output = dense_output.cpu().detach().numpy()
                 dense_output = np.mean(np.array(dense_output), axis=0)
             dense_output_avg.append(dense_output)
@@ -910,19 +859,13 @@ def analyze_pcc(num_class, ana_layer):
     pcc_class = []
     for source_class in range(0, num_class):
         print('analyzing pcc on class :{}'.format(source_class))
-        hidden_test = []
         for cur_layer in ana_layer:
             hidden_test_ = np.loadtxt(
                 args.output_dir + "/test_pre0_" + "c" + str(source_class) + "_layer_" + str(cur_layer) + ".txt")
-            # l = np.ones(len(hidden_test_)) * cur_layer
             hidden_test = np.insert(np.array(hidden_test_), 0, cur_layer, axis=1)
-            #hidden_test = hidden_test + list(hidden_test_)
-
             hidden_test = np.array(hidden_test)
 
             pcc = []
-
-            #mat_ori = hidden_test[:, (source_class + 2)]
             for i in range(0, num_class):
                 if i == source_class:
                     continue
@@ -939,8 +882,6 @@ def analyze_pcc(num_class, ana_layer):
                 mat_cmp = hidden_test[:, (i + 2)]
 
                 pcc_i = np.corrcoef(mat_ori, mat_cmp)[0, 1]
-                #cos similarity
-                #pcc_i = dot(mat_ori, mat_cmp) / (norm(mat_ori) * norm(mat_cmp))
                 pcc.append(pcc_i)
         pcc_class.append(pcc)
         np.savetxt(args.output_dir + "/pcc_" + "c" + str(source_class) + ".txt", pcc, fmt="%s")
@@ -952,310 +893,17 @@ def detect_pcc(num_class):
     pcc = []
     for source_class in range(0, num_class):
         pcc_class = np.loadtxt(args.output_dir + "/pcc_" + "c" + str(source_class) + ".txt")
-        #pcc_i = pcc_class[-1, :]
         pcc_i = pcc_class
         pcc_i = np.insert(np.array(pcc_i), source_class, 0, axis=0)
         pcc.append(pcc_i)
     pcc_avg = np.mean(np.array(pcc), axis=0)
     pcc_avg = 1 - pcc_avg
-    #find outlier
 
     flag_list = outlier_detection(list(pcc_avg), max(pcc_avg), th=args.confidence)
     return flag_list
 
 
-def analyze_source_class(model, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):
-    out = []
-    old_out = []
-    common_out = []
-    top_nums = []
-    top_nums_s = []
-    for source_class in range(0, num_class):
-        #print('analyzing source class: {}'.format(source_class))
-        #class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class, args.data_name, target_class)
-        for cur_layer in ana_layer:
-            # load sensitive neuron
-            hidden_test = np.loadtxt(
-                args.output_dir + "/test_pre0_" + "c" + str(source_class) + "_layer_" + str(cur_layer) + ".txt")
-            # check common important neuron
-            temp = hidden_test[:, [0, (potential_target + 1)]]
-            ind = np.argsort(temp[:, 1])[::-1]
-            temp = temp[ind]
-
-            # find outlier hidden neurons
-            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=max(2, args.confidence2), verbose=False)))
-            top_neuron = list(temp[:top_num].T[0].astype(int))
-            np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
-                       temp[:,0].astype(int), fmt="%s")
-            #debug
-            top_nums.append(top_num)
-            # get source to source top neuron
-            temp_s = hidden_test[:, [0, (source_class + 1)]]
-            ind = np.argsort(temp_s[:, 1])[::-1]
-            temp_s = temp_s[ind]
-
-            # find outlier hidden neurons
-            top_num_s = int(len(outlier_detection(temp_s[:, 1], max(temp_s[:, 1]), th=args.confidence3, verbose=False)))
-            top_neuron_s = list(temp_s[:top_num_s].T[0].astype(int))
-
-            #debug
-            top_nums_s.append(top_num_s)
-
-            len_top_s = max(len(top_neuron), top_num_s)
-            top_neuron_s = temp_s[:len_top_s]
-
-            common = np.intersect1d(top_neuron, top_neuron_s)
-            if source_class == potential_target:
-                common = []
-
-            common_out.append(len(common))
-
-    idx = np.argsort(common_out)
-    print('[DEBUG]: common_out{}'.format(idx))
-    print('[DEBUG]: common_out{}'.format(common_out))
-    print('[DEBUG]: top_nums{}'.format(top_nums))
-    print('[DEBUG]: top_nums_s{}'.format(top_nums_s))
-
-    flag_list = idx[-1]
-    return flag_list
-
-
-def analyze_source_class2(net, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):
-    common_out = []
-    common_out_p = []
-    top_nums = []
-    top_nums_s = []
-    for source_class in range(0, num_class):
-        #print('analyzing source class: {}'.format(source_class))
-        #class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class, args.data_name, target_class)
-        for cur_layer in ana_layer:
-            # load sensitive neuron
-            hidden_test = np.loadtxt(
-                args.output_dir + "/test_pre0_" + "c" + str(source_class) + "_layer_" + str(cur_layer) + ".txt")
-            # check common important neuron
-            temp = hidden_test[:, [0, (potential_target + 1)]]
-            ind = np.argsort(temp[:, 1])[::-1]
-            temp = temp[ind]
-
-            # find outlier hidden neurons
-            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=max(2, args.confidence2), verbose=False)))
-            top_neuron = list(temp[:top_num].T[0].astype(int))
-            np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
-                       temp[:,0].astype(int), fmt="%s")
-            #debug
-            top_nums.append(top_num)
-            # clean class loader
-            clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class,
-                                                         args.data_name,
-                                                         args.t_attack)
-            act_clean = analyze_activation(net, args.arch, clean_class_loader, source_class,
-                                           potential_target,
-                                           args.num_sample, args.ana_layer)
-
-            act_clean_outstanding = np.array(
-                outlier_detection(act_clean[:, 1], max(act_clean[:, 1]), th=args.confidence3, verbose=False))[:, 0]
-            # print('act_clean_outstanding:{}'.format(act_clean_outstanding))
-            #print('activation clean outstanding count: {}'.format(len(act_clean_outstanding)))
-            top_num_s = int(len(act_clean_outstanding))
-            top_nums_s.append(top_num_s)
-            common = np.intersect1d(top_neuron, act_clean_outstanding)
-            if source_class == potential_target:
-                common = []
-
-            common_out.append(len(common))
-
-            if len(act_clean_outstanding) == 0:
-                common_percentage = 0
-            else:
-                common_percentage = len(common) / (len(act_clean_outstanding)) * 100.
-            common_out_p.append(common_percentage)
-
-    idx = np.argsort(common_out_p)
-
-    print('[DEBUG]: common_out{}'.format(common_out))
-    print('[DEBUG]: common_out_p{}'.format(idx))
-    np.set_printoptions(precision=2)
-    print('[DEBUG]: common_out_p{}'.format(np.array(common_out_p)))
-    print('[DEBUG]: top_nums{}'.format(top_nums))
-    print('[DEBUG]: top_nums_s{}'.format(top_nums_s))
-
-    flag_list = idx[-1]
-    return flag_list
-
-
-def analyze_source_class3(net, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):
-    common_out = []
-    common_out_p = []
-    top_nums = []
-    act_vals = []
-    for source_class in range(0, num_class):
-        #print('analyzing source class: {}'.format(source_class))
-        #class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class, args.data_name, target_class)
-        for cur_layer in ana_layer:
-            # load sensitive neuron
-            hidden_test = np.loadtxt(
-                args.output_dir + "/test_pre0_" + "c" + str(source_class) + "_layer_" + str(cur_layer) + ".txt")
-            # check common important neuron
-            temp = hidden_test[:, [0, (potential_target + 1)]]
-            ind = np.argsort(temp[:, 1])[::-1]
-            temp = temp[ind]
-
-            # find outlier hidden neurons
-            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=args.confidence2, verbose=False)))
-            top_neuron = list(temp[:top_num].T[0].astype(int))
-            np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
-                       temp[:,0].astype(int), fmt="%s")
-            #debug
-            top_nums.append(top_num)
-            # clean class loader
-            clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class,
-                                                         args.data_name,
-                                                         args.t_attack)
-            act_clean = analyze_activation(net, args.arch, clean_class_loader, source_class,
-                                           potential_target,
-                                           args.num_sample, args.ana_layer)
-
-            #activation value
-            act_val = np.sum(act_clean[top_neuron][:,1])
-            if source_class == potential_target:
-                act_val = 0.
-            act_vals.append(act_val)
-            # print('act_clean_outstanding:{}'.format(act_clean_outstanding))
-            #print('act_val: {}'.format(act_val))
-            common_out.append(act_val)
-
-    idx = np.argsort(common_out)
-    print('[DEBUG]: act_vals{}'.format(idx))
-    np.set_printoptions(precision=4)
-    print('[DEBUG]: act_vals{}'.format(np.array(act_vals)))
-
-    flag_list = idx[-1]
-    return flag_list
-
-
-def analyze_source_class9(net, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):
-    common_out = []
-    common_out_p = []
-    top_nums = []
-    act_vals = []
-    for source_class in range(0, num_class):
-        #print('analyzing source class: {}'.format(source_class))
-        #class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class, args.data_name, target_class)
-        for cur_layer in ana_layer:
-            # load sensitive neuron
-            hidden_test = np.loadtxt(
-                args.output_dir + "/test_pre0_" + "c" + str(source_class) + "_layer_" + str(cur_layer) + ".txt")
-            # check common important neuron
-            temp = hidden_test[:, [0, (potential_target + 1)]]
-            ind = np.argsort(temp[:, 1])[::-1]
-            temp = temp[ind]
-
-            # find outlier hidden neurons
-            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=args.confidence2, verbose=False)))
-            top_neuron = list(temp[:top_num].T[0].astype(int))
-            np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
-                       temp[:,0].astype(int), fmt="%s")
-
-            #debug
-            top_nums.append(top_num)
-            # get source to source top neuron
-            temp_s = hidden_test[:, [0, (source_class + 1)]]
-            ind = np.argsort(temp_s[:, 1])[::-1]
-            temp_s = temp_s[ind]
-
-            # find outlier hidden neurons
-            top_num_s = int(len(outlier_detection(temp_s[:, 1], max(temp_s[:, 1]), th=args.confidence3, verbose=False)))
-            top_neuron_s = list(temp_s[:top_num_s].T[0].astype(int))
-
-            common = np.intersect1d(top_neuron, top_neuron_s)
-            if source_class == potential_target:
-                common = []
-
-            # clean class loader
-            clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class,
-                                                         args.data_name,
-                                                         args.t_attack)
-            act_clean = analyze_activation(net, args.arch, clean_class_loader, source_class,
-                                           potential_target,
-                                           args.num_sample, args.ana_layer)
-
-            #activation value
-            act_val = np.sum(act_clean[list(common)][:,1])
-            if source_class == potential_target:
-                act_val = 0.
-            act_vals.append(act_val)
-            # print('act_clean_outstanding:{}'.format(act_clean_outstanding))
-            #print('act_val: {}'.format(act_val))
-            common_out.append(act_val)
-
-    idx = np.argsort(common_out)
-    print('[DEBUG]: act_vals{}'.format(idx))
-    np.set_printoptions(precision=4)
-    print('[DEBUG]: act_vals{}'.format(np.array(act_vals)))
-
-    flag_list = idx[-1]
-    return flag_list
-
-
-def analyze_source_class4(model, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):
-    ac_means = []
-    for source_class in range(0, num_class):
-        for cur_layer in ana_layer:
-            # load sensitive neuron
-            hidden_test = np.loadtxt(
-                args.output_dir + "/test_pre0_" + "c" + str(source_class) + "_layer_" + str(cur_layer) + ".txt")
-            # check common important neuron
-            temp = hidden_test[:, [0, (potential_target + 1)]]
-            ind = np.argsort(temp[:, 1])[::-1]
-            temp = temp[ind]
-
-            # find outlier hidden neurons
-            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=max(2, args.confidence2), verbose=False)))
-            top_neuron = list(temp[:top_num].T[0].astype(int))
-            np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
-                       temp[:,0].astype(int), fmt="%s")
-
-            temp = hidden_test[:, [0, (source_class + 1)]]
-            ind = np.argsort(temp[:, 1])[::-1]
-            temp = temp[ind]
-
-            ac_mean = np.mean(temp[:int(len(temp) * args.top)])
-            if source_class == potential_target:
-                ac_mean = .0
-            ac_means.append(ac_mean)
-
-    idx = np.argsort(ac_means)
-    print('[DEBUG]: ac_means{}'.format(idx))
-    np.set_printoptions(precision=4)
-    print('[DEBUG]: ac_means{}'.format(np.array(ac_means)))
-
-    flag_list = idx[-1]
-    return flag_list
-
-
-def analyze_source_class6(net,  potential_target, num_class, ana_layer, num_sample):
-    pcc = []
-    for source_class in range(0, num_class):
-        pcc_class = np.loadtxt(args.output_dir + "/pcc_" + "c" + str(source_class) + ".txt")
-        #pcc_i = pcc_class[-1, :]
-        pcc_i = pcc_class
-        pcc_i = np.insert(np.array(pcc_i), source_class, 0, axis=0)
-        pcc.append(pcc_i)
-    pcc_avg = np.mean(np.array(pcc), axis=0)
-    pcc_avg = 1 - pcc_avg
-    #find outlier
-
-    idx = np.argsort(pcc_avg)
-
-    print('[DEBUG]: pcc_avg{}'.format(idx))
-    np.set_printoptions(precision=4)
-    print('[DEBUG]: pcc_avg{}'.format(np.array(pcc_avg)))
-
-    flag_list = idx[-2]
-    return flag_list
-
-
-def analyze_source_class5_(net, potential_target, num_class, ana_layer, num_sample):
+def analyze_source_class(net,  potential_target, num_class, ana_layer, num_sample):
     ce_cleans = []
     for source_class in range(0, num_class):
         for cur_layer in ana_layer:
@@ -1263,9 +911,8 @@ def analyze_source_class5_(net, potential_target, num_class, ana_layer, num_samp
             clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class,
                                                          args.data_name,
                                                          args.t_attack)
-            ce_clean = analyze_embedding(net, args.arch, clean_class_loader, source_class,
-                                         potential_target,
-                                         num_sample, args.ana_layer)
+            ce_clean = analyze_embedding(net, args.arch, clean_class_loader, source_class, potential_target, num_sample,
+                                         args.ana_layer)
 
             if source_class == potential_target:
                 ce_clean = .0
@@ -1274,35 +921,9 @@ def analyze_source_class5_(net, potential_target, num_class, ana_layer, num_samp
 
     idx = np.argsort(ce_cleans)
 
-    print('[DEBUG]: ce_cleans{}'.format(idx))
+    #print('[DEBUG]: ce_cleans{}'.format(idx))
     np.set_printoptions(precision=4)
-    print('[DEBUG]: ce_cleans{}'.format(np.array(ce_cleans)))
-
-    flag_list = idx[-1]
-    return flag_list
-
-def analyze_source_class5(net,  potential_target, num_class, ana_layer, num_sample):
-    ce_cleans = []
-    for source_class in range(0, num_class):
-        for cur_layer in ana_layer:
-            # clean class loader
-            clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class,
-                                                         args.data_name,
-                                                         args.t_attack)
-            ce_clean = analyze_embedding(net, args.arch, clean_class_loader, source_class,
-                                           potential_target,
-                                           num_sample, args.ana_layer)
-
-            if source_class == potential_target:
-                ce_clean = .0
-
-            ce_cleans.append(ce_clean)
-
-    idx = np.argsort(ce_cleans)
-
-    print('[DEBUG]: ce_cleans{}'.format(idx))
-    np.set_printoptions(precision=4)
-    print('[DEBUG]: ce_cleans{}'.format(np.array(ce_cleans)))
+    #print('[DEBUG]: ce_cleans{}'.format(np.array(ce_cleans)))
 
     # insert class index
     c_i = np.arange(0, len(idx), 1, dtype=int)
@@ -1310,7 +931,7 @@ def analyze_source_class5(net,  potential_target, num_class, ana_layer, num_samp
 
     flag_list = outlier_detection(temp[:,1], max(temp[:,1]), th=args.confidence2, verbose=False)
     if len(flag_list) > 1:
-        print('[DEBUG] flag_list:{}'.format(flag_list))
+        #print('[DEBUG] flag_list:{}'.format(flag_list))
         wanted = []
         for source_c, _ in flag_list:
             wanted.append(source_c)
@@ -1324,103 +945,12 @@ def analyze_source_class5(net,  potential_target, num_class, ana_layer, num_samp
     return out
 
 
-def analyze_source_class7(model, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):
-    '''
-    increase source class
-    '''
-    out = []
-    old_out = []
-    common_out = []
-    top_nums = []
-    top_nums_s = []
-    for source_class in range(0, num_class):
-        #print('analyzing source class: {}'.format(source_class))
-        #class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class, args.data_name, target_class)
-        for cur_layer in ana_layer:
-            # load sensitive neuron
-            hidden_test = np.loadtxt(
-                args.output_dir + "/test_pre0_" + "c" + str(source_class) + "_layer_" + str(cur_layer) + ".txt")
-            # check common important neuron
-            temp = hidden_test[:, [0, (potential_target + 1)]]
-            ind = np.argsort(temp[:, 1])[::-1]
-            temp = temp[ind]
-
-            # find outlier hidden neurons
-            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=max(2, args.confidence2), verbose=False)))
-            top_neuron = list(temp[:top_num].T[0].astype(int))
-            np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
-                       temp[:,0].astype(int), fmt="%s")
-            #debug
-            top_nums.append(top_num)
-            # get source to source top neuron
-            temp_s = hidden_test[:, [0, (source_class + 1)]]
-            ind = np.argsort(temp_s[:, 1])[::-1]
-            temp_s = temp_s[ind]
-
-            # find outlier hidden neurons
-            top_num_s = int(len(outlier_detection(temp_s[:, 1], max(temp_s[:, 1]), th=args.confidence3, verbose=False)))
-            top_neuron_s = list(temp_s[:top_num_s].T[0].astype(int))
-
-            # print('current layer: {}'.format(cur_layer))
-            model1, model2 = split_model(model, model_name, split_layer=cur_layer)
-            model1.eval()
-            model2.eval()
-            # summary(model1, (3, 32, 32))
-            class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class,
-                                                         args.data_name,
-                                                         args.t_attack)
-            do_predict_avg = []
-            total_num_samples = 0
-            for image, gt in class_loader:
-                if total_num_samples >= num_sample:
-                    break
-
-                image, gt = image.to(device), gt.to(device)
-
-                # compute output
-                with torch.no_grad():
-                    dense_output = model1(image)
-                    ori_output = model2(dense_output)
-                    # old_output = model(image)
-                    dense_hidden_ = torch.clone(torch.reshape(dense_output, (dense_output.shape[0], -1)))
-
-                    do_predict_neu = []
-                    do_predict = []
-
-                    dense_hidden_[:, list(top_neuron)] = 1
-                    dense_output_ = torch.reshape(dense_hidden_, dense_output.shape)
-                    do_predict = model2(dense_output_).cpu().detach().numpy()
-                    do_predict = np.mean(np.array(do_predict), axis=0)
-                do_predict_avg.append(do_predict)  # batchx4096x11
-                total_num_samples += len(gt)
-            # average of all baches
-            do_predict_avg = np.mean(np.array(do_predict_avg), axis=0)
-            # 4096x10
-            out.append(do_predict_avg)
-            # insert neuron index
-            idx = np.arange(0, len(do_predict_avg), 1, dtype=int)
-            do_predict_avg = np.c_[idx, do_predict_avg]
-            np.savetxt(args.output_dir + "/test_incrsource_" + "c" + str(source_class) + "_layer_" + str(cur_layer) + ".txt",
-                       do_predict_avg, fmt="%s")
-
-    common_out = np.array(out)[:, potential_target]
-
-    idx = np.argsort(common_out)
-    print('[DEBUG]: common_out{}'.format(idx))
-    print('[DEBUG]: common_out{}'.format(common_out))
-
-    flag_list = idx[-2]
-    return flag_list
-
-
 def solve_detect_common_outstanding_neuron(num_class, ana_layer):
         '''
         find common outstanding neurons
         return potential attack base class and target class
         '''
-        #print('Detecting common outstanding neurons.')
 
-        flag_list = []
         top_list = []
         top_neuron = []
 
@@ -1428,9 +958,7 @@ def solve_detect_common_outstanding_neuron(num_class, ana_layer):
             top_list_i, top_neuron_i = detect_eachclass_all_layer(each_class, num_class, ana_layer)
             top_list = top_list + top_list_i
             top_neuron.append(top_neuron_i)
-            #self.plot_eachclass_expand(each_class)
 
-        #top_list dimension: 10 x 10 = 100
         flag_list = outlier_detection(top_list, max(top_list))
         if len(flag_list) == 0:
             return []
@@ -1459,7 +987,6 @@ def detect_eachclass_all_layer(cur_class, num_class, ana_layer):
         hidden_test = []
         for cur_layer in ana_layer:
             hidden_test_ = np.loadtxt(args.output_dir + "/test_pre0_" + "c" + str(cur_class) + "_layer_" + str(cur_layer) + ".txt")
-            #l = np.ones(len(hidden_test_)) * cur_layer
             hidden_test_ = np.insert(np.array(hidden_test_), 0, cur_layer, axis=1)
             hidden_test = hidden_test + list(hidden_test_)
 
@@ -1491,10 +1018,6 @@ def detect_eachclass_all_layer(cur_class, num_class, ana_layer):
             top_list.append(len(temp))
             top_neuron.append(temp)
 
-        # top_list x10
-        # find outlier
-        #flag_list = self.outlier_detection(top_list, top_num, cur_class)
-
         # top_list: number of intersected neurons (10,)
         # top_neuron: layer and index of intersected neurons    ((2, n) x 10)
         return list(np.array(top_list) / top_num), top_neuron
@@ -1509,7 +1032,6 @@ def solve_detect_outlier(num_class, ana_layer):
     tops = []   #outstanding neuron for each class
 
     for each_class in range (0, num_class):
-        #top_ = self.find_outstanding_neuron(each_class, prefix="all_")
         top_ = find_outstanding_neuron(each_class, num_class, ana_layer, prefix="")
         tops.append(top_)
 
@@ -1527,7 +1049,6 @@ def solve_detect_outlier(num_class, ana_layer):
         if base_class[i] != target_class[i]:
             out.append([base_class[i], target_class[i]])
 
-    #'''
     ret = []
     base_class = []
     target_class = []
@@ -1553,17 +1074,11 @@ def find_outstanding_neuron(cur_class, num_class, ana_layer, prefix=""):
     '''
     find outstanding neurons for cur_class
     '''
-    #'''
     hidden_test = []
     for cur_layer in ana_layer:
-        #hidden_test_ = np.loadtxt(RESULT_DIR + prefix + "test_pre0_" + "c" + str(cur_class) + "_layer_" + str(cur_layer) + ".txt")
         hidden_test_ = np.loadtxt(args.output_dir + '/' + prefix + "test_pre0_" + "c" + str(cur_class) + "_layer_" + str(cur_layer) + ".txt")
-        #l = np.ones(len(hidden_test_)) * cur_layer
         hidden_test_ = np.insert(np.array(hidden_test_), 0, cur_layer, axis=1)
         hidden_test = hidden_test + list(hidden_test_)
-    '''
-    hidden_test = np.loadtxt(RESULT_DIR + prefix + "test_pre0_"  + "c" + str(cur_class) + "_layer_13" + ".txt")
-    '''
     hidden_test = np.array(hidden_test)
 
     # find outlier hidden neurons for all class embedding
@@ -1585,9 +1100,6 @@ def outlier_detection(cmp_list, max_val, th=2, verbose=False):
         median = np.median(cmp_list)
         mad = consistency_constant * np.median(np.abs(cmp_list - median))   #median of the deviation
         min_mad = np.abs(np.min(cmp_list) - median) / mad
-
-        #print('median: %f, MAD: %f' % (median, mad))
-        #print('anomaly index: %f' % min_mad)
 
         flag_list = []
         i = 0
@@ -1633,8 +1145,6 @@ def find_target_class(flag_list, num_class):
             base_classes.append(base_class)
             target_classes.append(target_class)
             i = i + 1
-            #if i >= self.num_target:
-            #    break
 
         return base_classes, target_classes
 
@@ -1802,49 +1312,6 @@ def train_tune(model, criterion, reg, target_class, optimizer, data_loader, adv_
     loss = total_loss / len(data_loader)
     acc = float(total_correct) / len(data_loader.dataset)
     return loss, acc
-
-
-def train_trigger(model, criterion, optimizer, target_class, image, batch_size, reg=0.9):
-    model.module.generator.train()
-    model.module.target_model.eval()
-    total_correct = 0
-    total_loss = 0.0
-
-    # images
-    images = image.repeat(batch_size, 1, 1, 1)
-    images = images.to(device)
-
-    target = (torch.ones(images.shape[0], dtype=torch.int64) * target_class).to(device)
-
-    optimizer.zero_grad()
-    output = model(images)
-    #K.mean(model1(input_img)[:, output_index]) - reg * K.mean(K.square(input_img))
-    uap = torch.unsqueeze(model.module.generator.uap, dim=0)
-    loss = criterion(output, target)# + reg * torch.mean(torch.square(uap + image.to(device)))
-    #loss = criterion(output, target)
-
-    pred = output.data.max(1)[1]
-    total_correct += pred.eq(target.view_as(pred)).sum()
-    total_loss += loss.item()
-
-    loss.backward()
-    optimizer.step()
-
-    model.module.generator.uap.data = torch.clamp(model.module.generator.uap.data, -0.1, 0.1)
-
-    return total_loss, float(total_correct)
-
-
-def _adjust_learning_rate(optimizer, epoch, lr):
-    if epoch < 21:
-        lr = lr
-    elif epoch < 100:
-        lr = 0.1 * lr
-    else:
-        lr = 0.0009
-    #print('epoch: {}  lr: {:.4f}'.format(epoch, lr))
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
 
 
 def test(model, criterion, data_loader):

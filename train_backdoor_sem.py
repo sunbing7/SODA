@@ -13,7 +13,6 @@ import models
 from data.data_loader import get_custom_loader
 from models.selector import *
 from models.split_model import get_num_trainable_parameters
-#from data.tinyimagenetloader import get_tiny_dataset
 
 
 parser = argparse.ArgumentParser(description='Train poisoned networks')
@@ -53,7 +52,7 @@ os.makedirs(args.output_dir, exist_ok=True)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(device)
 
-#import cv2
+
 def main():
     logger = logging.getLogger(__name__)
     logging.basicConfig(
@@ -64,20 +63,11 @@ def main():
             logging.FileHandler(os.path.join(args.output_dir, 'output.log')),
             logging.StreamHandler()
         ])
-    #logger.info(args)
 
     # Step 1: create dataset - clean val set, poisoned test set, and clean test set.
     train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader = \
         get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack, 'all')
 
-    '''
-    #test data loader
-    for i, (images, labels) in enumerate(train_clean_loader):
-        # save img
-        img = images[0].numpy()
-        img = np.transpose(img, (1, 2, 0))
-        cv2.imwrite(args.output_dir + '/' + str(i) + '_' + str(labels[0].numpy()) + '.png', img * 255)
-    '''
     # Step 1: create poisoned / clean dataset
     poison_test_loader = test_adv_loader
     clean_test_loader = test_clean_loader
@@ -100,7 +90,6 @@ def main():
 
     # Step 3: train backdoored models
     logger.info('Epoch \t lr \t Time \t TrainLoss \t TrainACC \t PoisonLoss \t PoisonACC \t CleanLoss \t CleanACC')
-    #torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_init.th'))
 
     for epoch in range(0, args.epoch):
         start = time.time()
@@ -176,7 +165,6 @@ def sem_train():
 
     # Step 3: train backdoored models
     logger.info('Epoch \t lr \t Time \t TrainLoss \t TrainACC \t PoisonLoss \t PoisonACC \t CleanLoss \t CleanACC')
-    #torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_init.th'))
 
     for epoch in range(0, args.epoch):
         start = time.time()
@@ -245,7 +233,6 @@ def sem_tune():
 
     # Step 3: train backdoored models
     logger.info('Epoch \t lr \t Time \t TrainLoss \t TrainACC \t PoisonLoss \t PoisonACC \t CleanLoss \t CleanACC')
-    #torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_init.th'))
 
     for epoch in range(0, args.epoch):
         start = time.time()

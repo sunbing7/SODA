@@ -215,8 +215,8 @@ def detect():
         #                                  args.ana_layer, args.num_sample, args.confidence2)
         #print('[Detection9] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
 
-        flag_list = analyze_source_class5(net, potential_target, args.num_class, args.ana_layer, args.num_sample)
-        print('[Detection5] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+        source = analyze_source_class5(net, potential_target, args.num_class, args.ana_layer, args.num_sample)
+        print('[Detection5] potential source class: {}, target class: {}'.format(int(source), int(potential_target)))
         #flag_list = analyze_source_class6(net, potential_target, args.num_class, args.ana_layer, args.num_sample)
         #print('[Detection6] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
     end2 = time.time()

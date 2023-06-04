@@ -208,10 +208,13 @@ def detect():
         #flag_list = analyze_source_class(net, args.arch, args.poison_target, potential_target, args.num_class,
         #                                 args.ana_layer, args.num_sample, args.confidence2)
         #print('[Detection1] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
-        flag_list = analyze_source_class5(net, potential_target, args.num_class, args.ana_layer, args.num_sample)
-        print('[Detection5] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
-        flag_list = analyze_source_class6(net, potential_target, args.num_class, args.ana_layer, args.num_sample)
-        print('[Detection6] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+        flag_list = analyze_source_class7(net, args.arch, args.poison_target, potential_target, args.num_class,
+                                         args.ana_layer, args.num_sample, args.confidence2)
+        print('[Detection7] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+        #flag_list = analyze_source_class5(net, potential_target, args.num_class, args.ana_layer, args.num_sample)
+        #print('[Detection5] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+        #flag_list = analyze_source_class6(net, potential_target, args.num_class, args.ana_layer, args.num_sample)
+        #print('[Detection6] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
     end2 = time.time()
     print('Detection time:{}'.format(end2 - start))
     return
@@ -1205,6 +1208,96 @@ def analyze_source_class5(net,  potential_target, num_class, ana_layer, num_samp
     print('[DEBUG]: ce_cleans{}'.format(idx))
     np.set_printoptions(precision=4)
     print('[DEBUG]: ce_cleans{}'.format(np.array(ce_cleans)))
+
+    flag_list = idx[-1]
+    return flag_list
+
+
+def analyze_source_class7(model, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):
+    '''
+    increase source class
+    '''
+    out = []
+    old_out = []
+    common_out = []
+    top_nums = []
+    top_nums_s = []
+    for source_class in range(0, num_class):
+        #print('analyzing source class: {}'.format(source_class))
+        #class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class, args.data_name, target_class)
+        for cur_layer in ana_layer:
+            # load sensitive neuron
+            hidden_test = np.loadtxt(
+                args.output_dir + "/test_pre0_" + "c" + str(source_class) + "_layer_" + str(cur_layer) + ".txt")
+            # check common important neuron
+            temp = hidden_test[:, [0, (potential_target + 1)]]
+            ind = np.argsort(temp[:, 1])[::-1]
+            temp = temp[ind]
+
+            # find outlier hidden neurons
+            top_num = int(len(outlier_detection(temp[:, 1], max(temp[:, 1]), th=max(2, args.confidence2), verbose=False)))
+            top_neuron = list(temp[:top_num].T[0].astype(int))
+            np.savetxt(args.output_dir + "/outstanding_" + "c" + str(source_class) + "_target_" + str(potential_target) + ".txt",
+                       temp[:,0].astype(int), fmt="%s")
+            #debug
+            top_nums.append(top_num)
+            # get source to source top neuron
+            temp_s = hidden_test[:, [0, (source_class + 1)]]
+            ind = np.argsort(temp_s[:, 1])[::-1]
+            temp_s = temp_s[ind]
+
+            # find outlier hidden neurons
+            top_num_s = int(len(outlier_detection(temp_s[:, 1], max(temp_s[:, 1]), th=args.confidence3, verbose=False)))
+            top_neuron_s = list(temp_s[:top_num_s].T[0].astype(int))
+
+            # print('current layer: {}'.format(cur_layer))
+            model1, model2 = split_model(model, model_name, split_layer=cur_layer)
+            model1.eval()
+            model2.eval()
+            # summary(model1, (3, 32, 32))
+            class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class,
+                                                         args.data_name,
+                                                         args.t_attack)
+            do_predict_avg = []
+            total_num_samples = 0
+            for image, gt in class_loader:
+                if total_num_samples >= num_sample:
+                    break
+
+                image, gt = image.to(device), gt.to(device)
+
+                # compute output
+                with torch.no_grad():
+                    dense_output = model1(image)
+                    ori_output = model2(dense_output)
+                    # old_output = model(image)
+                    dense_hidden_ = torch.clone(torch.reshape(dense_output, (dense_output.shape[0], -1)))
+
+                    do_predict_neu = []
+                    do_predict = []
+
+                    dense_hidden_[:, list(top_neuron_s)] = 1
+                    dense_output_ = torch.reshape(dense_hidden_, dense_output.shape)
+                    do_predict = model2(dense_output_).cpu().detach().numpy()
+                    do_predict = np.mean(np.array(do_predict), axis=0)
+                do_predict_avg.append(do_predict)  # batchx4096x11
+                total_num_samples += len(gt)
+            # average of all baches
+            do_predict_avg = np.mean(np.array(do_predict_avg), axis=0)
+            # 4096x10
+            # insert neuron index
+            idx = np.arange(0, len(do_predict_avg), 1, dtype=int)
+            do_predict_avg = np.c_[idx, do_predict_avg]
+            np.savetxt(args.output_dir + "/test_incrsource_" + "c" + str(source_class) + "_layer_" + str(cur_layer) + ".txt",
+                       do_predict_avg, fmt="%s")
+            out.append(do_predict_avg)
+    common_out = np.array(out)[:, (potential_target + 1)]
+
+    idx = np.argsort(common_out)
+    print('[DEBUG]: common_out{}'.format(idx))
+    print('[DEBUG]: common_out{}'.format(common_out))
+    print('[DEBUG]: top_nums{}'.format(top_nums))
+    print('[DEBUG]: top_nums_s{}'.format(top_nums_s))
 
     flag_list = idx[-1]
     return flag_list

@@ -1285,21 +1285,20 @@ def analyze_source_class7(model, model_name, target_class, potential_target, num
             # average of all baches
             do_predict_avg = np.mean(np.array(do_predict_avg), axis=0)
             # 4096x10
+            out.append(do_predict_avg)
             # insert neuron index
             idx = np.arange(0, len(do_predict_avg), 1, dtype=int)
             do_predict_avg = np.c_[idx, do_predict_avg]
             np.savetxt(args.output_dir + "/test_incrsource_" + "c" + str(source_class) + "_layer_" + str(cur_layer) + ".txt",
                        do_predict_avg, fmt="%s")
-            out.append(do_predict_avg)
-    common_out = np.array(out)[:, (potential_target + 1)]
+
+    common_out = np.array(out)[:, potential_target]
 
     idx = np.argsort(common_out)
     print('[DEBUG]: common_out{}'.format(idx))
     print('[DEBUG]: common_out{}'.format(common_out))
-    print('[DEBUG]: top_nums{}'.format(top_nums))
-    print('[DEBUG]: top_nums_s{}'.format(top_nums_s))
 
-    flag_list = idx[-1]
+    flag_list = idx[-2]
     return flag_list
 
 

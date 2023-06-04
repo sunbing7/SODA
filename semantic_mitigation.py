@@ -208,12 +208,12 @@ def detect():
         #flag_list = analyze_source_class(net, args.arch, args.poison_target, potential_target, args.num_class,
         #                                 args.ana_layer, args.num_sample, args.confidence2)
         #print('[Detection1] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
-        flag_list = analyze_source_class3(net, args.arch, args.poison_target, potential_target, args.num_class,
-                                         args.ana_layer, args.num_sample, args.confidence2)
-        print('[Detection3] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
-        flag_list = analyze_source_class9(net, args.arch, args.poison_target, potential_target, args.num_class,
-                                          args.ana_layer, args.num_sample, args.confidence2)
-        print('[Detection9] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+        #flag_list = analyze_source_class3(net, args.arch, args.poison_target, potential_target, args.num_class,
+        #                                 args.ana_layer, args.num_sample, args.confidence2)
+        #print('[Detection3] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
+        #flag_list = analyze_source_class9(net, args.arch, args.poison_target, potential_target, args.num_class,
+        #                                  args.ana_layer, args.num_sample, args.confidence2)
+        #print('[Detection9] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
 
         flag_list = analyze_source_class5(net, potential_target, args.num_class, args.ana_layer, args.num_sample)
         print('[Detection5] potential source class: {}, target class: {}'.format(int(flag_list), int(potential_target)))
@@ -1255,6 +1255,32 @@ def analyze_source_class6(net,  potential_target, num_class, ana_layer, num_samp
     return flag_list
 
 
+def analyze_source_class5_(net, potential_target, num_class, ana_layer, num_sample):
+    ce_cleans = []
+    for source_class in range(0, num_class):
+        for cur_layer in ana_layer:
+            # clean class loader
+            clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, source_class,
+                                                         args.data_name,
+                                                         args.t_attack)
+            ce_clean = analyze_embedding(net, args.arch, clean_class_loader, source_class,
+                                         potential_target,
+                                         num_sample, args.ana_layer)
+
+            if source_class == potential_target:
+                ce_clean = .0
+
+            ce_cleans.append(ce_clean)
+
+    idx = np.argsort(ce_cleans)
+
+    print('[DEBUG]: ce_cleans{}'.format(idx))
+    np.set_printoptions(precision=4)
+    print('[DEBUG]: ce_cleans{}'.format(np.array(ce_cleans)))
+
+    flag_list = idx[-1]
+    return flag_list
+
 def analyze_source_class5(net,  potential_target, num_class, ana_layer, num_sample):
     ce_cleans = []
     for source_class in range(0, num_class):
@@ -1278,8 +1304,23 @@ def analyze_source_class5(net,  potential_target, num_class, ana_layer, num_samp
     np.set_printoptions(precision=4)
     print('[DEBUG]: ce_cleans{}'.format(np.array(ce_cleans)))
 
-    flag_list = idx[-1]
-    return flag_list
+    # insert class index
+    idx = np.arange(0, len(idx), 1, dtype=int)
+    temp = np.c_[idx, ce_cleans]
+
+    flag_list = outlier_detection(temp[:,1], max(temp[:,1]), th=args.confidence2, verbose=False)
+    if len(flag_list) > 1:
+        wanted = []
+        for source_c, _ in flag_list:
+            wanted.append(source_c)
+        tgt_to_src = np.loadtxt(args.output_dir + "/adv_ce_" + "source_" + str(potential_target) + "_target_" + str(potential_target) + ".txt")
+        temp = tgt_to_src[wanted]
+        ind = np.argsort(temp[:, 1])[::-1]
+        temp = temp[ind]
+        out = int(temp[-1][0])
+    else:
+        out = flag_list[0][0]
+    return out
 
 
 def analyze_source_class7(model, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):

@@ -1213,7 +1213,7 @@ def analyze_source_class5(net,  potential_target, num_class, ana_layer, num_samp
     return flag_list
 
 
-def analyze_source_class8(model, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):
+def analyze_source_class7(model, model_name, target_class, potential_target, num_class, ana_layer, num_sample, th=3):
     '''
     increase source class
     '''

@@ -434,7 +434,7 @@ def gen_trigger():
                     print("Iteration %d, Loss=%f, target prob=%f, source prob=%f" % (
                         epoch, float(loss), float(target_prediction), float(source_prediction)))
                 '''
-                if target_prediction >= 0.9:
+                if target_prediction >= 0.99:
                     break
             predict = net(image.reshape(torch.unsqueeze(image, 0).shape))
             predict = torch.argmax(predict)

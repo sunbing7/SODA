@@ -303,12 +303,12 @@ def adaptive_train():
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=args.schedule, gamma=0.1)
 
     # Step 3: train backdoored models
-    logger.info('Epoch \t lr \t Time \t TrainLoss \t TrainACC \t PoisonLoss \t PoisonACC \t CleanLoss \t CleanACC')
+    logger.info('Epoch \t lr \t Time \t TrainLoss \t PCCStd \t TrainACC \t PoisonLoss \t PoisonACC \t CleanLoss \t CleanACC')
 
     for epoch in range(0, args.epoch):
         start = time.time()
         lr = optimizer.param_groups[0]['lr']
-        train_loss, train_acc = train_adaptive(model=net, criterion=criterion, optimizer=optimizer,
+        train_loss, train_acc, pcc_std = train_adaptive(model=net, criterion=criterion, optimizer=optimizer,
                                       data_loader=train_clean_loader, adv_loader=train_adv_loader)
 
         cl_test_loss, cl_test_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
@@ -317,8 +317,8 @@ def adaptive_train():
         scheduler.step()
         end = time.time()
         logger.info(
-            '%d \t %.3f \t %.1f \t %.4f \t %.4f \t %.4f \t %.4f \t %.4f \t %.4f',
-            epoch, lr, end - start, train_loss, train_acc, po_test_loss, po_test_acc,
+            '%d \t %.3f \t %.1f \t %.4f \t %.4f \t %.4f \t %.4f \t %.4f \t %.4f \t %.4f',
+            epoch, lr, end - start, train_loss, pcc_std, train_acc, po_test_loss, po_test_acc,
             cl_test_loss, cl_test_acc)
 
         #if epoch > (args.epoch - 10) or epoch == 99:
@@ -406,6 +406,7 @@ def train_adaptive(model, criterion, optimizer, data_loader, adv_loader):
     model.train()
     total_correct = 0
     total_loss = 0.0
+    total_pcc_std = 0.0
 
     if len(adv_loader.dataset) < int(args.batch_size * args.ratio):
         print('[DEBUG] adv len:{}, expected {}'.format(len(adv_loader.dataset), int(args.batch_size * args.ratio)))
@@ -444,6 +445,7 @@ def train_adaptive(model, criterion, optimizer, data_loader, adv_loader):
         loss = criterion(output, labels) + (args.reg * pcc_std)
         total_correct += pred.eq(labels.view_as(pred)).sum()
         total_loss += loss.item()
+        total_pcc_std += pcc_std
 
         loss.backward()
         optimizer.step()
@@ -451,7 +453,8 @@ def train_adaptive(model, criterion, optimizer, data_loader, adv_loader):
 
     loss = total_loss / len(data_loader)
     acc = float(total_correct) / len(data_loader.dataset)
-    return loss, acc
+    pcc_std_out = total_pcc_std / len(data_loader)
+    return loss, acc, pcc_std_out
 
 
 def pcc_calculation(hidden_neurons, prediction):

@@ -12,7 +12,7 @@ import models
 
 from data.data_loader import get_custom_loader
 from models.selector import *
-from models.split_model import get_num_trainable_parameters
+from models.split_model import get_num_trainable_parameters, split_model
 
 
 parser = argparse.ArgumentParser(description='Train poisoned networks')
@@ -37,11 +37,14 @@ parser.add_argument('--data_name', type=str, default='CIFAR10', help='name of da
 parser.add_argument('--model_path', type=str, default='models/', help='model path')
 parser.add_argument('--num_class', type=int, default=10, help='number of classes')
 parser.add_argument('--resume', type=int, default=0, help='resume from args.checkpoint')
-parser.add_argument('--option', type=str, default='base', choices=['base', 'semtrain', 'semtune'], help='run option')
+parser.add_argument('--option', type=str, default='base', choices=['base', 'semtrain', 'semtune', 'adaptive'], help='run option')
 parser.add_argument('--lr', type=float, default=0.1, help='lr')
 parser.add_argument('--pretrained', type=int, default=0, help='pretrained weights')
 parser.add_argument('--out_name', type=str, default='')
 parser.add_argument('--ratio', type=float, default=0.3125)
+parser.add_argument('--ana_layer', type=int, nargs="+", default=[2], help='layer to split')
+parser.add_argument('--reg', type=float, default=50, help='adaptive attack reg factor')
+
 
 args = parser.parse_args()
 args_dict = vars(args)
@@ -259,6 +262,74 @@ def sem_tune():
                                               + str(args.data_name) + '_' + str(args.t_attack) + '_last.th'))
 
 
+def adaptive_train():
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(
+        format='[%(asctime)s] - %(message)s',
+        datefmt='%Y/%m/%d %H:%M:%S',
+        level=logging.DEBUG,
+        handlers=[
+            logging.FileHandler(os.path.join(args.output_dir, 'output.log')),
+            logging.StreamHandler()
+        ])
+    logger.info(args)
+
+    if args.poison_type != 'semantic':
+        print('Invalid poison type!')
+        return
+
+    # Step 1: create dataset - clean val set, poisoned test set, and clean test set.
+    train_clean_loader, train_adv_loader, test_clean_loader, test_adv_loader = \
+        get_custom_loader(args.data_set, args.batch_size, args.poison_target, args.data_name, args.t_attack, 'all')
+
+    # Step 1: create poisoned / clean dataset
+    poison_test_loader = test_adv_loader
+    clean_test_loader = test_clean_loader
+
+    # Step 2: prepare model, criterion, optimizer, and learning rate scheduler.
+    net = getattr(models, args.arch)(num_classes=args.num_class, pretrained=args.pretrained).to(device)
+    if args.resume:
+        state_dict = torch.load(args.checkpoint, map_location=device)
+        load_state_dict(net, orig_state_dict=state_dict)
+
+    total_params = sum(p.numel() for p in net.parameters())
+    print('Total number of parameters:{}'.format(total_params))
+
+    trainable_params = get_num_trainable_parameters(net)
+    print("Trainable parameters: {}".format(trainable_params))
+
+    criterion = torch.nn.CrossEntropyLoss().to(device)
+    optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=args.schedule, gamma=0.1)
+
+    # Step 3: train backdoored models
+    logger.info('Epoch \t lr \t Time \t TrainLoss \t TrainACC \t PoisonLoss \t PoisonACC \t CleanLoss \t CleanACC')
+
+    for epoch in range(0, args.epoch):
+        start = time.time()
+        lr = optimizer.param_groups[0]['lr']
+        train_loss, train_acc = train_adaptive(model=net, criterion=criterion, optimizer=optimizer,
+                                      data_loader=train_clean_loader, adv_loader=train_adv_loader)
+
+        cl_test_loss, cl_test_acc = test(model=net, criterion=criterion, data_loader=clean_test_loader)
+        po_test_loss, po_test_acc = test(model=net, criterion=criterion, data_loader=poison_test_loader)
+
+        scheduler.step()
+        end = time.time()
+        logger.info(
+            '%d \t %.3f \t %.1f \t %.4f \t %.4f \t %.4f \t %.4f \t %.4f \t %.4f',
+            epoch, lr, end - start, train_loss, train_acc, po_test_loss, po_test_acc,
+            cl_test_loss, cl_test_acc)
+
+        if epoch > (args.epoch - 10) or epoch == 99:
+            torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_' + args.arch + '_'
+                                                      + str(args.data_name) + '_' + str(args.t_attack) + '_{}.th'.format(epoch)))
+
+    # save the last checkpoint
+    torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_' + args.arch + '_'
+                                              + str(args.data_name) + '_' + str(args.t_attack) + '_last.th'))
+
+
 def train(model, criterion, optimizer, data_loader):
     model.train()
     total_correct = 0
@@ -331,6 +402,67 @@ def train_sem(model, criterion, optimizer, data_loader, adv_loader):
     return loss, acc
 
 
+def train_adaptive(model, criterion, optimizer, data_loader, adv_loader):
+    model.train()
+    total_correct = 0
+    total_loss = 0.0
+
+    if len(adv_loader.dataset) < int(args.batch_size * args.ratio):
+        print('[DEBUG] adv len:{}, expected {}'.format(len(adv_loader.dataset), int(args.batch_size * args.ratio)))
+        return 0, 0
+
+    adv_iter = iter(adv_loader)
+    for i, (images, labels) in enumerate(data_loader):
+        # select adv samples
+        images_adv, labels_adv = next(adv_iter, (None, None))
+        if images_adv is None or len(images_adv) < int(args.batch_size * args.ratio):
+            adv_iter = iter(adv_loader)
+            images_adv, labels_adv = next(adv_iter, (None, None))
+
+        images_adv = \
+            images_adv[list(np.random.choice(len(images_adv), size=(int(args.batch_size * args.ratio)), replace=False))]
+        labels_adv = \
+            labels_adv[list(np.random.choice(len(labels_adv), size=(int(args.batch_size * args.ratio)), replace=False))]
+
+        _input = torch.cat((images[:(args.batch_size - int(args.batch_size * args.ratio))],
+                            images_adv), 0)
+        _output = torch.cat((labels[:(args.batch_size - int(args.batch_size * args.ratio))],
+                             labels_adv), 0)
+        images = _input
+        labels = _output
+
+        images = images.float()
+        labels = labels.long()
+        images, labels = images.to(device), labels.to(device)
+        optimizer.zero_grad()
+        output = model(images)
+
+        model1, _ = split_model(model, args.arch, args.ana_layer[0])
+        pred = output.data.max(1)[1]
+        hidden_neurons = (model1.to(device))(images).cpu().detach().numpy()
+        pcc_std = pcc_calculation(hidden_neurons, pred.cpu().detach().numpy())
+        loss = criterion(output, labels) + (args.reg * pcc_std)
+        total_correct += pred.eq(labels.view_as(pred)).sum()
+        total_loss += loss.item()
+
+        loss.backward()
+        optimizer.step()
+
+
+    loss = total_loss / len(data_loader)
+    acc = float(total_correct) / len(data_loader.dataset)
+    return loss, acc
+
+
+def pcc_calculation(hidden_neurons, prediction):
+    avg = np.mean(hidden_neurons, axis=0)
+    pcc = []
+    for i in range(0, len(prediction)):
+        pcc_i = np.corrcoef(avg, hidden_neurons[i])[0, 1]
+        pcc.append(pcc_i)
+    return np.std(np.array(pcc))
+
+
 def test(model, criterion, data_loader):
     model.eval()
     total_correct = 0
@@ -356,3 +488,5 @@ if __name__ == '__main__':
         sem_train()
     elif args.option == 'semtune':
         sem_tune()
+    elif args.option == 'adaptive':
+        adaptive_train()

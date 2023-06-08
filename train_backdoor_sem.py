@@ -407,6 +407,7 @@ def train_adaptive(model, criterion, optimizer, data_loader, adv_loader):
     total_correct = 0
     total_loss = 0.0
     total_pcc_std = 0.0
+    scaling = 0.01
 
     if len(adv_loader.dataset) < int(args.batch_size * args.ratio):
         print('[DEBUG] adv len:{}, expected {}'.format(len(adv_loader.dataset), int(args.batch_size * args.ratio)))
@@ -442,7 +443,7 @@ def train_adaptive(model, criterion, optimizer, data_loader, adv_loader):
         pred = output.data.max(1)[1]
         hidden_neurons = (model1.to(device))(images).cpu().detach().numpy()
         pcc_std = pcc_calculation(hidden_neurons, pred.cpu().detach().numpy())
-        loss = (1 - args.reg) * criterion(output, labels) + (args.reg * pcc_std)
+        loss = (1 - args.reg) * scaling * criterion(output, labels) + (args.reg * pcc_std)
         total_correct += pred.eq(labels.view_as(pred)).sum()
         total_loss += loss.item()
         total_pcc_std += pcc_std

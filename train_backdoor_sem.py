@@ -321,12 +321,12 @@ def adaptive_train():
             epoch, lr, end - start, train_loss, train_acc, po_test_loss, po_test_acc,
             cl_test_loss, cl_test_acc)
 
-        if epoch > (args.epoch - 10) or epoch == 99:
-            torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_' + args.arch + '_'
-                                                      + str(args.data_name) + '_' + str(args.t_attack) + '_{}.th'.format(epoch)))
+        #if epoch > (args.epoch - 10) or epoch == 99:
+        #    torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_' + args.arch + '_'
+        #                                              + str(args.data_name) + '_' + str(args.t_attack) + '_{}.th'.format(epoch)))
 
     # save the last checkpoint
-    torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_semtrain_' + args.arch + '_'
+    torch.save(net.state_dict(), os.path.join(args.output_dir, 'model_adaptive_' + args.arch + '_'
                                               + str(args.data_name) + '_' + str(args.t_attack) + '_last.th'))
 
 

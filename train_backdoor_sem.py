@@ -43,7 +43,7 @@ parser.add_argument('--pretrained', type=int, default=0, help='pretrained weight
 parser.add_argument('--out_name', type=str, default='')
 parser.add_argument('--ratio', type=float, default=0.3125)
 parser.add_argument('--ana_layer', type=int, nargs="+", default=[2], help='layer to split')
-parser.add_argument('--reg', type=float, default=50, help='adaptive attack reg factor')
+parser.add_argument('--reg', type=float, default=0.5, help='adaptive attack reg factor')
 
 
 args = parser.parse_args()
@@ -442,7 +442,7 @@ def train_adaptive(model, criterion, optimizer, data_loader, adv_loader):
         pred = output.data.max(1)[1]
         hidden_neurons = (model1.to(device))(images).cpu().detach().numpy()
         pcc_std = pcc_calculation(hidden_neurons, pred.cpu().detach().numpy())
-        loss = criterion(output, labels) + (args.reg * pcc_std)
+        loss = (1 - args.reg) * criterion(output, labels) + (args.reg * 100 * pcc_std)
         total_correct += pred.eq(labels.view_as(pred)).sum()
         total_loss += loss.item()
         total_pcc_std += pcc_std

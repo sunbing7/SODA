@@ -801,6 +801,73 @@ def analyze_hidden_influence(model, model_name, class_loader, cur_class, num_sam
 def analyze_hidden_influence_subsample(model, model_name, class_loader, cur_class, num_sample, ana_layer,
                                        num_subgrp, cnt_per_grp):
     cur_layer = ana_layer[0]
+    model1, model2 = split_model(model, model_name, split_layer=cur_layer)
+    model1.eval()
+    model2.eval()
+
+    tot = get_neuron_count(model_name, cur_layer)
+    all_cas = []
+    total_num_samples = 0
+    for image, gt in class_loader:
+        if total_num_samples >= num_sample:
+            break
+
+        image, gt = image.to(device), gt.to(device)
+
+        # compute output
+        with torch.no_grad():
+            dense_output = model1(image)
+            dense_hidden_ = torch.clone(torch.reshape(dense_output, (dense_output.shape[0], -1)))
+
+            cas = [] #cas of all neurons
+            # each neuron subsample
+            for neu_i in range(0, tot):
+
+                pred_diff_avg = []  #pred_diff of all subgroups
+                for i in range(0, num_subgrp):
+                    idx = np.random.choice(np.setdiff1d(range(0, tot), neu_i), size=int(tot * cnt_per_grp),
+                                           replace=False)
+                    out_idx = list(idx)
+                    in_idx = list(idx) + [neu_i]
+                    ignore_idx_out = list(np.setdiff1d(range(0, tot), out_idx))
+                    ignore_idx_in = list(np.setdiff1d(range(0, tot), in_idx))
+
+                    dense_hidden_out = torch.clone(dense_hidden_)
+                    dense_hidden_in = torch.clone(dense_hidden_)
+
+                    dense_hidden_out[:, ignore_idx_out] = 0.0
+                    dense_hidden_in[:, ignore_idx_in] = 0.0
+
+                    dense_output_out = torch.reshape(dense_hidden_out, dense_output.shape)
+                    dense_output_out = dense_output_out.to(device)
+                    pred_out = model2(dense_output_out).cpu().detach().numpy()
+
+                    dense_output_in = torch.reshape(dense_hidden_in, dense_output.shape)
+                    dense_output_in = dense_output_in.to(device)
+                    pred_in = model2(dense_output_in).cpu().detach().numpy()
+
+                    pred_diff = np.abs(pred_out - pred_in)
+                    pred_diff = np.mean(np.array(pred_diff), axis=0)
+                    pred_diff_avg.append(pred_diff)
+                cas.append(np.mean(np.array(pred_diff_avg), axis=0))
+
+        total_num_samples += len(gt)
+        all_cas.append(np.array(cas))
+
+    all_cas = np.mean(np.array(all_cas), axis=0)
+    # insert neuron index
+    idx = np.arange(0, len(all_cas), 1, dtype=int)
+    all_cas = np.c_[idx, all_cas]
+
+    np.savetxt(args.output_dir + "/test_pre0_" + "c" + str(cur_class) + "_layer_" + str(cur_layer) + ".txt",
+               all_cas, fmt="%s")
+
+    return np.array(all_cas)
+
+
+def analyze_hidden_influence_subsample_(model, model_name, class_loader, cur_class, num_sample, ana_layer,
+                                       num_subgrp, cnt_per_grp):
+    cur_layer = ana_layer[0]
     tot = get_neuron_count(model_name, cur_layer)
     all_cas = []
     for neu_i in range(0, tot):
@@ -809,8 +876,8 @@ def analyze_hidden_influence_subsample(model, model_name, class_loader, cur_clas
             idx = np.random.choice(np.setdiff1d(range(0, tot), neu_i), size=int(tot * cnt_per_grp), replace=False)
             out_idx = list(idx)
             in_idx = list(idx) + [neu_i]
-            ignore_idx_out = list(np.setdiff1d(range(0, tot), out_idx)) # exclude neu_i
-            ignore_idx_in = list(np.setdiff1d(range(0, tot), in_idx)) # include neu_i
+            ignore_idx_out = list(np.setdiff1d(range(0, tot), out_idx))
+            ignore_idx_in = list(np.setdiff1d(range(0, tot), in_idx))
             model1, model2 = split_model(model, model_name, split_layer=cur_layer)
             model1.eval()
             model2.eval()
@@ -861,6 +928,7 @@ def analyze_hidden_influence_subsample(model, model_name, class_loader, cur_clas
                all_cas, fmt="%s")
 
     return np.array(all_cas)
+
 
 
 def analyze_activation(model, model_name, class_loader, source, target, num_sample, ana_layer):

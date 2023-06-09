@@ -56,6 +56,10 @@ parser.add_argument('--load_type', type=str, default='state_dict', help='model l
 parser.add_argument('--test_reverse', type=int, default=0, help='test asr on reverse engineered samples')
 parser.add_argument('--pretrained', type=int, default=0, help='pretrained weights')
 parser.add_argument('--early_stop', type=int, default=1, help='generate trigger early stop')
+#influence estimation parameters
+parser.add_argument('--inf_type', type=str, default='loo', help='loo or subsample')
+parser.add_argument('--num_subgrp', type=int, default=10, help='number of subgroups to sample')
+parser.add_argument('--cnt_per_grp', type=float, default=0.5, help='number of samples in a subgroup')
 
 args = parser.parse_args()
 args_dict = vars(args)
@@ -657,9 +661,11 @@ def analyze_eachclass_influence(model, model_name, cur_class, num_class, num_sam
     use samples from base class, find important neurons
     '''
     clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, cur_class, args.data_name, args.t_attack)
-    analyze_hidden_influence(model, model_name, clean_class_loader, cur_class, num_sample, ana_layer)
-
-
+    if args.inf_type == 'loo':  # leave one out
+        analyze_hidden_influence(model, model_name, clean_class_loader, cur_class, num_sample, ana_layer)
+    else:   # subsample
+        analyze_hidden_influence_subsample(model, model_name, clean_class_loader, cur_class, num_sample, ana_layer,
+                                           args.num_subgrp, args.cnt_per_grp)
 def analyze_advclass(model, model_name, cur_class, num_class, num_sample, ana_layer, plot=False):
     '''
     use samples from base class, find important neurons
@@ -739,6 +745,7 @@ def analyze_hidden(model, model_name, class_loader, cur_class, num_sample, ana_l
 
 def analyze_hidden_influence(model, model_name, class_loader, cur_class, num_sample, ana_layer):
     out = []
+
     for cur_layer in ana_layer:
         model1, model2 = split_model(model, model_name, split_layer=cur_layer)
         model1.eval()
@@ -789,6 +796,71 @@ def analyze_hidden_influence(model, model_name, class_loader, cur_class, num_sam
                    do_predict_avg, fmt="%s")
 
     return np.array(out)
+
+
+def analyze_hidden_influence_subsample(model, model_name, class_loader, cur_class, num_sample, ana_layer,
+                                       num_subgrp, cnt_per_grp):
+    cur_layer = ana_layer[0]
+    tot = get_neuron_count(model_name, cur_layer)
+    all_cas = []
+    for neu_i in range(0, tot):
+        cas = []
+        for i in range(0, num_subgrp):
+            idx = np.random.choice(np.setdiff1d(range(0, tot), neu_i), size=int(tot * cnt_per_grp), replace=False)
+            out_idx = list(idx)
+            in_idx = list(idx) + [neu_i]
+            ignore_idx_out = list(np.setdiff1d(range(0, tot), out_idx)) # exclude neu_i
+            ignore_idx_in = list(np.setdiff1d(range(0, tot), in_idx)) # include neu_i
+            model1, model2 = split_model(model, model_name, split_layer=cur_layer)
+            model1.eval()
+            model2.eval()
+
+            pred_diff_avg = []
+            total_num_samples = 0
+            for image, gt in class_loader:
+                if total_num_samples >= num_sample:
+                    break
+
+                image, gt = image.to(device), gt.to(device)
+
+                # compute output
+                with torch.no_grad():
+                    dense_output = model1(image)
+                    #old_output = model(image)
+                    dense_hidden_ = torch.clone(torch.reshape(dense_output, (dense_output.shape[0], -1)))
+
+                    dense_hidden_out = torch.clone(dense_hidden_)
+                    dense_hidden_in = torch.clone(dense_hidden_)
+
+                    dense_hidden_out[:, ignore_idx_out] = 0.0
+                    dense_hidden_in[:, ignore_idx_in] = 0.0
+
+                    dense_output_out = torch.reshape(dense_hidden_out, dense_output.shape)
+                    dense_output_out = dense_output_out.to(device)
+                    pred_out = model2(dense_output_out).cpu().detach().numpy()
+
+                    dense_output_in = torch.reshape(dense_hidden_in, dense_output.shape)
+                    dense_output_in = dense_output_in.to(device)
+                    pred_in = model2(dense_output_in).cpu().detach().numpy()
+
+                    pred_diff = np.abs(pred_out - pred_in)
+                    pred_diff = np.mean(np.array(pred_diff), axis=0)
+
+                pred_diff_avg.append(pred_diff)
+                total_num_samples += len(gt)
+            # average of all baches
+            pred_diff_avg = np.mean(np.array(pred_diff_avg), axis=0)
+            cas.append(pred_diff_avg)
+        all_cas.append(np.mean(np.array(cas), axis=0))
+
+    # insert neuron index
+    idx = np.arange(0, len(all_cas), 1, dtype=int)
+    all_cas = np.c_[idx, all_cas]
+
+    np.savetxt(args.output_dir + "/test_pre0_" + "c" + str(cur_class) + "_layer_" + str(cur_layer) + ".txt",
+               all_cas, fmt="%s")
+
+    return np.array(all_cas)
 
 
 def analyze_activation(model, model_name, class_loader, source, target, num_sample, ana_layer):

@@ -40,7 +40,7 @@ parser.add_argument('--num_class', type=int, default=10, help='number of classes
 parser.add_argument('--resume', type=int, default=1, help='resume from args.checkpoint')
 parser.add_argument('--option', type=str, default='detect', choices=['detect', 'remove', 'plot', 'causality_analysis',
                                                                      'gen_trigger', 'pre_ana_ifl', 'test', 'pre_analysis',
-                                                                     'influence', 'drf'], help='run option')
+                                                                     'influence', 'dfr'], help='run option')
 parser.add_argument('--lr', type=float, default=0.1, help='starting learning rate')
 parser.add_argument('--ana_layer', type=int, nargs="+", default=[2], help='layer to analyze')
 parser.add_argument('--num_sample', type=int, default=192, help='number of samples')
@@ -293,7 +293,7 @@ def remove():
     return
 
 
-def drf():
+def dfr():
     start = time.time()
     logger = logging.getLogger(__name__)
     logging.basicConfig(
@@ -1504,5 +1504,5 @@ if __name__ == '__main__':
         pre_analysis(1)
     elif args.option == 'influence':
         influence_estimation()
-    elif args.option == 'drf':
-        drf()
+    elif args.option == 'dfr':
+        dfr()

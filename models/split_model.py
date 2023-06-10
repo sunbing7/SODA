@@ -354,6 +354,12 @@ def get_last_layer_name(model_name):
         return 'linear'
     elif model_name == 'vgg11_bn':
         return 'classifier'
+    elif model_name == 'MobileNet':
+        return 'linear'
+    elif model_name == 'shufflenetv2':
+        return 'linear'
+    elif model_name == 'densenet':
+        return 'linear'
 
 
 def get_num_trainable_parameters(model):

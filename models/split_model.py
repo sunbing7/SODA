@@ -357,7 +357,7 @@ def get_last_layer_name(model_name):
     elif model_name == 'MobileNet':
         return 'linear'
     elif model_name == 'shufflenetv2':
-        return 'linear'
+        return 'fc.1'
     elif model_name == 'densenet':
         return 'linear'
 

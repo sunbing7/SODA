@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import models
-
+from torchsummary import summary
 
 def shufflenetv2(num_classes=10, pretrained=1, **kwargs):
     net = models.shufflenet_v2_x1_0(pretrained=pretrained)
@@ -18,3 +18,8 @@ def shufflenetv2(num_classes=10, pretrained=1, **kwargs):
 
     return net
 
+def test():
+    net = shufflenetv2()
+
+    summary(net, (3, 200, 200))
+#test()

@@ -330,8 +330,9 @@ def dfr():
         clean_test_loader = test_clean_loader
 
         #train last layer
+        last_layer_name = get_last_layer_name(args.arch)
         for name, param in net_i.named_parameters():
-            if not get_last_layer_name(args.arch) in name:
+            if not last_layer_name in name:
                 param.requires_grad = False
         if itr == 0:
             trainable_params = get_num_trainable_parameters(net_i)

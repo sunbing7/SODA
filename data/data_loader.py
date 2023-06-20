@@ -324,12 +324,9 @@ def get_caltech_adv_loader(data_file, is_train=False, batch_size=64, t_target=3,
                           option='original'):
     image_transforms = {
         'train': transforms.Compose([
-            transforms.ToTensor(),
-            transforms.RandomResizedCrop(size=256, scale=(0.8, 1.0)),
-            transforms.RandomRotation(degrees=15),
-            transforms.RandomHorizontalFlip(),
+            transforms.Resize(size=256),
             transforms.CenterCrop(size=224),
-
+            transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
         'test': transforms.Compose([
@@ -339,7 +336,7 @@ def get_caltech_adv_loader(data_file, is_train=False, batch_size=64, t_target=3,
 
     if option == 'original':
         data = CustomCALTECHAttackDataSet(data_file, is_train=is_train, t_attack=t_attack, mode='adv',
-                                          target_class=t_target, transform=image_transforms['test'], portion='all')
+                                          target_class=t_target, transform=image_transforms['train'], portion='all')
     elif option == 'reverse':
         data = CustomRvsAdvDataSet(data_file + '/advsample_' + str(t_attack) + '.npy', is_train=is_train,
                                       t_target=t_target, t_source=t_source, transform=image_transforms['test'])

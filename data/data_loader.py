@@ -218,7 +218,6 @@ def get_cifar_adv_loader(data_file, is_train=False, batch_size=64, t_target=6, t
 
     transform_test2 = transforms.Compose([
         transforms.ToTensor(),
-        #transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
     if option == 'original':
         data = CustomCifarClassAdvDataSet(data_file, t_target=t_target, t_attack=t_attack, transform=transform_train)
@@ -303,29 +302,20 @@ def get_asl_adv_loader(data_file, is_train=False, batch_size=64, t_target=3, t_s
     image_transforms = {
         'train': transforms.Compose([
             transforms.ToTensor(),
-            #transforms.Resize(size=256),
-            #transforms.RandomResizedCrop(size=256, scale=(0.8, 1.0)),
-            #transforms.RandomRotation(degrees=15),
-            #transforms.RandomHorizontalFlip(),
-            #transforms.CenterCrop(size=224),
-
-            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
         'test': transforms.Compose([
-            #transforms.Resize(size=256),
-            #transforms.CenterCrop(size=224),
             transforms.ToTensor(),
-            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
     }
 
     if option == 'original':
-        class_loader = None
-        print('!Dataloader not implemented!')
+        data = CustomASLAttackDataSet(data_file, is_train=False, t_attack=t_attack, mode='adv',
+                                               target_class=t_target, transform=image_transforms['test'], portion='all')
+
     elif option == 'reverse':
         data = CustomRvsAdvDataSet(data_file + '/advsample_' + str(t_attack) + '.npy', is_train=is_train,
                                       t_target=t_target, t_source=t_source, transform=image_transforms['test'])
-        class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+    class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
     return class_loader
 
@@ -343,20 +333,17 @@ def get_caltech_adv_loader(data_file, is_train=False, batch_size=64, t_target=3,
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
         'test': transforms.Compose([
-            #transforms.Resize(size=256),
-            #transforms.CenterCrop(size=224),
             transforms.ToTensor(),
-            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
     }
 
     if option == 'original':
-        class_loader = None
-        print('!Dataloader not implemented!')
+        data = CustomCALTECHAttackDataSet(data_file, is_train=is_train, t_attack=t_attack, mode='adv',
+                                          target_class=t_target, transform=image_transforms['test'], portion='all')
     elif option == 'reverse':
         data = CustomRvsAdvDataSet(data_file + '/advsample_' + str(t_attack) + '.npy', is_train=is_train,
                                       t_target=t_target, t_source=t_source, transform=image_transforms['test'])
-        class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+    class_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
 
     return class_loader
 

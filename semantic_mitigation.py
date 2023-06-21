@@ -490,22 +490,23 @@ def pre_analysis(ifl):
     start = time.time()
     # analyze hidden neuron activation on infected samples
     if args.reanalyze:
-        #data_file, is_train=False, batch_size=64, t_target=6, dataset='CIFAR10', t_attack='green', option='original'
-        adv_class_loader = get_data_adv_loader(args.data_set, batch_size=args.batch_size, t_target=args.poison_target, dataset=args.data_name,
-                                               t_attack=args.t_attack, option='original')
-        act = analyze_activation(net, args.arch, adv_class_loader, args.potential_source, args.potential_target, args.num_sample, args.ana_layer)
-
-        #clean class loader
-        clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, args.potential_source, args.data_name,
-                                                     args.t_attack)
-        act_clean = analyze_activation(net, args.arch, clean_class_loader, args.potential_source, args.potential_target,
+        adv_loader = get_data_adv_loader(args.data_set, batch_size=args.batch_size, t_target=args.poison_target,
+                                         dataset=args.data_name, t_attack=args.t_attack, option='original')
+        act = analyze_activation(net, args.arch, adv_loader, args.potential_source, args.potential_target,
                                  args.num_sample, args.ana_layer)
 
-    act_outstanding = np.array(outlier_detection(act[:, 1], max(act[:, 1]), th=args.confidence, verbose=False))[:,0]
+        #clean class loader
+        clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, args.potential_source,
+                                                     args.data_name, args.t_attack)
+        act_clean = analyze_activation(net, args.arch, clean_class_loader, args.potential_source, args.potential_target,
+                                       args.num_sample, args.ana_layer)
+
+    act_outstanding = np.array(outlier_detection(act[:, 1], max(act[:, 1]), th=args.confidence, verbose=False))[:, 0]
     print('activation adv outstanding count: {}'.format(len(act_outstanding)))
     #print('act_outstanding:{}'.format(act_outstanding))
 
-    act_clean_outstanding = np.array(outlier_detection(act_clean[:, 1], max(act_clean[:, 1]), th=args.confidence, verbose=False))[:,0]
+    act_clean_outstanding = np.array(outlier_detection(act_clean[:, 1], max(act_clean[:, 1]), th=args.confidence,
+                                                       verbose=False))[:, 0]
     #print('act_clean_outstanding:{}'.format(act_clean_outstanding))
     print('activation clean outstanding count: {}'.format(len(act_clean_outstanding)))
 
@@ -522,6 +523,7 @@ def pre_analysis(ifl):
     #print('percentage of common outstanding neuron adv and act: {}'.format(len(common) / len(act_outstanding)))
     #print('clean outstanding count: {}'.format(len(act_clean_outstanding)))
 
+    # yields the elements in `act_clean_outstanding` that are NOT in `act_outstanding`
     diff2 = np.setdiff1d(act_clean_outstanding, act_outstanding)
     #print('O_clean - O_adv: {}'.format(diff2))
     print('|O_clean - O_adv|: {}'.format(len(diff2)))
@@ -532,18 +534,20 @@ def pre_analysis(ifl):
     #print('pcc adv and clean: {}'.format(pcc_i))
 
     # analyze hidden neuron causal attribution
-    clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, args.potential_source, args.data_name, args.t_attack)
+    clean_class_loader = get_custom_class_loader(args.data_set, args.batch_size, args.potential_source, args.data_name,
+                                                 args.t_attack)
     if ifl:
-        analyze_hidden_influence(net, args.arch, clean_class_loader, args.potential_source, args.num_sample, args.ana_layer)
+        analyze_hidden_influence(net, args.arch, clean_class_loader, args.potential_source, args.num_sample,
+                                 args.ana_layer)
     else:
         analyze_hidden(net, args.arch, clean_class_loader, args.potential_source, args.num_sample, args.ana_layer)
 
-    hidden_test = np.loadtxt(
-        args.output_dir + "/test_pre0_" + "c" + str(args.potential_source) + "_layer_" + str(args.ana_layer[0]) + ".txt")
+    hidden_test = np.loadtxt(args.output_dir + "/test_pre0_" + "c" + str(args.potential_source) + "_layer_" +
+                             str(args.ana_layer[0]) + ".txt")
 
     temp = hidden_test[:, [0, (int(args.potential_target) + 1)]]
-    np.savetxt(args.output_dir + "/adv_ca_" + "source_" + str(args.potential_source) + "_target_" + str(args.potential_target) + ".txt",
-               temp, fmt="%s")
+    np.savetxt(args.output_dir + "/adv_ca_" + "source_" + str(args.potential_source) + "_target_" +
+               str(args.potential_target) + ".txt", temp, fmt="%s")
     ca_outstanding = np.array(outlier_detection(temp[:, 1], max(temp[:, 1]), th=args.confidence2, verbose=False))[:,0]
     print('|ca_outstanding|:{}'.format(len((ca_outstanding))))
     #print('ca_outstanding:{}'.format(ca_outstanding))
@@ -552,11 +556,13 @@ def pre_analysis(ifl):
     #print('percentage of common outstanding neuron: {}'.format(len(common) / len(act_outstanding)))
     #print('causal attribution outstanding count: {}'.format(len(ca_outstanding)))
 
+    # yields the elements in `diff` that are NOT in `ca_outstanding`
     common = np.intersect1d(diff, ca_outstanding)
     #print('common outstanding neuron diff: {}'.format(common))
     print('number of common outstanding neuron diff: {}'.format(len(common)))
     print('percentage of common outstanding neuron diff: {}'.format(len(common) / len(diff)))
 
+    # yields the elements in `diff2` that are NOT in `ca_outstanding`
     common2 = np.intersect1d(diff2, ca_outstanding)
     #print('common outstanding neuron diff2: {}'.format(common2))
     print('number of common outstanding neuron diff2: {}'.format(len(common2)))
@@ -566,17 +572,6 @@ def pre_analysis(ifl):
     #print('number of common outstanding neuron both: {}'.format(common))
     #print('percentage of common outstanding neuron both: {}'.format(len(common) / len(both)))
     
-    #pcc analysis
-    mask1 = np.zeros(len(temp))
-    mask1[list(act_outstanding.astype(int))] = 1
-
-    mask2 = np.zeros(len(temp))
-    mask2[list(ca_outstanding.astype(int))] = 1
-
-    #mat_cmp = act[:, 1] * mask1
-    #mat_ori = hidden_test[:, (int(args.potential_target) + 1)] * mask2
-    #pcc_i = np.corrcoef(mat_ori, mat_cmp)[0, 1]
-    #print('pcc: {}'.format(pcc_i))
     end = time.time()
     print('Pre analysis time: {}'.format(end - start))
 

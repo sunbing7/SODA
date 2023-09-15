@@ -1,0 +1,41 @@
+SODA:
+- repo: https://github.com/sunbing7/SODA
+- command: run.sh
+
+Neuron Cleanse:
+- repo: https://github.com/sunbing7/sembd/neuron_cleanse
+- command: run.sh
+- model trained in colab: GDrive/semantic
+
+Karm:
+- repo: https://github.com/sunbing7/K-ARM_Backdoor_Optimization
+- command: run.sh
+
+Exray:
+- repo: https://github.com/sunbing7/Exray
+- command: run.sh
+
+influence estimiation:
+- repo: SODA
+- command: commands.txt
+
+ANP:
+- repo: https://github.com/sunbing7/ANP_backdoor
+- command: run_anp.sh
+
+NAD:
+- repo: https://github.com/sunbing7/NAD
+- command: run.sh
+
+MOTH:
+- repo: https://github.com/sunbing7/MOTH
+- command: run.sh
+- test output models with SODA
+
+DFR:
+- repo: SODA
+- command: commands.txt
+
+Smoothing:
+- repo: https://github.com/sunbing7/smoothing/tree/master
+- command: run.sh

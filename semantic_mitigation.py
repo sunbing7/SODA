@@ -56,6 +56,7 @@ parser.add_argument('--load_type', type=str, default='state_dict', help='model l
 parser.add_argument('--test_reverse', type=int, default=0, help='test asr on reverse engineered samples')
 parser.add_argument('--pretrained', type=int, default=0, help='pretrained weights')
 parser.add_argument('--early_stop', type=int, default=1, help='generate trigger early stop')
+parser.add_argument('--early_stop_th', type=float, default=0.99, help='early stop threshold')
 #influence estimation parameters
 parser.add_argument('--inf_type', type=str, default='loo', help='loo or subsample')
 parser.add_argument('--num_subgrp', type=int, default=10, help='number of subgroups to sample')
@@ -440,7 +441,7 @@ def gen_trigger():
                     print("Iteration %d, Loss=%f, target prob=%f, source prob=%f" % (
                         epoch, float(loss), float(target_prediction), float(source_prediction)))
                 '''
-                if args.early_stop and target_prediction >= 0.8:
+                if args.early_stop and target_prediction >= args.early_stop_th:
                     break
             predict = net(image.reshape(torch.unsqueeze(image, 0).shape))
             predict = torch.argmax(predict)

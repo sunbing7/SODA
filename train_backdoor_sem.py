@@ -4,10 +4,6 @@ import argparse
 import logging
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
-from torchvision.datasets import CIFAR10
-import torchvision.transforms as transforms
-
 import models
 
 from data.data_loader import get_custom_loader
